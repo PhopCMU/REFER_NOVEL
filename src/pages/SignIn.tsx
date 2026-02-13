@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { image } from "../constant";
 import SignInForm from "./Forms/SignInForm";
 import SignUpForm from "./Forms/SignUpForm";
@@ -8,6 +8,9 @@ import { showToast } from "../utils/showToast";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import type { FeedbackProps } from "../types/type";
 import { PostFeedback } from "../api/PostApi";
+import { LoadingForm } from "../component/LoadingForm";
+import { useNavigate } from "react-router-dom";
+import { isAuthenticatedLocally } from "../utils/authUtils";
 
 export default function AuthPage() {
   const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">(
@@ -17,8 +20,25 @@ export default function AuthPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rating, setRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [recaptchaReady, setRecaptchaReady] = useState(false);
+  // === Router === //
+  const navigate = useNavigate();
 
   const { executeRecaptcha } = useGoogleReCaptcha();
+  useEffect(() => {
+    if (executeRecaptcha) {
+      setRecaptchaReady(true);
+    }
+  }, [executeRecaptcha]);
+
+  // ✅ Auto-login ถ้ามี session ที่ยังไม่หมดอายุ
+  useEffect(() => {
+    if (isAuthenticatedLocally()) {
+      navigate("/novel/dashboard", { replace: true });
+      return;
+    }
+  }, [navigate]);
 
   const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +53,7 @@ export default function AuthPage() {
       return;
     }
 
+    setLoading(true);
     try {
       const token = await executeRecaptcha("feedback");
       if (!token) {
@@ -60,8 +81,18 @@ export default function AuthPage() {
       setComment("");
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (!recaptchaReady) {
+    return <LoadingForm text="กำลังโหลด reCAPTCHA..." />;
+  }
+
+  if (loading) {
+    return <LoadingForm text="กำลังส่งข้อมูล..." />;
+  }
 
   return (
     <div className="min-h-screen flex">

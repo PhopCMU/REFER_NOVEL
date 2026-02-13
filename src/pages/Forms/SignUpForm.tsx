@@ -6,8 +6,14 @@ import { ToastContainer } from "react-toastify";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import InfoModal from "../../component/layout/InfoModal";
 import SearchableSelect from "../../component/Inputs/SearchableSelect";
-import { PostAddWorksplace } from "../../api/PostApi";
-import type { WorkplacePayload } from "../../types/type";
+import { PostAddWorksplace, PostRegister } from "../../api/PostApi";
+import type {
+  DataFormSubmitProps,
+  DataHospitalProps,
+  WorkplacePayload,
+} from "../../types/type";
+import { GetHospitalsWorkplace } from "../../api/GetApi";
+import { LoadingForm } from "../../component/LoadingForm";
 
 type Workplace = {
   type?: "hospital" | "clinic"; // รพส. หรือ คลินิก
@@ -19,10 +25,10 @@ export default function SignUpForm() {
   const { executeRecaptcha } = useGoogleReCaptcha();
   // === useState ===
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<typeof mockup_data_hospital>(
-    [],
-  );
+  const [data_hospital, setData_hospital] = useState<DataHospitalProps[]>([]);
+  const [suggestions, setSuggestions] = useState<typeof data_hospital>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -72,6 +78,33 @@ export default function SignUpForm() {
       hasNumber,
       hasMinLength,
     });
+  };
+
+  // === Function ดึงข้อมูลสถานที่ === //
+  const useRefDataHopitals = useRef(false);
+  useEffect(() => {
+    if (useRefDataHopitals.current) return;
+    useRefDataHopitals.current = true;
+    fetchDataHospitalWorkplace();
+  }, []);
+
+  const fetchDataHospitalWorkplace = async () => {
+    setIsLoading(true);
+    try {
+      const resp = await GetHospitalsWorkplace();
+      if (!resp.success) {
+        showToast.error("เกิดข้อผิดพลาดในการดึงข้อมูลสถานที่");
+        setIsLoading(false);
+        return;
+      }
+
+      setData_hospital(resp.data);
+      setIsLoading(false);
+    } catch (error) {
+      console.log("Error in fetchDataHospitalWorkplace:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // เมื่อ type เปลี่ยน → ล้าง suggestion
@@ -310,14 +343,12 @@ export default function SignUpForm() {
 
   const handleAddWorkplace = async () => {
     if (!validateWorkplace()) return;
-
-    // ✅ ส่งข้อมูลไปยัง API หรือ state หลักที่นี่
-    console.log("เพิ่มสถานที่ใหม่:", formDataWorkplace);
     if (!executeRecaptcha) {
       showToast.error("ไม่สามารถโหลด reCAPTCHA ได้ ลองใหม่อีกครั้ง");
       return;
     }
 
+    setIsLoading(true);
     try {
       const token = await executeRecaptcha("hospital_workplace");
       if (!token) {
@@ -343,13 +374,14 @@ export default function SignUpForm() {
       }) สำเร็จ!`;
 
       showToast.success(meg);
+
+      setFormDataWorkplace({ type: "hospital", name: "" });
+      await fetchDataHospitalWorkplace();
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการเพิ่มสถานที่");
+    } finally {
+      setIsLoading(false);
     }
-
-    // รีเซ็ตฟอร์ม
-    // setFormDataWorkplace({ type: "hospital", name: "" });
-    // setAddWorkloction(false); // ปิดฟอร์มอัตโนมัติหลังบันทึก (optional)
   };
 
   const handleSubmit = async () => {
@@ -371,26 +403,40 @@ export default function SignUpForm() {
         return;
       }
 
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          recaptchaToken: token,
-        }),
-      });
+      const payload: DataFormSubmitProps = {
+        ceLicense: formData.ceLicense,
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        lineID: formData.lineID,
+        password: formData.password,
+        recaptchaToken: token,
+        workplaces: formData.workplaces,
+        phone: formData.phone,
+      };
 
-      if (!res.ok) {
-        const msg = await res.text();
-        showToast.error(msg || "สมัครไม่สำเร็จ");
+      const resp = await PostRegister(payload);
+
+      if (!resp.success) {
+        showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการลงทะเบียน");
         return;
       }
 
-      console.log("Form submitted:", formData);
+      setFormData({
+        ceLicense: "",
+        email: "",
+        firstName: "",
+        lastName: "",
+        lineID: "",
+        password: "",
+        confirmPassword: "",
+        workplaces: [],
+        phone: "",
+      });
+
       showToast.success("ลงทะเบียนสำเร็จ! ยินดีต้อนรับ");
-    } catch (err) {
-      console.error(err);
-      showToast.error("เกิดข้อผิดพลาดในการยืนยัน reCAPTCHA");
+    } catch (err: any) {
+      showToast.error("เกิดข้อผิดพลาด: " + err.message);
     }
   };
 
@@ -407,39 +453,6 @@ export default function SignUpForm() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  // Mockup data
-  const mockup_data_hospital = [
-    {
-      id: "1",
-      hospital: "เชียงใหม่สัตวแพทย์",
-      type: "hospital",
-    },
-    {
-      id: "2",
-      hospital: "ลำปางสัตวแพทย์",
-      type: "hospital",
-    },
-    {
-      id: "3",
-      hospital: "สัตว์ทองหล่อ2",
-      type: "hospital",
-    },
-    {
-      id: "4",
-      hospital: "ทองหล่อ",
-      type: "clinic",
-    },
-    {
-      id: "5",
-      hospital: "ทองหล่อ2",
-      type: "clinic",
-    },
-    {
-      id: "6",
-      hospital: "ศูนยย์สัตว์เลี้ยงสุขุมวิท",
-      type: "clinic",
-    },
-  ];
 
   // ตรวจสอบภาษาไทย
   const isThaiOnly = (text: string): boolean => {
@@ -447,17 +460,15 @@ export default function SignUpForm() {
     return thaiRegex.test(text.trim()) && text.trim() !== "";
   };
 
-  // ตรวจสอบว่ามีใน mockup_data_hospital
+  // ตรวจสอบว่ามีใน data_hospital
   const isHospitalExists = (hospitalName: string): boolean => {
-    return mockup_data_hospital.some(
-      (item) => item.hospital === hospitalName.trim(),
-    );
+    return data_hospital.some((item) => item.name === hospitalName.trim());
   };
 
   // กรองข้อมูลตาม query
   // const filterHospitals = (query: string) => {
   //   if (!query.trim()) return [];
-  //   return mockup_data_hospital.filter((item) =>
+  //   return data_hospital.filter((item) =>
   //     item.hospital.toLowerCase().includes(query.toLowerCase())
   //   );
   // };
@@ -465,13 +476,13 @@ export default function SignUpForm() {
   const filterHospitals = (query: string) => {
     if (!query.trim()) return [];
 
-    return mockup_data_hospital
+    return data_hospital
       .map((item) => {
         // สร้าง label แบบเดียวกับที่ใช้ใน hospitalOptions
         const label =
           item.type === "hospital"
-            ? `โรงพยาบาลสัตว์ ${item.hospital}`
-            : `คลินิก ${item.hospital}`;
+            ? `โรงพยาบาลสัตว์ ${item.name}`
+            : `คลินิก ${item.name}`;
         return { ...item, label }; // เก็บ label ไว้ใช้กรอง
       })
       .filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
@@ -479,14 +490,15 @@ export default function SignUpForm() {
   };
 
   // แปลงให้เข้ากับ Select component
-  const hospitalOptions = mockup_data_hospital.map((item) => ({
+  const hospitalOptions = data_hospital.map((item) => ({
     value: item.id,
-    label:
-      item.type === "hospital"
-        ? `โรงพยาบาลสัตว์${item.hospital}`
-        : `คลินิก${item.hospital}`,
+    label: item.type === "hospital" ? `${item.name}` : `${item.name}`,
     type: item.type,
   }));
+
+  if (isLoading) {
+    return <LoadingForm text="กําลังโหลดข้อมูล..." />;
+  }
 
   return (
     <div className="space-y-6">
@@ -792,7 +804,7 @@ export default function SignUpForm() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: index * 0.05 }}
                                 onClick={() => {
-                                  handleSelectSuggestion(item.hospital);
+                                  handleSelectSuggestion(item.name);
                                   setShowSuggestions(false);
                                 }}
                                 className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150 flex items-center gap-3 group"
@@ -818,7 +830,7 @@ export default function SignUpForm() {
                                 </span> */}
                                 <div className="flex-1">
                                   <div className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">
-                                    {item.hospital}
+                                    {item.name}
                                   </div>
                                   <div className="text-xs text-gray-500 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-xs">

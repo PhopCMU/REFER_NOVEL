@@ -1,5 +1,10 @@
 import CryptoJS from "crypto-js";
-import type { FeedbackProps, WorkplacePayload } from "../types/type";
+import type {
+  DataFormLoginProps,
+  DataFormSubmitProps,
+  FeedbackProps,
+  WorkplacePayload,
+} from "../types/type";
 
 export const encryptData = (data: FeedbackProps | string) => {
   const dataToEncrypt = JSON.stringify(data);
@@ -10,7 +15,12 @@ export const encryptData = (data: FeedbackProps | string) => {
 };
 
 export const encryptDataNew = (
-  data: FeedbackProps | WorkplacePayload | string,
+  data:
+    | FeedbackProps
+    | WorkplacePayload
+    | DataFormSubmitProps
+    | DataFormLoginProps
+    | string,
 ) => {
   const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";
 

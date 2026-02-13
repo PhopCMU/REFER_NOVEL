@@ -2,28 +2,62 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-
-const menuItems = [
-  { name: "ภาพรวมระบบ", icon: "dashboard", path: "/novel" },
-  { name: "ข้อมูลสัตว์ป่วย", icon: "pets", path: "/novel/animals" },
-  { name: "ส่งตัวสัตว์ป่วย", icon: "send", path: "/novel/referral" },
-  { name: "ตรวจสอบสถานะ", icon: "search", path: "/novel/status" },
-  { name: "ขอผลการรักษา", icon: "description", path: "/novel/report" },
-];
-
+import { Dog, Home, Podcast, Search, Send } from "lucide-react";
 interface SidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
+  user: any;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const currentPath = location.pathname;
+
+  const menuItems = [
+    {
+      name: "ภาพรวมระบบ",
+      icon: Home,
+      path: "/novel/dashboard",
+      showIf: (user: any) => user.aud === "vet",
+    },
+    {
+      name: "ข้อมูลสัตว์ป่วย",
+      icon: Dog,
+      path: "/novel/animals",
+      showIf: (user: any) => user.aud === "vet",
+    },
+    {
+      name: "ส่งตัวสัตว์ป่วย",
+      icon: Send,
+      path: "/novel/referral",
+      showIf: (user: any) => user.aud === "vet",
+    },
+    {
+      name: "ตรวจสอบสถานะ",
+      icon: Search,
+      path: "/novel/status",
+      showIf: (user: any) => user.aud === "vet",
+    },
+    {
+      name: "ขอผลการรักษา",
+      icon: Podcast,
+      path: "/novel/report",
+      showIf: (user: any) => user.aud === "vet",
+    },
+    {
+      name: "ข้อมูลสัตว์ป่วย (NOVEL)",
+      icon: Podcast,
+      path: "/novel/novel-report",
+      showIf: (user: any) => user.aud === "vet-novel", // หมอ NOVEL
+    },
+  ];
+
+  const visibleMenuItems = menuItems.filter(
+    (item) => !item.showIf || item.showIf(user),
+  );
 
   const isActive = (path: string) => {
-    if (path === "/novel") return currentPath === path;
-    return currentPath.startsWith(path);
+    return location.pathname.startsWith(path);
   };
 
   return (
@@ -63,8 +97,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
       {/* Navigation */}
       <nav className="p-3 mt-2 flex-1">
-        {menuItems.map((item, index) => {
+        {visibleMenuItems.map((item, index) => {
+          const Icon = item.icon;
           const active = isActive(item.path);
+
           return (
             <div key={index} className="relative group mb-2">
               <button
@@ -85,7 +121,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                   }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
-                  {item.icon}
+                  <Icon
+                    className={`w-5 h-5 ${
+                      active ? "text-blue-400" : "text-gray-400"
+                    }`}
+                  />
                 </motion.span>
 
                 {/* แสดงชื่อเมื่อเปิด Sidebar เท่านั้น */}

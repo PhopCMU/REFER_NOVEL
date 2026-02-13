@@ -2,6 +2,7 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getUserFromToken, removeToken } from "../../utils/authUtils";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -65,11 +66,16 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState(getTitleFromPath(location.pathname));
-  const [showNotifications, setShowNotifications] = useState(false);
+  // const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  //
+  const user = getUserFromToken()!;
+
+  console.log(user);
 
   // อัปเดต title เมื่อ path เปลี่ยน
   React.useEffect(() => {
@@ -83,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         notificationRef.current &&
         !notificationRef.current.contains(event.target as Node)
       ) {
-        setShowNotifications(false);
+        // setShowNotifications(false);
       }
       if (
         profileRef.current &&
@@ -97,23 +103,23 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   }, []);
 
   // ฟังก์ชันจัดการการคลิกการแจ้งเตือน
-  const handleNotificationClick = (id: number) => {
-    // ทำเครื่องหมายว่าอ่านแล้ว
-    console.log("Notification clicked:", id);
-    setShowNotifications(false);
-  };
+  // const handleNotificationClick = (id: number) => {
+  //   // ทำเครื่องหมายว่าอ่านแล้ว
+  //   console.log("Notification clicked:", id);
+  //   setShowNotifications(false);
+  // };
 
   // ฟังก์ชันทำเครื่องหมายว่าอ่านแล้วทั้งหมด
-  const markAllAsRead = () => {
-    console.log("Mark all as read");
-    setShowNotifications(false);
-  };
+  // const markAllAsRead = () => {
+  //   console.log("Mark all as read");
+  //   setShowNotifications(false);
+  // };
 
   // ฟังก์ชันออกจากระบบ
   const handleLogout = () => {
-    // ล้าง session หรือ token ตรงนี้
-    console.log("Logging out...");
-    navigate("/");
+    removeToken();
+    navigate("/sign-in", { replace: true });
+    toggleSidebar();
   };
 
   return (
@@ -146,7 +152,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         </div> */}
 
         {/* Notifications */}
-        <div className="relative" ref={notificationRef}>
+        {/* <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             className="text-gray-500 hover:text-blue-600 relative p-2 rounded-full hover:bg-blue-50 transition-colors duration-200"
@@ -158,135 +164,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               {notifications.filter((notif) => !notif.read).length}
             </span>
           </button>
-
-          {/* Dropdown: Notifications */}
-          <AnimatePresence>
-            {showNotifications && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -5, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-50"
-                style={{
-                  boxShadow:
-                    "0 10px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)",
-                }}
-              >
-                {/* Header */}
-                <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <span className="material-symbols-outlined text-blue-600 mr-2">
-                        notifications
-                      </span>
-                      <h3 className="font-semibold text-gray-800">
-                        การแจ้งเตือน
-                      </h3>
-                    </div>
-                    <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded-full">
-                      {notifications.filter((notif) => !notif.read).length}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Notification List */}
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications.length > 0 ? (
-                    notifications.map((notif) => (
-                      <motion.div
-                        key={notif.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={`p-4 border-b border-gray-100 last:border-b-0 hover:bg-blue-50 cursor-pointer transition-all duration-200 ${
-                          !notif.read
-                            ? "bg-blue-50 border-l-4 border-l-blue-500"
-                            : "bg-white"
-                        }`}
-                        onClick={() => handleNotificationClick(notif.id)}
-                      >
-                        <div className="flex items-start">
-                          <div
-                            className={`p-2 rounded-full mr-3 ${
-                              notif.type === "success"
-                                ? "bg-green-100 text-green-600"
-                                : notif.type === "warning"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : "bg-blue-100 text-blue-600"
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-sm">
-                              {notif.type === "success"
-                                ? "check_circle"
-                                : notif.type === "warning"
-                                ? "warning"
-                                : "info"}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <p className="font-medium text-gray-800 text-sm mb-1">
-                                {notif.title}
-                              </p>
-                              <span className="text-xs text-gray-500 whitespace-nowrap">
-                                {notif.time}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                              {notif.message}
-                            </p>
-                          </div>
-                        </div>
-                        {!notif.read && (
-                          <div className="mt-2">
-                            <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
-                          </div>
-                        )}
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="p-6 text-center">
-                      <span className="material-symbols-outlined text-gray-300 text-4xl mb-2">
-                        notifications_off
-                      </span>
-                      <p className="text-gray-500 text-sm">
-                        ไม่มีแจ้งเตือนใหม่
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div className="p-3 bg-gray-50 flex justify-between items-center">
-                  <button
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center transition-colors duration-200"
-                    onClick={() => {
-                      navigate("/novel/notifications");
-                      setShowNotifications(false);
-                    }}
-                  >
-                    <span className="material-symbols-outlined text-sm mr-1">
-                      list_alt
-                    </span>
-                    ดูทั้งหมด
-                  </button>
-                  {notifications.some((notif) => !notif.read) && (
-                    <button
-                      className="text-xs text-gray-600 hover:text-gray-800 font-medium flex items-center transition-colors duration-200"
-                      onClick={markAllAsRead}
-                    >
-                      <span className="material-symbols-outlined text-sm mr-1">
-                        done_all
-                      </span>
-                      ทำเครื่องหมายว่าอ่านแล้วทั้งหมด
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        </div> */}
 
         {/* User Profile */}
         <div
@@ -294,17 +172,38 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           ref={profileRef}
         >
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium text-gray-800">Dr. Somchai</p>
-            <p className="text-xs text-gray-500">สัตวแพทย์</p>
+            <p className="text-sm font-medium text-gray-800">
+              DVM {user?.firstName} {user?.lastName}
+            </p>
+
+            <p className="text-xs text-gray-500">{user?.hospitalName}</p>
           </div>
-          <div className="relative">
-            <img
-              src="https://ui-avatars.com/api/?name=Dr.+Vet&background=4f46e5&color=fff&size=128&bold=true&font-size=0.5"
-              alt="User"
-              className="w-10 h-10 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform duration-200"
+          <div className="relative group">
+            {/* Glass morphism effect */}
+            <div
+              className="relative w-12 h-12 rounded-full backdrop-blur-md 
+               bg-white/20 border border-white/50 shadow-xl
+               cursor-pointer transform transition-all duration-300 
+               hover:scale-110 hover:bg-white/30
+               flex items-center justify-center"
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-            />
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+            >
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-400/20"></div>
+
+              <span className="relative text-white font-bold text-lg drop-shadow-md">
+                {user?.firstName?.charAt(0).toUpperCase()}
+                {user?.lastName?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+
+            {/* Status with glow effect */}
+            <span className="absolute -bottom-0.5 -right-0.5">
+              <span className="relative flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white"></span>
+              </span>
+            </span>
           </div>
 
           {/* Dropdown: Profile Menu */}
@@ -324,11 +223,10 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <div className="p-2 ">
                   <div className="px-3 py-2 border-b border-gray-100 mb-1">
                     <p className="text-sm font-medium text-gray-800">
-                      Dr. Somchai
+                      {user.firstName} {user.lastName}{" "}
+                      <span className="text-[10px]">{user?.ceLicense}</span>
                     </p>
-                    <p className="text-xs text-gray-500">
-                      somchai@animalhospital.com
-                    </p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
 
                   <button

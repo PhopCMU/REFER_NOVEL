@@ -1,10 +1,16 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Input from "../../component/Inputs/Input";
 import { showToast } from "../../utils/showToast";
 import { ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import SearchableSelect from "../../component/Inputs/SearchableSelect";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { GetHospitalsWorkplace } from "../../api/GetApi";
+import type { DataFormLoginProps, DataHospitalProps } from "../../types/type";
+import { LoadingForm } from "../../component/LoadingForm";
+import { PostLogin } from "../../api/PostApi";
+import { getUserFromToken, saveToken } from "../../utils/authUtils";
 
 interface FormErrors {
   email?: string;
@@ -17,15 +23,56 @@ interface SignInFormProps {
 }
 
 export default function SignInForm({ onForgotPassword }: SignInFormProps) {
+  // === Router === //
+  const navigate = useNavigate();
+  // === Google Recaptcha === //
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  // === useState === //
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [selectedHospital, setSelectedHospital] = useState<string>("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [data_hospital, setData_hospital] = useState<DataHospitalProps[]>([]);
 
-  const handleSubmit = () => {
+  // === Function ดึงข้อมูลสถานที่ === //
+  const useRefDataHopitals = useRef(false);
+  useEffect(() => {
+    if (useRefDataHopitals.current) return;
+    useRefDataHopitals.current = true;
+    fetchDataHospitalWorkplace();
+  }, []);
+
+  const fetchDataHospitalWorkplace = async () => {
+    setIsLoading(true);
+    try {
+      const resp = await GetHospitalsWorkplace();
+      if (!resp.success) {
+        showToast.error("เกิดข้อผิดพลาดในการดึงข้อมูลสถานที่");
+        setIsLoading(false);
+        return;
+      }
+
+      setData_hospital(resp.data);
+      setIsLoading(false);
+    } catch (error) {
+      console.log("Error in fetchDataHospitalWorkplace:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
     const newErrors: FormErrors = {};
+
+    if (!executeRecaptcha) {
+      showToast.error("ไม่สามารถโหลด reCAPTCHA ได้ ลองใหม่อีกครั้ง");
+      return;
+    }
+
+    const token = await executeRecaptcha("signin");
 
     if (!email) {
       newErrors.email = "กรุณากรอกอีเมล";
@@ -53,68 +100,45 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
       return;
     }
 
+    const payload: DataFormLoginProps = {
+      email,
+      password,
+      selectedHospital,
+      recaptchaToken: token,
+    };
+
     setIsSubmitting(true);
     setErrors({});
-    showToast.info("กำลังเข้าสู่ระบบ...");
 
+    const resp = await PostLogin(payload);
+
+    if (!resp.success) {
+      showToast.error(resp);
+      setErrors(resp);
+      setIsSubmitting(false);
+      return;
+    }
+    saveToken(resp.token);
     setTimeout(() => {
-      navigate("/novel");
-    }, 3000);
+      showToast.success("เข้าสู่ระบบสําเร็จ");
+      navigate("/dashboard");
+      setIsSubmitting(false);
+    }, 2000);
   };
 
   const handleSubmitVetCmu = () => {
     showToast.info("กำลังเชื่อมต่อกับระบบ CMU Account...");
   };
 
-  // Mockup data
-  const mockup_data_hospital = [
-    {
-      id: "1",
-      hospital: "CMU Hospital",
-    },
-    {
-      id: "2",
-      hospital: "Chulalongkorn University Hospital",
-    },
-    {
-      id: "3",
-      hospital: "Rajavithi Hospital",
-    },
-    {
-      id: "4",
-      hospital: "Thammasat University Hospital",
-    },
-    {
-      id: "5",
-      hospital: "Thammasat University Hospital",
-    },
-    {
-      id: "6",
-      hospital: "Thammasat University Hospital",
-    },
-    {
-      id: "7",
-      hospital: "Thammasat University Hospital",
-    },
-    {
-      id: "8",
-      hospital: "Thammasat University Hospital",
-    },
-    {
-      id: "9",
-      hospital: "Thammasat University Hospital",
-    },
-    {
-      id: "10",
-      hospital: "Thammasat University Hospital",
-    },
-  ];
-
   // แปลงให้เข้ากับ Select component
-  const hospitalOptions = mockup_data_hospital.map((item) => ({
+  const hospitalOptions = data_hospital.map((item) => ({
     value: item.id, // ใช้ id เป็น value
-    label: item.hospital, // ใช้ hospital เป็น text ที่แสดง
+    label: item.name, // ใช้ hospital เป็น text ที่แสดง
   }));
+
+  if (isLoading) {
+    return <LoadingForm text="กำลังโหลดข้อมูล.." />;
+  }
 
   return (
     <div className="space-y-6">
