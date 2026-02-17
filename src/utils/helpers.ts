@@ -3,6 +3,10 @@ import type {
   DataFormLoginProps,
   DataFormSubmitProps,
   FeedbackProps,
+  FormPetProp,
+  PayloadCreatedOwner,
+  PayloadFetchOwner,
+  PayloadUpdateOwner,
   WorkplacePayload,
 } from "../types/type";
 
@@ -20,6 +24,10 @@ export const encryptDataNew = (
     | WorkplacePayload
     | DataFormSubmitProps
     | DataFormLoginProps
+    | PayloadCreatedOwner
+    | PayloadFetchOwner
+    | PayloadUpdateOwner
+    | FormPetProp
     | string,
 ) => {
   const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";

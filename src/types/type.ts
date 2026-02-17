@@ -54,6 +54,7 @@ type PetType = "Dog" | "Cat" | "Exotic";
 
 export interface FormPetProp {
   id?: string;
+  ownerId: string;
   name: string; // ชื่อสัตว์
   color: string; // สี
   sex: animalSex; // เพศ
@@ -62,5 +63,29 @@ export interface FormPetProp {
   sterilization: SterilizationStatus; // ประวัติการทำหมัน
   species: PetType; // ชนิด
   exoticdescription?: string; // เพิ่มฟิลด์ exoticdescription ถ้า PetType เป็น Exotic เช่น เต๋า, สัตว์ป่า, กวาง
-  breed: string; // สายพันธุ์
+  breed?: string; // สายพันธุ์
+}
+
+export interface PayloadCreatedOwner {
+  address: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  hospitalId: string;
+  phone: string;
+  veterinarianId: string;
+}
+
+export interface PayloadUpdateOwner {
+  id: string;
+  address: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+export interface PayloadFetchOwner {
+  hospitalId: string;
+  veterinarianId: string;
 }

@@ -1,9 +1,19 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { showToast } from "../../../utils/showToast";
 import { ToastContainer } from "react-toastify";
 import { getUserFromToken } from "../../../utils/authUtils";
-import { type FormOwnerProp, type FormPetProp } from "../../../types/type";
+import {
+  type FormOwnerProp,
+  type FormPetProp,
+  type PayloadCreatedOwner,
+  type PayloadFetchOwner,
+  type PayloadUpdateOwner,
+} from "../../../types/type";
+import { PostCreatedOwner, PostCreatedPet } from "../../../api/PostApi";
+import { GetOwners } from "../../../api/GetApi";
+import { LoadingForm } from "../../../component/LoadingForm";
+import { PutUpdateOwner } from "../../../api/PutApi";
 
 interface Pet {
   id?: number;
@@ -122,6 +132,7 @@ export default function AnimalPage() {
 
   const [petForm, setPetForm] = useState<FormPetProp>({
     name: "",
+    ownerId: "",
     color: "",
     sex: "M",
     weight: "",
@@ -133,6 +144,60 @@ export default function AnimalPage() {
   });
   const [editingPetId, setEditingPetId] = useState<string>("");
   const [expandedOwner, setExpandedOwner] = useState<string>("");
+
+  // === Loiading === //
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  // === useEffect === //
+  const useRefFetchDataOwners = useRef(false);
+  useEffect(() => {
+    if (useRefFetchDataOwners.current) return;
+    useRefFetchDataOwners.current = true;
+    fetchDataOwners();
+  }, []);
+
+  const fetchDataOwners = async () => {
+    const veterinarianId = userLogin?.id;
+    const hospitalId = userLogin?.hospitalId;
+
+    if (!veterinarianId || !hospitalId) {
+      showToast.error("Missing veterinarianId or hospitalId");
+      return;
+    }
+
+    const payload: PayloadFetchOwner = {
+      veterinarianId,
+      hospitalId,
+    };
+
+    setMessage("Fetching owners...");
+    setLoading(true);
+
+    try {
+      const resp = await GetOwners(payload);
+
+      if (!resp.success) {
+        showToast.error("Error fetching owners");
+        return;
+      }
+      // console.log("resp", resp._data);
+      if (resp._data.length === 0) {
+        showToast.error("No owners found");
+        return;
+      }
+      setOwners(resp._data);
+      setMessage("");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching owners:", error);
+      setMessage("");
+      setLoading(false);
+    } finally {
+      setMessage("");
+      setLoading(false);
+    }
+  };
 
   const changeOwnerForm = useCallback(
     (
@@ -200,38 +265,57 @@ export default function AnimalPage() {
   };
 
   // เพิ่มเจ้าของใหม่
-  const addOwner = () => {
+  const addOwner = async () => {
     if (validateForm(ownerForm)) return;
 
     try {
+      if (isEditingOwner) {
+        const payload: PayloadUpdateOwner = {
+          id: ownerForm.id ?? "",
+          address: ownerForm.address,
+          email: ownerForm.email,
+          firstName: ownerForm.firstName,
+          lastName: ownerForm.lastName,
+          phone: ownerForm.phone,
+        };
+
+        const resp = await PutUpdateOwner(payload);
+
+        if (!resp.success) {
+          showToast.error(resp);
+          return;
+        }
+
+        showToast.success("แก้ไขเจ้าของสําเร็จ");
+
+        setTimeout(async () => {
+          resetOwnerForm();
+          await fetchDataOwners();
+        }, 1000);
+      } else {
+        const payload: PayloadCreatedOwner = {
+          ...ownerForm,
+          veterinarianId: userLogin?.id ?? "",
+          hospitalId: userLogin?.hospitalId,
+        };
+
+        const resp = await PostCreatedOwner(payload);
+
+        if (!resp.success) {
+          showToast.error(resp);
+          return;
+        }
+
+        showToast.success("เพิ่มเจ้าของสําเร็จ");
+
+        setTimeout(async () => {
+          resetOwnerForm();
+          await fetchDataOwners();
+        }, 1000);
+      }
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการเพิ่มเจ้าของ");
     }
-
-    const payload: any = {
-      ...ownerForm,
-      veterinarianId: userLogin?.id,
-      hospitalId: userLogin?.hospitalId,
-    };
-
-    console.log("payload", payload);
-    // const newOwner: Owner = {
-    //   id: ownerForm.id || Date.now(),
-    //   firstName: ownerForm.firstName,
-    //   lastName: ownerForm.lastName,
-    //   phone: ownerForm.phone,
-    //   email: ownerForm.email,
-    //   pets: [],
-    // };
-
-    // if (isEditingOwner) {
-    //   setOwners(owners.map((o) => (o.id === ownerForm.id ? newOwner : o)));
-    //   setIsEditingOwner(false);
-    // } else {
-    //   setOwners([...owners, newOwner]);
-    // }
-
-    // resetOwnerForm();
   };
 
   const filteredOwners = owners.filter((owner) => {
@@ -246,13 +330,9 @@ export default function AnimalPage() {
 
   // แก้ไขเจ้าของ
   const editOwner = (owner: FormOwnerProp) => {
-    // setOwnerForm({
-    //   id: owner.id,
-    //   firstName: owner.firstName,
-    //   lastName: owner.lastName,
-    //   phone: owner.phone,
-    //   email: owner.email,
-    // });
+    setOwnerForm({
+      ...owner,
+    });
     setIsEditingOwner(true);
   };
 
@@ -263,52 +343,114 @@ export default function AnimalPage() {
 
   // รีเซ็ตฟอร์มเจ้าของ
   const resetOwnerForm = () => {
-    // setOwnerForm({
-    //   id: 0,
-    //   firstName: "",
-    //   lastName: "",
-    //   phone: "",
-    //   email: "",
-    // });
+    setOwnerForm({
+      id: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      address: "",
+    });
     setIsEditingOwner(false);
   };
 
-  // เพิ่มหรืออัปเดตสัตว์
-  const addPet = (ownerId: string) => {
-    if (!petForm.name || !petForm.breed) {
-      return showToast.error("กรุณากรอกชื่อและสายพันธุ์");
+  const validatePetForm = (petForm: FormPetProp) => {
+    if (!petForm.name?.trim()) {
+      return showToast.error("กรุณากรอกชื่อและนามสกุล");
     }
 
-    const newPet: FormPetProp = {
-      ...petForm,
-    };
+    if (!petForm.breed?.trim()) {
+      return showToast.error("กรุณากรอกสายพันธุ์");
+    }
 
-    // resetPetForm();
-    setEditingPetId("");
+    if (!petForm.color?.trim()) {
+      return showToast.error("กรุณากรอกสี");
+    }
+
+    if (!petForm.sex?.trim()) {
+      return showToast.error("กรุณากรอกเพศ");
+    }
+    if (!petForm.age?.trim()) {
+      return showToast.error("กรุณากรอกอายุ");
+    }
+
+    if (!petForm.sterilization?.trim()) {
+      return showToast.error("กรุณากรอกประวัติการทำหมัน");
+    }
+
+    if (!petForm.species?.trim()) {
+      return showToast.error("กรุณากรอกประเภทสัตว์");
+    } else {
+      if (petForm.species === "Exotic") {
+        if (!petForm.exoticdescription?.trim()) {
+          return showToast.error("กรุณากรอกรายละเอียดสัตว์ เช่น นก เต๋า อื่นๆ");
+        }
+      }
+    }
   };
 
-  // แก้ไขสัตว์
-  // const editPet = (ownerId: number, pet: Pet) => {
-  //   setPetForm({ ...pet });
-  //   setEditingPetId(pet.id);
-  //   setExpandedOwner(ownerId); // เปิดรายการ
-  // };
+  // เพิ่มหรืออัปเดตสัตว์
+  const addPet = async (ownerId: string) => {
+    if (!ownerId) return showToast.error("กรุณาเลือกเจ้าของ");
+    if (validatePetForm(petForm)) return;
+    setMessage("กําลังเพิ่มสัตว์...");
+    setLoading(true);
+    try {
+      const payload: FormPetProp = {
+        ...petForm,
+        ownerId: ownerId,
+      };
 
-  // ลบสัตว์
-  // const removePet = (ownerId: number, petId: number) => {
-  //   setOwners(
-  //     owners.map((o) =>
-  //       o.id === ownerId
-  //         ? { ...o, pets: o.pets.filter((p) => p.id !== petId) }
-  //         : o,
-  //     ),
-  //   );
-  // };
+      console.log("petForm", payload);
+
+      const resp = await PostCreatedPet(payload);
+
+      if (!resp.success) {
+        showToast.error(resp);
+        return;
+      }
+
+      setTimeout(async () => {
+        await fetchDataOwners();
+        resetPetForm();
+      }, 1000);
+
+      showToast.success("เพิ่มสัตว์สําเร็จ");
+    } catch (error) {
+      showToast.error("เกิดข้อผิดพลาดในการเพิ่มสัตว์");
+    }
+    // if (!petForm.name || !petForm.breed) {
+    //   return showToast.error("กรุณากรอกชื่อและสายพันธุ์");
+    // }
+    // const newPet: FormPetProp = {
+    //   ...petForm,
+    // };
+    // resetPetForm();
+    // setEditingPetId("");
+
+    // แก้ไขสัตว์
+    // const editPet = (ownerId: number, pet: Pet) => {
+    //   setPetForm({ ...pet });
+    //   setEditingPetId(pet.id);
+    //   setExpandedOwner(ownerId); // เปิดรายการ
+    // };
+
+    // ลบสัตว์
+    // const removePet = (ownerId: number, petId: number) => {
+    //   setOwners(
+    //     owners.map((o) =>
+    //       o.id === ownerId
+    //         ? { ...o, pets: o.pets.filter((p) => p.id !== petId) }
+    //         : o,
+    //     ),
+    //   );
+  };
 
   // รีเซ็ตฟอร์มสัตว์
   const resetPetForm = () => {
     setPetForm({
       id: "",
+      ownerId: "",
       name: "",
       color: "",
       sex: "M",
@@ -320,6 +462,10 @@ export default function AnimalPage() {
       breed: "",
     });
   };
+
+  if (loading) {
+    return <LoadingForm text={message} />;
+  }
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
@@ -347,27 +493,7 @@ export default function AnimalPage() {
             จัดการข้อมูลเจ้าของสัตว์และสัตว์ป่วยในระบบ
           </p>
         </div>
-        {/* Search Bar */}
-        <div className="flex items-center w-2xl space-x-3 bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3">
-          <span className="material-symbols-outlined text-gray-500">
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="ค้นหาเจ้าของ (ชื่อ, นามสกุล, เบอร์, อีเมล)"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 outline-none text-sm"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <span className="material-symbols-outlined text-sm">close</span>
-            </button>
-          )}
-        </div>
+
         <div className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
           <span className="material-symbols-outlined text-sm">group</span>
           {owners.length} เจ้าของ
@@ -559,13 +685,36 @@ export default function AnimalPage() {
         transition={{ delay: 0.1 }}
         className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
       >
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-600">
-              list
+        <div className="flex items-center justify-between gap-1">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-600">
+                list
+              </span>
+              รายชื่อเจ้าของ
+            </h2>
+          </div>
+          {/* Search Bar */}
+          <div className="flex items-center w-xl space-x-3 bg-gray-100 px-4 py-3 mx-2">
+            <span className="material-symbols-outlined text-gray-500">
+              search
             </span>
-            รายชื่อเจ้าของ
-          </h2>
+            <input
+              type="text"
+              placeholder="ค้นหาเจ้าของ (ชื่อ, นามสกุล, เบอร์, อีเมล)"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 outline-none text-sm"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {filteredOwners.length === 0 ? (
@@ -578,7 +727,7 @@ export default function AnimalPage() {
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {filteredOwners.map((owner) => (
+            {filteredOwners.map((owner: any) => (
               <div key={owner.id} className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -605,17 +754,17 @@ export default function AnimalPage() {
                       <span className="material-symbols-outlined text-sm">
                         pets
                       </span>
-                      10 ตัว
+                      {owner.animals.length} ตัว
                     </div>
 
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      // onClick={() =>
-                      //   setExpandedOwner(
-                      //     expandedOwner === owner?.id ? "" : owner.id,
-                      //   )
-                      // }
+                      onClick={() =>
+                        setExpandedOwner(
+                          expandedOwner === owner?.id ? "" : owner.id,
+                        )
+                      }
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     >
                       <span className="material-symbols-outlined">
@@ -665,7 +814,7 @@ export default function AnimalPage() {
                             ? "แก้ไขข้อมูลสัตว์ป่วย"
                             : "เพิ่มสัตว์ป่วย"}
                         </h4>
-                        <div className="grid md:grid-cols-6 gap-3">
+                        <div className="grid md:grid-cols-5 gap-3">
                           <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               ชื่อสัตว์
@@ -675,6 +824,20 @@ export default function AnimalPage() {
                               name="name"
                               placeholder="ชื่อสัตว์"
                               value={petForm.name}
+                              onChange={changePetForm}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              สี
+                            </label>
+                            <input
+                              type="text"
+                              name="color"
+                              placeholder="สี"
+                              value={petForm.color}
                               onChange={changePetForm}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                             />
@@ -708,22 +871,20 @@ export default function AnimalPage() {
                                 </option>
                               ))}
                             </select>
+                            {petForm.species === "Exotic" && (
+                              <div>
+                                <input
+                                  type="text"
+                                  name="exoticdescription"
+                                  placeholder="ประเภทสัตว์ชนิดพิเศษ"
+                                  value={petForm.exoticdescription}
+                                  onChange={changePetForm}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                                />
+                              </div>
+                            )}
                           </div>
-                          {petForm.species === "Exotic" && (
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                ชนิดพิเศษ (เช่น เต๋า, นก, งู, ม้าน้ำ)
-                              </label>
-                              <input
-                                type="text"
-                                name="exoticdescription"
-                                placeholder="ประเภทสัตว์ชนิดพิเศษ"
-                                value={petForm.exoticdescription}
-                                onChange={changePetForm}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-                              />
-                            </div>
-                          )}
+
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               สายพันธุ์
@@ -793,9 +954,7 @@ export default function AnimalPage() {
                               ))}
                             </select>
                           </div>
-                        </div>
 
-                        <div className="grid md:grid-cols-6 gap-3">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               อายุ
@@ -814,6 +973,7 @@ export default function AnimalPage() {
                             </label>
                             <input
                               type="text"
+                              name="weight"
                               placeholder="เช่น 5.5"
                               value={petForm.weight || ""}
                               onChange={changePetForm}

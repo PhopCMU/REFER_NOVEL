@@ -3,10 +3,12 @@ import type {
   DataFormLoginProps,
   DataFormSubmitProps,
   FeedbackProps,
+  FormPetProp,
+  PayloadCreatedOwner,
   WorkplacePayload,
 } from "../types/type";
 import { encryptDataNew } from "../utils/helpers";
-import { api } from "./Axios";
+import { api, apiWithAuth } from "./Axios";
 
 // export const PostResetPassword = async (
 //     email: string,
@@ -26,8 +28,18 @@ export const PostAddWorksplace = async (payload: WorkplacePayload) => {
 
     return resp.data;
   } catch (error: any) {
-    console.error("Error in PostAddWorksplace:", error.message);
-    return error.response.data.message;
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in PostAddWorksplace: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in PostAddWorksplace: ", error.message);
+        return error.message;
+      }
+    }
   }
 };
 
@@ -41,8 +53,15 @@ export const PostFeedback = async (payload: FeedbackProps) => {
 
     return resp.data;
   } catch (error: any) {
-    console.error("Error in PostFeedback:", error.message);
-    return error.response.data.message;
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in PostFeedback: ", error.response.data.message);
+        return error.response.data.message;
+      } else {
+        console.error("Error in PostFeedback: ", error.message);
+        return error.message;
+      }
+    }
   }
 };
 
@@ -80,6 +99,51 @@ export const PostLogin = async (payload: DataFormLoginProps) => {
         return error.response.data.message;
       } else {
         console.error("Error in PostLogin: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
+
+export const PostCreatedOwner = async (payload: PayloadCreatedOwner) => {
+  try {
+    const encyptedDataBody = encryptDataNew(payload);
+
+    const resp = await apiWithAuth.post("/owners/create", {
+      encodedData: encyptedDataBody,
+    });
+    return resp.data;
+  } catch (error: any) {
+    console.error("Error in PostCreatedOwner: ", error);
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in PostCreatedOwner: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in PostCreatedOwner: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
+
+export const PostCreatedPet = async (payload: FormPetProp) => {
+  try {
+    const encyptedDataBody = encryptDataNew(payload);
+    const resp = await apiWithAuth.post("/pet/create", {
+      encodedData: encyptedDataBody,
+    });
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in PostCreatedAnimal: ", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Error in PostCreatedAnimal: ", error.message);
         return error.message;
       }
     }
