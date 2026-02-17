@@ -15,19 +15,6 @@ import { GetOwners } from "../../../api/GetApi";
 import { LoadingForm } from "../../../component/LoadingForm";
 import { PutUpdateOwner } from "../../../api/PutApi";
 
-interface Pet {
-  id?: number;
-  name: string;
-  type: "Dog" | "Cat" | "Exotic";
-  breed: string;
-  gender: "male" | "female";
-  neutered: boolean;
-  ageYears: number;
-  ageMonths: number;
-  ageDays: number;
-  weight: number; // in kg
-}
-
 // Mokup data
 const ServiceRequested = [
   {
@@ -427,24 +414,37 @@ export default function AnimalPage() {
     // };
     // resetPetForm();
     // setEditingPetId("");
-
-    // แก้ไขสัตว์
-    // const editPet = (ownerId: number, pet: Pet) => {
-    //   setPetForm({ ...pet });
-    //   setEditingPetId(pet.id);
-    //   setExpandedOwner(ownerId); // เปิดรายการ
-    // };
-
-    // ลบสัตว์
-    // const removePet = (ownerId: number, petId: number) => {
-    //   setOwners(
-    //     owners.map((o) =>
-    //       o.id === ownerId
-    //         ? { ...o, pets: o.pets.filter((p) => p.id !== petId) }
-    //         : o,
-    //     ),
-    //   );
   };
+  // แก้ไขสัตว์
+  const editPet = (ownerId: string, pet: FormPetProp) => {
+    setPetForm({
+      ...pet,
+    });
+    try {
+      if (!ownerId) return showToast.error("กรุณาเลือกเจ้าของ");
+      if (validatePetForm(petForm)) return;
+
+      const payload: FormPetProp = {
+        ...pet,
+        ownerId: ownerId,
+      };
+
+      console.log("payload", payload);
+    } catch (error) {
+      showToast.error("เกิดข้อผิดพลาดในการแก้ไขสัตว์");
+    }
+  };
+
+  // ลบสัตว์
+  // const removePet = (ownerId: number, petId: number) => {
+  //   setOwners(
+  //     owners.map((o) =>
+  //       o.id === ownerId
+  //         ? { ...o, pets: o.pets.filter((p) => p.id !== petId) }
+  //         : o,
+  //     ),
+  //   );
+  //};
 
   // รีเซ็ตฟอร์มสัตว์
   const resetPetForm = () => {
@@ -955,19 +955,20 @@ export default function AnimalPage() {
                             </select>
                           </div>
 
-                          <div>
+                          <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              อายุ
+                              อายุ (โดยต้องใส่ ปี เดือน วัน ต่อ ท้ายตัวเลข)
                             </label>
                             <input
                               type="text"
                               name="age"
+                              placeholder="เช่น 1 ปี 2 เดือน หรือ 3 วัน"
                               value={petForm.age}
                               onChange={changePetForm}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                             />
                           </div>
-                          <div className="md:col-span-2">
+                          <div className="md:col-span-1">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               น้ำหนัก (กก.)
                             </label>
@@ -1015,13 +1016,19 @@ export default function AnimalPage() {
 
                       {/* ตารางสัตว์ */}
 
-                      {/* {owner.pets.length > 0 ? (
+                      {owner.animals.length > 0 ? (
                         <div className="border border-gray-200 rounded-lg overflow-hidden">
                           <table className="w-full">
                             <thead>
                               <tr className="bg-gray-50">
                                 <th className="p-3 text-left text-sm font-medium text-gray-700">
+                                  No.
+                                </th>
+                                <th className="p-3 text-left text-sm font-medium text-gray-700">
                                   ชื่อ
+                                </th>
+                                <th className="p-3 text-left text-sm font-medium text-gray-700">
+                                  สี
                                 </th>
                                 <th className="p-3 text-left text-sm font-medium text-gray-700">
                                   ชนิด
@@ -1032,42 +1039,51 @@ export default function AnimalPage() {
                                 <th className="p-3 text-left text-sm font-medium text-gray-700">
                                   น้ำหนัก
                                 </th>
-                                <th className="p-3 text-left text-sm font-medium text-gray-700">
+                                <th className="p-3 text-left text-sm font-medium text-gray-700 flex justify-end">
                                   จัดการ
                                 </th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                              {owner.pets.map((pet) => (
+                              {owner.animals.map((pet: any, index: number) => (
                                 <tr
                                   key={pet.id}
                                   className="hover:bg-gray-50 transition-colors"
                                 >
                                   <td className="p-3 text-gray-800">
-                                    {pet.name}
+                                    {index + 1}
                                   </td>
-                                  <td className="p-3 text-gray-600">
-                                    {pet.type === "Dog"
+                                  <td className="p-3 text-gray-800">
+                                    {pet.name || "ไม่ระบุ"}
+                                  </td>
+                                  <td className="p-3 text-gray-800">
+                                    {pet.color}
+                                  </td>
+                                  <td className="p-3 text-gray-800">
+                                    {pet.species === "Dog"
                                       ? "สุนัข"
-                                      : pet.type === "Cat"
+                                      : pet.species === "Cat"
                                         ? "แมว"
-                                        : "สัตว์แปลก"}
+                                        : "สัตว์ชนิดพเศษ"}
+                                    {pet.species === "Exotic" && (
+                                      <span className="p-3 text-gray-600">
+                                        ({pet.exoticdescription})
+                                      </span>
+                                    )}
                                   </td>
+
                                   <td className="p-3 text-gray-600">
-                                    {pet.ageYears > 0 && `${pet.ageYears} ปี `}
-                                    {pet.ageMonths > 0 &&
-                                      `${pet.ageMonths} เดือน `}
-                                    {pet.ageDays > 0 && `${pet.ageDays} วัน`}
+                                    {pet.age} ปี
                                   </td>
                                   <td className="p-3 text-gray-600">
                                     {pet.weight} กก.
                                   </td>
                                   <td className="p-3">
-                                    <div className="flex gap-2">
+                                    <div className="flex justify-end items-end gap-2">
                                       <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
-                                        // onClick={() => editPet(owner.id, pet)}
+                                        onClick={() => editPet(owner.id, pet)}
                                         className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                                       >
                                         <span className="material-symbols-outlined text-sm">
@@ -1100,7 +1116,7 @@ export default function AnimalPage() {
                           </span>
                           <p>ยังไม่มีสัตว์ป่วย</p>
                         </div>
-                      )} */}
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

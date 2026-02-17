@@ -133,7 +133,7 @@ export const PostCreatedOwner = async (payload: PayloadCreatedOwner) => {
 export const PostCreatedPet = async (payload: FormPetProp) => {
   try {
     const encyptedDataBody = encryptDataNew(payload);
-    const resp = await apiWithAuth.post("/pet/create", {
+    const resp = await apiWithAuth.post("/owners/pet/create", {
       encodedData: encyptedDataBody,
     });
     return resp.data;
