@@ -44,3 +44,6 @@ export const encryptDataNew = (
 
   return `${iv.toString(CryptoJS.enc.Hex)}:${encrypted.toString()}`;
 };
+
+// === ToLowerCase === //
+export const toLowerStr = (val: any) => String(val ?? "").toLowerCase();

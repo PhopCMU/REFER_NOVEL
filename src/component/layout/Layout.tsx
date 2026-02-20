@@ -25,7 +25,7 @@ export default function Layout() {
       >
         <Header toggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
 
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main className="flex-1 p-2 md:p-2 overflow-auto">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

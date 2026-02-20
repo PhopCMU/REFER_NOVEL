@@ -46,6 +46,7 @@ export interface FormOwnerProp {
   address: string;
   veterinarianId?: string;
   hospitalId?: string;
+  animals?: FormPetProp[];
 }
 
 type animalSex = "M" | "F";
