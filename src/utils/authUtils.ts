@@ -1,5 +1,4 @@
 import { api } from "../api/Axios";
-import { encryptData } from "./helpers";
 
 import axios from "axios";
 
@@ -100,48 +99,6 @@ export const getAdminFromToken = (): {
   } catch (e) {
     console.error("Failed to parse token payload:", e);
     removeToken();
-    return null;
-  }
-};
-
-export const fetchUserProfile = async (): Promise<{
-  cecode: string;
-  codeId: string;
-  email: string;
-  fnameEn: string;
-  lnameEn: string;
-  foodtype: string;
-  points: number;
-  role: string;
-  [key: string]: any;
-} | null> => {
-  try {
-    const user = getUserFromToken();
-    if (!user) {
-      removeToken();
-      return null;
-    }
-
-    if (!getToken()) return null;
-
-    const encryptedData = encryptData("");
-
-    const response = await api.get(
-      `/api/pgt/user/profile?data=${encodeURIComponent(encryptedData)}`,
-      {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      },
-    );
-
-    if (response.data && response.data.success) {
-      console.log("Fetched user profile:", response.data.point);
-      return response.data.point;
-    }
-
-    console.warn("Unexpected profile response:", response.data);
-    return null;
-  } catch (error) {
-    console.error("Failed to fetch user profile:", error);
     return null;
   }
 };

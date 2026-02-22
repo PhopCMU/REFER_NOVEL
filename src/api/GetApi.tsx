@@ -13,9 +13,9 @@ export const GetHospitalsWorkplace = async () => {
   }
 };
 
-export const GetOwners = async (paylaod: PayloadFetchOwner) => {
+export const GetOwners = async (payload: PayloadFetchOwner) => {
   try {
-    const encyptedDataQuery = encryptDataNew(paylaod);
+    const encyptedDataQuery = encryptDataNew(payload);
     const encodedURL = encodeURIComponent(encyptedDataQuery);
     const resp = await apiWithAuth.get(`/owners?data=${encodedURL}`);
     return resp.data;

@@ -23,7 +23,10 @@ export default function Layout() {
           isSidebarOpen ? "md:ml-64" : "md:ml-18"
         }`}
       >
-        <Header toggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
+        <Header
+          user={userLogin}
+          toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        />
 
         <main className="flex-1 p-2 md:p-2 overflow-auto">
           <motion.div

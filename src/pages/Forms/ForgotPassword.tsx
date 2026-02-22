@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // เพิ่ม useEffect
 import Input from "../../component/Inputs/Input";
 import { showToast } from "../../utils/showToast";
 import { ToastContainer } from "react-toastify";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { LoadingForm } from "../../component/LoadingForm";
+import type { PayloadSendLinkResetPassword } from "../../types/type";
+import { PostLinkResetPassword } from "../../api/PostApi";
 
 interface FormErrors {
   email?: string;
@@ -19,23 +22,45 @@ export default function ForgotPasswordForm({
   const [email, setEmail] = useState<string>("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<string>("");
+
+  // --- ระบบนับเวลาถอยหลัง ---
+  const [canResend, setCanResend] = useState(true);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (!canResend && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      setCanResend(true);
+    }
+    return () => clearInterval(timer);
+  }, [canResend, countdown]);
+
+  const startCountdown = () => {
+    setCanResend(false);
+    setCountdown(30); // ตั้งค่า 30 วินาที
+  };
+  // -----------------------
 
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleSubmit = async () => {
-    // 1. รีเซ็ต error
-    setErrors({});
+    if (!canResend) return; // ป้องกันการกดผ่าน function ถ้ายังไม่ครบเวลา
 
+    setErrors({});
     const newErrors: FormErrors = {};
 
-    // 2. ตรวจสอบข้อมูลแบบฟอร์ม
     if (!email) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Email is invalid";
     }
 
-    // 3. ถ้ามี error แสดง toast และไม่ดำเนินการต่อ
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       Object.values(newErrors).forEach((err) => showToast.error(err));
@@ -43,51 +68,57 @@ export default function ForgotPasswordForm({
     }
 
     try {
-      // 4. ตรวจสอบ reCAPTCHA
+      setIsLoading(true);
+      setMessages("กำลังส่งลิงค์รีเซ็ตรหัสผ่าน...");
       if (!executeRecaptcha) {
         showToast.error("ไม่สามารถโหลด reCAPTCHA ได้ ลองใหม่อีกครั้ง");
+        setIsLoading(false);
         return;
       }
 
-      const token = await executeRecaptcha("forgot_password"); // action ควรตรงกับ backend
-
+      const token = await executeRecaptcha("forgot_password");
       if (!token) {
         showToast.error("ยืนยัน reCAPTCHA ไม่สำเร็จ");
+        setIsLoading(false);
         return;
       }
 
-      // 5. ส่งข้อมูลไปยัง API จริง
-      const res = await fetch("/api/forgot-password", {
-        // ✅ แก้จาก /api/signup เป็น /api/forgot-password
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, recaptchaToken: token }),
-      });
+      const payload: PayloadSendLinkResetPassword = {
+        email: email,
+        recaptchaToken: token,
+      };
 
-      // 6. ตรวจสอบสถานะการตอบกลับ
-      if (!res.ok) {
-        const errorData = await res
-          .json()
-          .catch(() => ({ message: "รีเซ็ตไม่สำเร็จ" }));
-        const errorMsg =
-          errorData.message || "เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน";
-        showToast.error(errorMsg);
+      const resp = await PostLinkResetPassword(payload);
+
+      if (!resp.success) {
+        setIsLoading(false);
+        setTimeout(() => {
+          showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการลงทะเบียน");
+        }, 1000);
+
         return;
       }
 
-      // 7. ถ้าสำเร็จ
-      setIsSubmitted(true);
-      showToast.success("ลิงก์รีเซ็ตรหัสผ่านถูกส่งไปยังอีเมลของคุณแล้ว");
+      setTimeout(() => {
+        setIsSubmitted(true);
+        setIsLoading(false);
+        setMessages("");
+        startCountdown();
+      }, 1500);
     } catch (error) {
       console.error("Error during forgot password submission:", error);
       showToast.error("เกิดข้อผิดพลาดในการส่งคำขอ กรุณาลองใหม่อีกครั้ง");
     }
   };
 
+  if (isLoading) {
+    return <LoadingForm text={messages} />;
+  }
+
   return (
     <div className="space-y-6">
+      <ToastContainer position="top-right" autoClose={3000} />
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -100,43 +131,40 @@ export default function ForgotPasswordForm({
         </p>
       </motion.div>
 
-      {/* Toast Notification */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        closeOnClick
-        pauseOnHover
-        draggable
-        theme="light"
-      />
-
       {isSubmitted ? (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
           className="text-center p-6 bg-green-50 rounded-lg border border-green-200 text-green-800"
         >
           <span className="material-symbols-outlined text-4xl mb-2 text-green-500">
             check_circle
           </span>
-          <h3 className="font-medium mb-1">ส่งคำขอรีเซ็ตรหัสผ่านสำเร็จ!</h3>
-          <p className="text-sm mb-4">
-            เราได้ส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปยังอีเมลของคุณแล้ว
-            กรุณาตรวจสอบกล่องจดหมาย
+          <h3 className="font-medium mb-1">ส่งคำขอสำเร็จ!</h3>
+          <p className="text-sm mb-4 text-gray-600">
+            เราส่งลิงก์ไปที่ <span className="font-bold">{email}</span> แล้ว{" "}
+            <br />
+            หากไม่ได้รับ กรุณารอเวลาเพื่อส่งใหม่อีกครั้ง
           </p>
+
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setIsSubmitted(false)}
-            className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-sm"
+            whileHover={canResend ? { scale: 1.02 } : {}}
+            whileTap={canResend ? { scale: 0.98 } : {}}
+            onClick={() => {
+              if (canResend) setIsSubmitted(false);
+            }}
+            disabled={!canResend}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+              canResend
+                ? "bg-green-600 text-white shadow-md hover:bg-green-700"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            }`}
           >
-            ตกลง
+            {canResend ? "ลองส่งใหม่อีกครั้ง" : `ส่งใหม่ได้ใน (${countdown}s)`}
           </motion.button>
         </motion.div>
       ) : (
         <div className="space-y-4">
-          {/* Email Input */}
           <Input
             label="Email"
             type="email"
@@ -150,30 +178,43 @@ export default function ForgotPasswordForm({
             error={errors.email}
           />
 
-          {/* Submit Button */}
           <motion.button
-            type="button" // ✅ แนะนำให้ใช้ type="button" เพื่อป้องกันการ submit แบบ default
-            whileHover={{
-              scale: 1.02,
-              boxShadow: "0 6px 16px rgba(37, 99, 235, 0.3)",
-              background: "linear-gradient(to right, #2563eb, #0284c7)",
-            }}
-            whileTap={{ scale: 0.98 }}
+            type="button"
+            whileHover={
+              canResend
+                ? {
+                    scale: 1.02,
+                    boxShadow: "0 6px 16px rgba(37, 99, 235, 0.3)",
+                    background: "linear-gradient(to right, #2563eb, #0284c7)",
+                  }
+                : {}
+            }
+            whileTap={canResend ? { scale: 0.98 } : {}}
             onClick={handleSubmit}
-            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"
+            disabled={!canResend}
+            className={`w-full py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 font-semibold transition-all ${
+              canResend
+                ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
+            }`}
           >
-            <span className="material-symbols-outlined">send</span>
-            ส่งลิงก์รีเซ็ตรหัสผ่าน
+            <span className="material-symbols-outlined">
+              {canResend ? "send" : "schedule"}
+            </span>
+            {canResend
+              ? "ส่งลิงก์รีเซ็ตรหัสผ่าน"
+              : `กรุณารอ ${countdown} วินาที`}
           </motion.button>
 
-          {/* Back to Sign In */}
           <div className="flex justify-center pt-2">
             <motion.button
               onClick={onBackToSignIn}
-              whileHover={{ x: 2 }}
-              className="text-sm font-medium bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent flex items-center gap-1"
+              whileHover={{ x: -2 }}
+              className="text-sm font-medium text-blue-600 flex items-center gap-1 hover:underline"
             >
-              <span className="material-symbols-outlined">arrow_back</span>
+              <span className="material-symbols-outlined text-sm">
+                arrow_back
+              </span>
               กลับไปหน้าเข้าสู่ระบบ
             </motion.button>
           </div>

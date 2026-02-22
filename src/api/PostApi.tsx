@@ -5,18 +5,60 @@ import type {
   FeedbackProps,
   FormPetProp,
   PayloadCreatedOwner,
+  PayloadResetPassword,
+  PayloadSendLinkResetPassword,
   WorkplacePayload,
 } from "../types/type";
 import { encryptDataNew } from "../utils/helpers";
 import { api, apiWithAuth } from "./Axios";
 
-// export const PostResetPassword = async (
-//     email: string,
-//     recaptchaToken: string,
-//     vis
-// ): Promise<> => {
+export const PostLinkResetPassword = async (
+  payload: PayloadSendLinkResetPassword,
+) => {
+  try {
+    const encyptedDataBody = encryptDataNew(payload);
+    const resp = await api.post("/auth/reset-password", {
+      encodedData: encyptedDataBody,
+    });
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in PostAddWorksplace: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in PostAddWorksplace: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
 
-// }
+export const PostNewPassword = async (payload: PayloadResetPassword) => {
+  try {
+    const encyptedDataBody = encryptDataNew(payload);
+    const resp = await api.post("/auth/new-password", {
+      encodedData: encyptedDataBody,
+    });
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in PostAddWorksplace: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in PostAddWorksplace: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
 
 export const PostAddWorksplace = async (payload: WorkplacePayload) => {
   try {

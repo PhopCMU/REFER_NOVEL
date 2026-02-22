@@ -90,3 +90,23 @@ export interface PayloadFetchOwner {
   hospitalId: string;
   veterinarianId: string;
 }
+
+export interface PayloadSendLinkResetPassword {
+  email: string;
+  recaptchaToken: string;
+}
+
+export interface PayloadCheckOtpProps {
+  id: string;
+  otp: string;
+  exp: string;
+  recaptchaToken: string;
+}
+
+export interface PayloadResetPassword {
+  id: string;
+  password: string;
+  email: string;
+  vet_codeId: string;
+  recaptchaToken: string;
+}

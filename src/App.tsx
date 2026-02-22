@@ -11,6 +11,7 @@ import PrivateRoute from "./component/PrivateRoute";
 import Dashboard from "./pages/Dashboard/page";
 import VetsPage from "./pages/Dashboard/vets/page";
 import ReferralsPage from "./pages/Dashboard/vets/referrals";
+import FormRepassword from "./pages/Forms/FormRepassword";
 
 export default function App() {
   return (
@@ -19,8 +20,9 @@ export default function App() {
         <Route path="/" element={<Navigate to="/novel/dashboard" replace />} />
 
         {/* public */}
-
         <Route path="/sign-in" element={<SignIn />} />
+
+        <Route path="/forgot-password" element={<FormRepassword />} />
 
         {/* protected */}
         <Route element={<PrivateRoute children={<Outlet />} />}>

@@ -29,6 +29,7 @@ export default function SignUpForm() {
   const [suggestions, setSuggestions] = useState<typeof data_hospital>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<string>("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -90,6 +91,7 @@ export default function SignUpForm() {
 
   const fetchDataHospitalWorkplace = async () => {
     setIsLoading(true);
+    setMessages("กำลังโหลดข้อมูล...");
     try {
       const resp = await GetHospitalsWorkplace();
       if (!resp.success) {
@@ -99,6 +101,7 @@ export default function SignUpForm() {
       }
 
       setData_hospital(resp.data);
+      setMessages("");
       setIsLoading(false);
     } catch (error) {
       console.log("Error in fetchDataHospitalWorkplace:", error);
@@ -348,8 +351,9 @@ export default function SignUpForm() {
       return;
     }
 
-    setIsLoading(true);
     try {
+      setIsLoading(true);
+      setMessages("กำลังเพิ่มข้อมูล...");
       const token = await executeRecaptcha("hospital_workplace");
       if (!token) {
         showToast.error("ยืนยัน reCAPTCHA ไม่สำเร็จ");
@@ -379,8 +383,6 @@ export default function SignUpForm() {
       await fetchDataHospitalWorkplace();
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการเพิ่มสถานที่");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -396,6 +398,8 @@ export default function SignUpForm() {
       return;
     }
 
+    setIsLoading(true);
+    setMessages("กำลังเพิ่มข้อมูล...");
     try {
       const token = await executeRecaptcha("signup");
       if (!token) {
@@ -418,24 +422,22 @@ export default function SignUpForm() {
       const resp = await PostRegister(payload);
 
       if (!resp.success) {
-        showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการลงทะเบียน");
+        setIsLoading(false);
+        setTimeout(() => {
+          showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการลงทะเบียน");
+        }, 1000);
         return;
       }
 
-      setFormData({
-        ceLicense: "",
-        email: "",
-        firstName: "",
-        lastName: "",
-        lineID: "",
-        password: "",
-        confirmPassword: "",
-        workplaces: [],
-        phone: "",
-      });
-
-      showToast.success("ลงทะเบียนสำเร็จ! ยินดีต้อนรับ");
+      setMessages("ลงทะเบียนสำเร็จ! ยินดีต้อนรับ");
+      setTimeout(async () => {
+        setIsLoading(false);
+        setMessages("");
+        window.location.reload();
+      }, 2000);
     } catch (err: any) {
+      setIsLoading(false);
+
       showToast.error("เกิดข้อผิดพลาด: " + err.message);
     }
   };
@@ -497,7 +499,7 @@ export default function SignUpForm() {
   }));
 
   if (isLoading) {
-    return <LoadingForm text="กําลังโหลดข้อมูล..." />;
+    return <LoadingForm text={messages} />;
   }
 
   return (

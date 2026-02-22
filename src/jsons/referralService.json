@@ -1,0 +1,17 @@
+[
+  { "code": "DERM", "description": "คลินิกโรคผิวหนัง" },
+  { "code": "OPH", "description": "คลินิกโรคตา" },
+  { "code": "DENT", "description": "คลินิกช่องปากและทันตกรรม" },
+  { "code": "ORTH", "description": "คลินิกกระดูกและข้อต่อ" },
+  { "code": "CARD", "description": "คลินิกหัวใจและหลอดเลือด" },
+  { "code": "NEURO", "description": "คลินิกระบบประสาทและสมอง" },
+  { "code": "FEL", "description": "คลินิกโรคแมว" },
+  { "code": "ONC", "description": "คลินิกโรคเนื้องอก" },
+  { "code": "PT", "description": "คลินิกกายภาพบำบัด" },
+  { "code": "ENDO", "description": "คลินิกฮอร์โมนและต่อมไร้ท่อ" },
+  { "code": "GI", "description": "คลินิกระบบทางเดินอาหาร" },
+  { "code": "NEPH", "description": "คลินิกโรคไต" },
+  { "code": "ACU", "description": "คลินิกฝังเข็ม" },
+  { "code": "EXOT", "description": "คลินิกสัตว์ชนิดพิเศษ" },
+  { "code": "AQUA", "description": "คลินิกสัตว์น้ำ" }
+]

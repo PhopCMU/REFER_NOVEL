@@ -4,19 +4,14 @@ import type {
   DataFormSubmitProps,
   FeedbackProps,
   FormPetProp,
+  PayloadCheckOtpProps,
   PayloadCreatedOwner,
   PayloadFetchOwner,
+  PayloadResetPassword,
+  PayloadSendLinkResetPassword,
   PayloadUpdateOwner,
   WorkplacePayload,
 } from "../types/type";
-
-export const encryptData = (data: FeedbackProps | string) => {
-  const dataToEncrypt = JSON.stringify(data);
-  const secretKey =
-    import.meta.env.VITE_CRYPTO_KEY || "default_secret_key_1234";
-  const encrypted = CryptoJS.AES.encrypt(dataToEncrypt, secretKey).toString();
-  return encrypted;
-};
 
 export const encryptDataNew = (
   data:
@@ -28,6 +23,9 @@ export const encryptDataNew = (
     | PayloadFetchOwner
     | PayloadUpdateOwner
     | FormPetProp
+    | PayloadSendLinkResetPassword
+    | PayloadCheckOtpProps
+    | PayloadResetPassword
     | string,
 ) => {
   const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";
@@ -43,6 +41,51 @@ export const encryptDataNew = (
   });
 
   return `${iv.toString(CryptoJS.enc.Hex)}:${encrypted.toString()}`;
+};
+
+export const useDecodecryptQuery = (data: string) => {
+  const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";
+  try {
+    const decodedData = decodeURIComponent(data);
+    const parts = decodedData.split(":");
+    if (parts.length !== 2) {
+      throw new Error("Format error: Missing IV or Ciphertext");
+    }
+
+    const iv = CryptoJS.enc.Hex.parse(parts[0]);
+    const ciphertext = parts[1];
+
+    const decrypt = (keyStr: string) => {
+      const key = CryptoJS.SHA256(keyStr);
+      const bytes = CryptoJS.AES.decrypt(ciphertext, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7,
+      });
+      return bytes.toString(CryptoJS.enc.Utf8);
+    };
+
+    let decryptedString = decrypt(secretKey);
+
+    if (!decryptedString) {
+      decryptedString = decrypt(secretKey);
+    }
+
+    if (!decryptedString) {
+      throw new Error(
+        "Malformed UTF-8 data - Key mismatch between Client and Server",
+      );
+    }
+
+    try {
+      return JSON.parse(decryptedString);
+    } catch {
+      return decryptedString;
+    }
+  } catch (error: any) {
+    console.error("Error in useDecodecryptQueryNew:", error);
+    throw error;
+  }
 };
 
 // === ToLowerCase === //

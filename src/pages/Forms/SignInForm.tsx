@@ -10,7 +10,7 @@ import { GetHospitalsWorkplace } from "../../api/GetApi";
 import type { DataFormLoginProps, DataHospitalProps } from "../../types/type";
 import { LoadingForm } from "../../component/LoadingForm";
 import { PostLogin } from "../../api/PostApi";
-import { getUserFromToken, saveToken } from "../../utils/authUtils";
+import { saveToken } from "../../utils/authUtils";
 
 interface FormErrors {
   email?: string;
@@ -49,6 +49,7 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
     setIsLoading(true);
     try {
       const resp = await GetHospitalsWorkplace();
+
       if (!resp.success) {
         showToast.error("เกิดข้อผิดพลาดในการดึงข้อมูลสถานที่");
         setIsLoading(false);
