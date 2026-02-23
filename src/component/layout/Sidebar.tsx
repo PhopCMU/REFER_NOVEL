@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
       showIf: (user: any) => user.aud === "vet",
     },
     {
-      name: "ข้อมูลสัตว์ป่วย",
+      name: "เพิ่มข้อมูลสัตว์ป่วย",
       icon: Dog,
       path: "/novel/animals",
       showIf: (user: any) => user.aud === "vet",

@@ -39,6 +39,7 @@ export interface DataFormLoginProps {
 
 export interface FormOwnerProp {
   id?: string;
+  owner_codeId?: string;
   firstName: string;
   lastName: string;
   phone: string;
@@ -56,6 +57,7 @@ type PetType = "Dog" | "Cat" | "Exotic";
 export interface FormPetProp {
   id?: string;
   ownerId: string;
+  animal_codeId?: string;
   name: string; // ชื่อสัตว์
   color: string; // สี
   sex: animalSex; // เพศ
@@ -65,6 +67,21 @@ export interface FormPetProp {
   species: PetType; // ชนิด
   exoticdescription?: string; // เพิ่มฟิลด์ exoticdescription ถ้า PetType เป็น Exotic เช่น เต๋า, สัตว์ป่า, กวาง
   breed?: string; // สายพันธุ์
+}
+
+export interface FormVetProp {
+  id: string;
+  vet_codeId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  ceLicense: string;
+  hospitalId: string;
+  hospitalName: string;
+  aud: string;
+  exp: number;
+  iat: number;
+  iss: string;
 }
 
 export interface PayloadCreatedOwner {

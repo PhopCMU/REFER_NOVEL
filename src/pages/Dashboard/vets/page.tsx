@@ -198,21 +198,25 @@ export default function VetsPage() {
           phone: ownerForm.phone,
         };
 
+        setLoading(true);
+        setMessage("กําลังแก้ไขข้อมูลเจ้าของ...");
         const resp = await PutUpdateOwner(payload);
 
         if (!resp.success) {
-          showToast.error(resp);
+          setLoading(false);
+          setMessage("");
+          setTimeout(() => {
+            showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการแก้ไขเจ้าของ");
+          }, 1000);
+
           return;
         }
-
-        setLoading(true);
-        setMessage("กําลังแก้ไขข้อมูลเจ้าของ...");
 
         setTimeout(async () => {
           resetOwnerForm();
           setShowCreateOwnerForm(false);
           await fetchDataOwners();
-        }, 2000);
+        }, 1500);
       } else {
         const payload: PayloadCreatedOwner = {
           ...ownerForm,
@@ -220,24 +224,31 @@ export default function VetsPage() {
           hospitalId: userLogin?.hospitalId,
         };
 
+        setLoading(true);
+        setMessage("กําลังเพิ่มข้อมูลเจ้าของ...");
+
         const resp = await PostCreatedOwner(payload);
 
         if (!resp.success) {
-          showToast.error(resp);
+          setLoading(false);
+          setMessage("");
+          setTimeout(() => {
+            showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการแก้ไขเจ้าของ");
+          }, 1000);
+
           return;
         }
-
-        setLoading(true);
-        setMessage("กําลังเพิ่มข้อมูลเจ้าของ...");
 
         setTimeout(async () => {
           resetOwnerForm();
           setShowCreateOwnerForm(false);
           await fetchDataOwners();
-        }, 2000);
+        }, 1500);
       }
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการเพิ่มเจ้าของ");
+      setLoading(false);
+      setMessage("");
     }
   };
 
@@ -374,20 +385,24 @@ export default function VetsPage() {
   const addPet = async (ownerId: string) => {
     if (!ownerId) return showToast.error("กรุณาเลือกเจ้าของ");
     if (validatePetForm(petForm)) return;
-    setLoading(true);
+
     try {
       if (editingPetId) {
-        setMessage("กําลังแก้ไขข้อมูลสัตว์...");
         const payload: FormPetProp = {
           ...petForm,
           ownerId: ownerId,
         };
 
+        setLoading(true);
+        setMessage("กําลังแก้ไขข้อมูลสัตว์...");
         const resp = await PutUpdatePet(payload);
 
         if (!resp.success) {
-          showToast.error(resp);
           setLoading(false);
+          setMessage("");
+          setTimeout(() => {
+            showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการแก้ไขสัตว์");
+          }, 1500);
           return;
         }
 
@@ -395,21 +410,27 @@ export default function VetsPage() {
           await fetchDataOwners();
           resetPetForm();
           setLoading(false);
+          setMessage("");
           setShowCreatePetForm(false);
           setEditingPetId("");
         }, 1000);
       } else {
-        setMessage("กําลังเพิ่มข้อมูลสัตว์...");
         const payload: FormPetProp = {
           ...petForm,
           ownerId: ownerId,
         };
 
+        setLoading(true);
+        setMessage("กําลังเพิ่มข้อมูลสัตว์...");
+
         const resp = await PostCreatedPet(payload);
 
         if (!resp.success) {
-          showToast.error(resp);
           setLoading(false);
+          setMessage("");
+          setTimeout(() => {
+            showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการแก้ไขสัตว์");
+          }, 1500);
           return;
         }
 
@@ -417,11 +438,14 @@ export default function VetsPage() {
           await fetchDataOwners();
           resetPetForm();
           setLoading(false);
+          setMessage("");
           setShowCreatePetForm(false);
         }, 1000);
       }
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการเพิ่มสัตว์");
+      setLoading(false);
+      setMessage("");
     }
   };
   // แก้ไขสัตว์
@@ -1210,7 +1234,7 @@ export default function VetsPage() {
                               <thead className="bg-gray-50">
                                 {/* Header with Owner Name and Search */}
                                 <tr>
-                                  <th colSpan={8} className="p-4">
+                                  <th colSpan={11} className="p-4">
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                       <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-blue-600 text-base">
@@ -1258,6 +1282,15 @@ export default function VetsPage() {
                                   </th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                                     อายุ
+                                  </th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                    สายพันธ์
+                                  </th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                    เพศ
+                                  </th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                    การทำหมัน
                                   </th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                                     น้ำหนัก
@@ -1344,6 +1377,50 @@ export default function VetsPage() {
                                           "-"
                                         )}
                                       </td>
+
+                                      <td className="px-4 py-3 text-gray-600">
+                                        {pet.breed ? (
+                                          <span className="flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm text-gray-400">
+                                              emoji_nature
+                                            </span>
+                                            {pet.breed}
+                                          </span>
+                                        ) : (
+                                          "-"
+                                        )}
+                                      </td>
+
+                                      <td className="px-4 py-3 text-gray-600">
+                                        {pet.sex ? (
+                                          <span className="flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm text-gray-400">
+                                              transgender
+                                            </span>
+                                            {pet.sex === "M" ? "ผู้" : "เมีย"}
+                                          </span>
+                                        ) : (
+                                          "-"
+                                        )}
+                                      </td>
+
+                                      <td className="px-4 py-3 text-gray-600">
+                                        {pet.sterilization ? (
+                                          <span className="flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm text-gray-400">
+                                              sound_detection_dog_barking
+                                            </span>
+                                            {pet.sterilization === "YES"
+                                              ? "ทำหมัน"
+                                              : pet.sterilization === "NO"
+                                                ? "ไม่ทำหมัน"
+                                                : "ไม่ทราบ"}
+                                          </span>
+                                        ) : (
+                                          "-"
+                                        )}
+                                      </td>
+
                                       <td className="px-4 py-3 text-gray-600">
                                         {pet.weight ? (
                                           <span className="flex items-center gap-1">
@@ -1482,7 +1559,7 @@ export default function VetsPage() {
                               {/* Table Footer */}
                               <tfoot className="bg-gray-50/80">
                                 <tr className="border-t border-gray-200">
-                                  <td colSpan={8} className="px-4 py-3">
+                                  <td colSpan={11} className="px-4 py-3">
                                     <div className="flex justify-end items-center gap-2 text-sm">
                                       <span className="text-gray-500">
                                         จำนวนสัตว์ป่วยทั้งหมด
