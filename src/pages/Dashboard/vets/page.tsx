@@ -274,7 +274,7 @@ export default function VetsPage() {
 
   // ===== Pagination Owner =====
   const [currentOwnerPage, setCurrentOwnerPage] = useState(1);
-  const ownerPerPage = 2;
+  const ownerPerPage = 5;
   const totalOwnerPage = Math.ceil(filteredOwners.length / ownerPerPage);
   const startIndexOwner = (currentOwnerPage - 1) * ownerPerPage;
   const currentOwners = filteredOwners.slice(

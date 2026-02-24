@@ -40,8 +40,6 @@ export default function ReferralsPage() {
     fetchDataOwners();
   }, []);
 
-  console.log(userLogin);
-
   const fetchDataOwners = async () => {
     const veterinarianId = userLogin?.id;
     const hospitalId = userLogin?.hospitalId;
