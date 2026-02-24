@@ -127,3 +127,130 @@ export interface PayloadResetPassword {
   vet_codeId: string;
   recaptchaToken: string;
 }
+
+// ─── Medical File Category ───────────────────────────────────────────────────
+export type MedicalFileCategory =
+  | "HISTORY"
+  | "LAB"
+  | "XRAY"
+  | "PHOTO"
+  | "BIOPSY";
+
+export interface MedicalFileCategoryConfig {
+  key: MedicalFileCategory;
+  label: string;
+  labelTH: string;
+  icon: React.ElementType;
+  required: boolean;
+  accept: string;
+  description: string;
+  onlyFor?: string;
+  maxFiles?: number;
+  maxSizeMB?: number;
+}
+
+// ─── Allowed File Types ──────────────────────────────────────────────────────
+export type AllowedMimeType =
+  | "application/pdf"
+  | "application/msword"
+  | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  | "application/vnd.ms-excel"
+  | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  | "image/jpeg"
+  | "image/jpg"
+  | "image/png"
+  | "image/gif"
+  | "image/webp"
+  | "image/bmp"
+  | "image/svg+xml"
+  | "image/tiff"
+  | "image/heic"
+  | "image/heif";
+
+export type AllowedFileType =
+  | "PDF"
+  | "DOC"
+  | "DOCX"
+  | "XLS"
+  | "XLSX"
+  | "IMAGE_JPG"
+  | "IMAGE_PNG"
+  | "IMAGE_GIF"
+  | "IMAGE_WEBP"
+  | "IMAGE_BMP"
+  | "IMAGE_SVG";
+
+// ─── Medical File ────────────────────────────────────────────────────────────
+export interface MedicalFile {
+  id: string;
+  caseId: string;
+  category: MedicalFileCategory;
+  name: string;
+  originalName: string;
+  mimeType: string;
+  fileExtension: string;
+  sizeBytes: number;
+  fileUrl: string;
+  fileKey?: string;
+  fileType: AllowedFileType;
+  isAllowed: boolean;
+  fileHash?: string;
+  uploadedBy: string;
+  createdAt: Date;
+  labResults?: LabResult[];
+}
+
+export interface LabResult {
+  id: string;
+  medicalFileId: string;
+  title: string;
+  description?: string;
+  resultData?: string;
+  createdAt: Date;
+}
+
+// ─── Service Referral (คลินิก) ───────────────────────────────────────────────
+export interface ServiceReferral {
+  id: string;
+  code: string;
+  nameTH: string;
+  nameEN: string;
+  description?: string;
+  isActive: boolean;
+  specialty?: string;
+}
+
+// ─── Uploaded File (Frontend State) ──────────────────────────────────────────
+export interface UploadedFile {
+  id: string;
+  category: MedicalFileCategory;
+  file: File;
+  name: string;
+  mimeType: string;
+  fileExtension: string;
+  sizeBytes: number;
+  preview?: string;
+  status: "pending" | "uploading" | "done" | "error";
+  progress: number;
+  error?: string;
+}
+
+// ─── Case Referral Payload ───────────────────────────────────────────────────
+export interface CaseReferralPayload {
+  animal_codeId: string;
+  owner_codeId: string;
+  veterinarianId: string;
+  hospitalId: string;
+  serviceId: string;
+  serviceCode: string;
+  title: string;
+  description?: string;
+  files: Array<{
+    category: MedicalFileCategory;
+    name: string;
+    mimeType: string;
+    sizeBytes: number;
+    fileExtension: string;
+  }>;
+  labResults: Record<string, LabResult[]>;
+}

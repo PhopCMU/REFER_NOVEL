@@ -9,16 +9,12 @@ import type {
 import { showToast } from "../../../utils/showToast";
 import { GetOwners } from "../../../api/GetApi";
 import { LoadingForm } from "../../../component/LoadingForm";
-import { useConfirmTailwind } from "../../../hook/useConfirmTailwind";
+
 import { ToastContainer } from "react-toastify";
 import { toLowerStr } from "../../../utils/helpers";
 import { ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import UploadFilePetModal from "../../../component/Modal";
-
-interface ServiceRequest {
-  [key: string]: any;
-}
+import CaseReferralModal from "../../../component/CaseReferralModal";
 
 export default function ReferralsPage() {
   // === Get user login === //
@@ -27,9 +23,7 @@ export default function ReferralsPage() {
   const [owners, setOwners] = useState<FormOwnerProp[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [expandedOwner, setExpandedOwner] = useState<string>("");
-  const [sendDataPet, setSendDataPet] = useState<FormPetProp>();
-  const [sendDataOwner, setSendDataOwner] = useState<FormOwnerProp>();
-  const [showUploadFilePetForm, setShowUploadFilePetForm] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
   const [modalData, setModalData] = useState<{
     pet: FormPetProp | null;
     owner: FormOwnerProp | null;
@@ -126,17 +120,21 @@ export default function ReferralsPage() {
   }, [searchTerm]);
 
   // === Functions === //
-  const addData = (owner: FormOwnerProp, pet: FormPetProp) => {
-    console.log("owner", owner);
-    console.log("pet", pet);
-    console.log("userLogin id", userLogin.id);
-    console.log("userLogin hospitalId", userLogin.hospitalId);
 
-    // ✅ เซ็ตข้อมูลทั้งหมดใน state เดียวกัน
+  const handleOpenReferral = (owner: FormOwnerProp, pet: FormPetProp) => {
+    // ✅ เซ็ตข้อมูลก่อนเปิด Modal (ป้องกัน race condition)
     setModalData({ pet, owner });
+    setShowReferralModal(true);
+  };
 
-    // ✅ เปิด Modal หลังจากเซ็ตข้อมูลแล้ว (ใน Event Handler เดียวกัน React จะ batch update ให้)
-    setShowUploadFilePetForm(true);
+  const handleSubmitReferral = async (payload: any) => {
+    console.log("Submitting referral:", payload);
+
+    // ✅ เรียก API จริง
+    // await api.post("/case-referrals", payload);
+
+    // ✅ แสดง success toast
+    // toast.success("ส่งเคสสำเร็จ");
   };
 
   if (loading) {
@@ -530,7 +528,7 @@ export default function ReferralsPage() {
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => {
-                                              addData(owner, pet);
+                                              handleOpenReferral(owner, pet);
                                             }}
                                             className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                                             title="เพิ่มข้อมูลการส่งตัวสัตว์ป่วย"
@@ -666,41 +664,18 @@ export default function ReferralsPage() {
           </div>
         )}
       </motion.div>
-      {showUploadFilePetForm && modalData.pet && modalData.owner && (
-        <UploadFilePetModal
-          pet={modalData.pet} // ✅ ใช้ค่าจาก modalData โดยตรง
+
+      {showReferralModal && modalData.pet && modalData.owner && (
+        <CaseReferralModal
+          pet={modalData.pet}
           owner={modalData.owner}
           vet={userLogin as FormVetProp}
+          isOpen={showReferralModal}
           onClose={() => {
-            setShowUploadFilePetForm(false);
-            setModalData({ pet: null, owner: null }); // ✅ ล้างค่าเมื่อปิด
-          }}
-          onSubmit={(files, labs) => {
-            console.log("Submitted", files, labs);
-
-            // ✅ ตัวอย่าง: เตรียม payload ส่ง API
-            const payload = {
-              animal_codeId: modalData.pet!.animal_codeId,
-              owner_codeId: modalData.owner!.owner_codeId,
-              veterinarianId: userLogin.id,
-              hospitalId: userLogin.hospitalId,
-              files: files.map((f) => ({
-                fileName: f.name,
-                category: f.category,
-                sizeBytes: f.sizeBytes,
-                mimeType: f.mimeType,
-              })),
-              labResults: labs,
-            };
-
-            console.log("Payload to API:", payload);
-
-            // ✅ เรียก API จริงที่นี่
-            // await api.post("/referrals", payload);
-
-            setShowUploadFilePetForm(false);
+            setShowReferralModal(false);
             setModalData({ pet: null, owner: null });
           }}
+          onSubmit={handleSubmitReferral}
         />
       )}
     </div>

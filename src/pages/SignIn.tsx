@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import { image } from "../constant";
+import images from "../constants/image";
 import SignInForm from "./Forms/SignInForm";
 import SignUpForm from "./Forms/SignUpForm";
 import ForgotPassword from "./Forms/ForgotPassword";
@@ -181,7 +181,7 @@ export default function AuthPage() {
       <div className="hidden md:flex md:w-1/2 bg-gray-100 relative">
         <div className="absolute inset-0 overflow-hidden">
           <img
-            src={image.bg_novel}
+            src={images.bg_novel}
             alt="Background"
             className="w-full h-full object-cover object-center"
           />
