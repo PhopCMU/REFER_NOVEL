@@ -254,3 +254,46 @@ export interface CaseReferralPayload {
   }>;
   labResults: Record<string, LabResult[]>;
 }
+
+// ─── Case Referral Payload Ecrypted ───────────────────────────────────────────────────
+export interface ReferralDataPayload {
+  animal_codeId: string;
+  owner_codeId: string;
+  veterinarianId: string;
+  hospitalId: string;
+  serviceId: string;
+  serviceCode: string;
+  title: string;
+  description: string;
+  files: any[];
+  labResults: Record<string, LabResult[]>; // หรือกำหนด Type ให้ชัดเจน
+  // ไม่ต้องใส่ files ในส่วนนี้ เพราะเราจะแยกส่ง
+}
+
+// ─── Case Referral Payload Request ───────────────────────────────────────────────────
+export interface PostReferralPayload {
+  metadata: {
+    animal_codeId: string;
+    owner_codeId: string;
+    veterinarianId: string;
+    hospitalId: string;
+    serviceId: string;
+    serviceCode: string;
+    title: string;
+    description?: string;
+    files: Array<{
+      clientIndex: number; // 🔑 ลำดับสำหรับจับคู่
+      category: string; // 🔑 MedicalFileCategory
+      name: string; // 🔑 originalName
+      mimeType: string;
+      sizeBytes: number;
+      fileExtension: string;
+      labResults?: Array<{
+        title: string;
+        description?: string;
+        resultData?: string;
+      }>;
+    }>;
+  };
+  files: File[]; // File Objects จริงๆ
+}

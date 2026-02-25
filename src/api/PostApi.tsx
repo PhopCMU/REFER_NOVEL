@@ -7,9 +7,10 @@ import type {
   PayloadCreatedOwner,
   PayloadResetPassword,
   PayloadSendLinkResetPassword,
+  PostReferralPayload,
   WorkplacePayload,
 } from "../types/type";
-import { encryptDataNew } from "../utils/helpers";
+import { encryptDataNew, encryptReferralMetadata } from "../utils/helpers";
 import { api, apiWithAuth } from "./Axios";
 
 export const PostLinkResetPassword = async (
@@ -189,5 +190,68 @@ export const PostCreatedPet = async (payload: FormPetProp) => {
         return error.message;
       }
     }
+  }
+};
+
+export const PostReferralCases = async (payload: PostReferralPayload) => {
+  try {
+    // ✅ 1. เข้ารหัสเฉพาะ Metadata (Text/JSON) ด้วย function เดิม
+    const encryptedMetadata = encryptDataNew(payload.metadata);
+
+    // ✅ 2. สร้าง FormData สำหรับ multipart/form-data
+    const formData = new FormData();
+
+    // ใส่ Metadata ที่เข้ารหัสแล้ว
+    formData.append("encodedData", encryptedMetadata);
+
+    // ✅ 3. ใส่ไฟล์ Binary พร้อมข้อมูลจับคู่ (ใช้ clientIndex + category)
+    payload.files.forEach((file, index) => {
+      // ส่งไฟล์ Binary (ชื่อไฟล์เดิมเพื่อให้ง่ายต่อการ debug)
+      formData.append("files", file, file.name);
+
+      // ✅ ส่ง metadata ของไฟล์นี้แยกเป็น field สำหรับจับคู่
+      formData.append(`files[${index}][clientIndex]`, index.toString());
+      formData.append(
+        `files[${index}][category]`,
+        payload.metadata.files[index]?.category || "",
+      );
+      formData.append(
+        `files[${index}][originalName]`,
+        payload.metadata.files[index]?.name || "",
+      );
+      formData.append(
+        `files[${index}][mimeType]`,
+        payload.metadata.files[index]?.mimeType || "",
+      );
+      formData.append(
+        `files[${index}][sizeBytes]`,
+        payload.metadata.files[index]?.sizeBytes.toString() || "0",
+      );
+      formData.append(
+        `files[${index}][fileExtension]`,
+        payload.metadata.files[index]?.fileExtension || "",
+      );
+    });
+
+    // ✅ 4. ส่ง Request (เพิ่ม timeout สำหรับไฟล์ใหญ่)
+    const resp = await apiWithAuth.post("/case/referral-cases", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      timeout: 120000, // 2 นาที
+    });
+
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in PostReferralCases: ", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Error in PostReferralCases: ", error.message);
+        return error.message;
+      }
+    }
+    throw error;
   }
 };

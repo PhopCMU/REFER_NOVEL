@@ -6,19 +6,12 @@ import {
   X,
   Upload,
   FileText,
-  FlaskConical,
-  Scan,
-  Camera,
-  Microscope,
   CheckCircle2,
   AlertCircle,
   ChevronRight,
   Trash2,
   Plus,
   Stethoscope,
-  Calendar,
-  Scale,
-  Droplets,
   PawPrint,
   Search,
 } from "lucide-react";
@@ -379,7 +372,7 @@ export default function CaseReferralModal({
   }, [selectedService]);
 
   const handleFiles = (files: File[], category: MedicalFileCategory) => {
-    const config = getCategoryConfig(category);
+    // const config = getCategoryConfig(category);
     const newEntries: UploadedFile[] = files.map((file) => {
       const entry: UploadedFile = {
         id: crypto.randomUUID(),
@@ -430,9 +423,9 @@ export default function CaseReferralModal({
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
-    setSubmitting(true);
+    // setSubmitting(true);
 
-    // Simulate upload
+    // ✅ 1. จำลองการอัพโหลด (UI Feedback)
     for (const f of uploadedFiles) {
       setUploadedFiles((prev) =>
         prev.map((p) =>
@@ -447,7 +440,8 @@ export default function CaseReferralModal({
       );
     }
 
-    const payload = {
+    // ✅ 2. เตรียม Metadata สำหรับเข้ารหัส (รวม category + name สำหรับจับคู่)
+    const metadataPayload = {
       animal_codeId: pet.animal_codeId,
       owner_codeId: owner.owner_codeId,
       veterinarianId: vet.id,
@@ -456,20 +450,57 @@ export default function CaseReferralModal({
       serviceCode: selectedService!.code,
       title: referralTitle,
       description: referralDescription,
-      files: uploadedFiles.map((f) => ({
-        category: f.category,
-        name: f.name,
+
+      // ✅ ส่ง metadata ของไฟล์พร้อมข้อมูลสำหรับจับคู่กับ Database
+      files: uploadedFiles.map((f, index) => ({
+        clientIndex: index, // 🔑 ลำดับสำหรับจับคู่กับไฟล์ Binary
+        category: f.category, // 🔑 MedicalFileCategory (HISTORY, LAB, etc.)
+        name: f.name, // 🔑 originalName ใน Database
         mimeType: f.mimeType,
         sizeBytes: f.sizeBytes,
         fileExtension: f.fileExtension,
+        // Lab Results (ถ้ามี)
+        labResults: labResults[f.id] ?? [],
       })),
-      labResults,
+      // Lab Results ที่ไม่เกี่ยวกับไฟล์ (ถ้ามี)
+      globalLabResults: Object.entries(labResults)
+        .filter(([fileId]) => !uploadedFiles.some((f) => f.id === fileId))
+        .reduce(
+          (acc, [fileId, results]) => ({ ...acc, [fileId]: results }),
+          {},
+        ),
     };
 
-    await onSubmit(payload);
+    console.log(
+      "🔍 Debug uploadedFiles:",
+      uploadedFiles.map((f) => ({
+        id: f.id,
+        name: f.name,
+        category: f.category,
+        hasFile: f.file instanceof File,
+        fileSize: f.file?.size,
+      })),
+    );
 
-    setSubmitting(false);
-    onClose();
+    // ✅ 3. ดึง File Objects จริงๆ (แก้เป็น f.file ตามที่เก็บไว้ตอน handleFiles)
+    const binaryFiles = uploadedFiles
+      .map((f) => f.file) // ✅ ใช้ property "file" ที่เก็บไว้ตอน handleFiles
+      .filter((f): f is File => f instanceof File);
+
+    console.log("📦 Encrypted Metadata:", {
+      fileCount: metadataPayload.files.length,
+      files: metadataPayload.files.map((f) => ({
+        clientIndex: f.clientIndex,
+        category: f.category,
+        name: f.name,
+      })),
+    });
+    console.log("📁 Binary Files count:", binaryFiles.length);
+    // ส่ง payload ไปยัง API ในหน้า referral.tsx
+    await onSubmit({ metadata: metadataPayload, files: binaryFiles });
+
+    // setSubmitting(false);
+    // onClose();
   };
 
   const activeCatFiles = uploadedFiles.filter(

@@ -15,6 +15,7 @@ import { toLowerStr } from "../../../utils/helpers";
 import { ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import CaseReferralModal from "../../../component/CaseReferralModal";
+import { PostReferralCases } from "../../../api/PostApi";
 
 export default function ReferralsPage() {
   // === Get user login === //
@@ -105,7 +106,7 @@ export default function ReferralsPage() {
 
   // ===== Pagination Owner =====
   const [currentOwnerPage, setCurrentOwnerPage] = useState(1);
-  const ownerPerPage = 2;
+  const ownerPerPage = 5;
   const totalOwnerPage = Math.ceil(filteredOwners.length / ownerPerPage);
   const startIndexOwner = (currentOwnerPage - 1) * ownerPerPage;
   const currentOwners = filteredOwners.slice(
@@ -130,6 +131,10 @@ export default function ReferralsPage() {
 
     // ✅ เรียก API จริง
     // await api.post("/case-referrals", payload);
+    await PostReferralCases({
+      metadata: payload.metadata,
+      files: payload.files,
+    });
 
     // ✅ แสดง success toast
     // toast.success("ส่งเคสสำเร็จ");

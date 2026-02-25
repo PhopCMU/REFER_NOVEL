@@ -10,6 +10,7 @@ import type {
   PayloadResetPassword,
   PayloadSendLinkResetPassword,
   PayloadUpdateOwner,
+  ReferralDataPayload,
   WorkplacePayload,
 } from "../types/type";
 
@@ -43,6 +44,7 @@ export const encryptDataNew = (
   return `${iv.toString(CryptoJS.enc.Hex)}:${encrypted.toString()}`;
 };
 
+// ─── useDecodecryptQuery  ───────────────────────────────────────────────────
 export const useDecodecryptQuery = (data: string) => {
   const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";
   try {
@@ -88,5 +90,10 @@ export const useDecodecryptQuery = (data: string) => {
   }
 };
 
-// === ToLowerCase === //
+// ─── toLowerStr  ───────────────────────────────────────────────────
 export const toLowerStr = (val: any) => String(val ?? "").toLowerCase();
+
+// ─── Case Referral  ───────────────────────────────────────────────────
+export const encryptReferralMetadata = (data: ReferralDataPayload) => {
+  return encryptDataNew(data);
+};
