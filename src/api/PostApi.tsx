@@ -10,7 +10,7 @@ import type {
   PostReferralPayload,
   WorkplacePayload,
 } from "../types/type";
-import { encryptDataNew, encryptReferralMetadata } from "../utils/helpers";
+import { encryptDataNew } from "../utils/helpers";
 import { api, apiWithAuth } from "./Axios";
 
 export const PostLinkResetPassword = async (
