@@ -31,6 +31,7 @@ import type {
   FormOwnerProp,
   FormVetProp,
 } from "../types/type";
+import { LoadingForm } from "./LoadingForm";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -365,6 +366,8 @@ export default function CaseReferralModal({
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const [referralTitle, setReferralTitle] = useState("");
   const [referralDescription, setReferralDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<string>("");
 
   // ✅ กรอง category ตาม service ที่เลือก (เช่น ONC จะเห็น BIOPSY)
   const visibleCategories = useMemo(() => {
@@ -423,7 +426,9 @@ export default function CaseReferralModal({
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
-    // setSubmitting(true);
+    setSubmitting(true);
+    setIsLoading(true);
+    setMessages("กำลังส่งข้อมูล...");
 
     // ✅ 1. จำลองการอัพโหลด (UI Feedback)
     for (const f of uploadedFiles) {
@@ -471,36 +476,41 @@ export default function CaseReferralModal({
         ),
     };
 
-    console.log(
-      "🔍 Debug uploadedFiles:",
-      uploadedFiles.map((f) => ({
-        id: f.id,
-        name: f.name,
-        category: f.category,
-        hasFile: f.file instanceof File,
-        fileSize: f.file?.size,
-      })),
-    );
+    // console.log(
+    //   "🔍 Debug uploadedFiles:",
+    //   uploadedFiles.map((f) => ({
+    //     id: f.id,
+    //     name: f.name,
+    //     category: f.category,
+    //     hasFile: f.file instanceof File,
+    //     fileSize: f.file?.size,
+    //   })),
+    // );
 
     // ✅ 3. ดึง File Objects จริงๆ (แก้เป็น f.file ตามที่เก็บไว้ตอน handleFiles)
     const binaryFiles = uploadedFiles
       .map((f) => f.file) // ✅ ใช้ property "file" ที่เก็บไว้ตอน handleFiles
       .filter((f): f is File => f instanceof File);
 
-    console.log("📦 Encrypted Metadata:", {
-      fileCount: metadataPayload.files.length,
-      files: metadataPayload.files.map((f) => ({
-        clientIndex: f.clientIndex,
-        category: f.category,
-        name: f.name,
-      })),
-    });
-    console.log("📁 Binary Files count:", binaryFiles.length);
+    // console.log("📦 Encrypted Metadata:", {
+    //   fileCount: metadataPayload.files.length,
+    //   files: metadataPayload.files.map((f) => ({
+    //     clientIndex: f.clientIndex,
+    //     category: f.category,
+    //     name: f.name,
+    //   })),
+    // });
+    // console.log("📁 Binary Files count:", binaryFiles.length);
     // ส่ง payload ไปยัง API ในหน้า referral.tsx
     await onSubmit({ metadata: metadataPayload, files: binaryFiles });
 
-    // setSubmitting(false);
-    // onClose();
+    setMessages("ส่งข้อมูลเรียบร้อยแล้ว");
+    setTimeout(() => {
+      setIsLoading(false);
+      setMessages("");
+      setSubmitting(false);
+      onClose();
+    }, 1500);
   };
 
   const activeCatFiles = uploadedFiles.filter(
@@ -524,6 +534,10 @@ export default function CaseReferralModal({
   };
 
   if (!isOpen) return null;
+
+  if (isLoading) {
+    return <LoadingForm text={messages} />;
+  }
 
   return (
     <AnimatePresence>

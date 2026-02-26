@@ -127,7 +127,7 @@ export default function ReferralsPage() {
   };
 
   const handleSubmitReferral = async (payload: any) => {
-    console.log("Submitting referral:", payload);
+    // console.log("Submitting referral:", payload);
 
     // ✅ เรียก API จริง
     // await api.post("/case-referrals", payload);
@@ -137,7 +137,7 @@ export default function ReferralsPage() {
     });
 
     // ✅ แสดง success toast
-    // toast.success("ส่งเคสสำเร็จ");
+    showToast.success("ส่งเคสสำเร็จ");
   };
 
   if (loading) {

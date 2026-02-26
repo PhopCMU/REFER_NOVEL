@@ -4,6 +4,7 @@ import type {
   DataFormSubmitProps,
   FeedbackProps,
   FormPetProp,
+  GetReferralCasesProps,
   PayloadCheckOtpProps,
   PayloadCreatedOwner,
   PayloadFetchOwner,
@@ -27,6 +28,7 @@ export const encryptDataNew = (
     | PayloadSendLinkResetPassword
     | PayloadCheckOtpProps
     | PayloadResetPassword
+    | GetReferralCasesProps
     | string,
 ) => {
   const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";
@@ -96,4 +98,18 @@ export const toLowerStr = (val: any) => String(val ?? "").toLowerCase();
 // ─── Case Referral  ───────────────────────────────────────────────────
 export const encryptReferralMetadata = (data: ReferralDataPayload) => {
   return encryptDataNew(data);
+};
+
+// ─── getStartOfDay  ───────────────────────────────────────────────────
+export const getStartOfDay = (date: Date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+};
+
+// ─── getEndOfDay  ───────────────────────────────────────────────────
+export const getEndOfDay = (date: Date) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d.toISOString();
 };

@@ -1,6 +1,6 @@
 import { AxiosError } from "axios";
 import { api, apiWithAuth } from "./Axios";
-import type { PayloadFetchOwner } from "../types/type";
+import type { GetReferralCasesProps, PayloadFetchOwner } from "../types/type";
 import { encryptDataNew } from "../utils/helpers";
 
 export const GetHospitalsWorkplace = async () => {
@@ -29,6 +29,30 @@ export const GetOwners = async (payload: PayloadFetchOwner) => {
         return error.response.data.message;
       } else {
         console.error("Error in PostAddWorksplace: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
+
+export const GetCaseReferral = async (payload: GetReferralCasesProps) => {
+  try {
+    const encyptedDataQuery = encryptDataNew(payload);
+    const encodedURL = encodeURIComponent(encyptedDataQuery);
+    const resp = await apiWithAuth.get(
+      `/case/cases-referrals?data=${encodedURL}`,
+    );
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in GetCaseReferral: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetCaseReferral: ", error.message);
         return error.message;
       }
     }

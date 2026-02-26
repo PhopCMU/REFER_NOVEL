@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard/page";
 import VetsPage from "./pages/Dashboard/vets/page";
 import ReferralsPage from "./pages/Dashboard/vets/referrals";
 import FormRepassword from "./pages/Forms/FormRepassword";
+import AnimalReferralMonitor from "./pages/Dashboard/vets/animalreferralmonitor";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="animals" element={<VetsPage />} />
             <Route path="referral" element={<ReferralsPage />} />
+            <Route path="status" element={<AnimalReferralMonitor />} />
           </Route>
         </Route>
 

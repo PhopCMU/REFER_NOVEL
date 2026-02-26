@@ -297,3 +297,9 @@ export interface PostReferralPayload {
   };
   files: File[]; // File Objects จริงๆ
 }
+
+// ─── Case Referral Payload List data ───────────────────────────────────────────────────
+export interface GetReferralCasesProps {
+  timeStart: string;
+  timeEnd: string;
+}
