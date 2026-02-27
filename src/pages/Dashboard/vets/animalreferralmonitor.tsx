@@ -3,105 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GetCaseReferral } from "../../../api/GetApi";
 
 import { getEndOfDay, getStartOfDay } from "../../../utils/helpers";
-
-// ─── Types & Interfaces ──────────────────────────────────────────────────────
-type TStatus =
-  | "PENDING"
-  | "RECEIVED"
-  | "CONFIRMED"
-  | "APPOINTED"
-  | "COMPLETED"
-  | "CANCELLED";
-type TReferralType = "CONTINUOUS" | "SPECIALIST" | "ONE_TIME";
-
-// ─── Interfaces for Real DB ─────────────────────────────────────────────
-export interface GetReferralCasesProps {
-  timeStart: string;
-  timeEnd: string;
-}
-
-interface Hospital {
-  id: string;
-  name: string;
-  type: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Veterinarian {
-  id: string;
-  vet_codeId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  // ...
-}
-
-interface Pet {
-  id: string;
-  animal_codeId: string;
-  name: string;
-  color: string;
-  sex: "M" | "F" | "UNKNOWN";
-  weight: string;
-  age: string;
-  sterilization: string;
-  species: "Dog" | "Cat" | "Exotic";
-  breed: string;
-  exoticdescription?: string | null; // มีในข้อมูลจริง
-  ownerId: string;
-}
-
-interface ServiceReferral {
-  id: string;
-  code: string;
-  name: string;
-}
-
-interface MedicalFile {
-  id: string;
-  caseId: string;
-  category: string;
-  name: string;
-  originalName: string;
-  sizeBytes: number;
-  fileUrl: string;
-  fileType: string;
-  createdAt: string;
-}
-
-interface StatusLog {
-  id: string;
-  caseId: string;
-  oldStatus: TStatus;
-  newStatus: TStatus;
-  changedBy: string | null;
-  note: string;
-  createdAt: string;
-}
-
-export interface CaseItem {
-  id: string;
-  referenceNo: string;
-  title: string;
-  description: string;
-  serviceCode: string;
-  status: TStatus;
-  referralType: TReferralType;
-  hospital: Hospital;
-  veterinarian: Veterinarian;
-  pet: Pet;
-  serviceReferral: ServiceReferral;
-  medicalFiles: MedicalFile[]; // มีในข้อมูลจริง
-  caseStatusLogs: StatusLog[]; // มีในข้อมูลจริง
-  appointments: any[]; // มีในข้อมูลจริง (เป็น array ว่าง)
-  resultSummary: string | null;
-  createdAt: string;
-  updatedAt: string;
-  closedAt: string | null;
-  // NOTE: ไม่มี field owner ใน root object จาก DB จริง
-}
+import CoverPDF from "../../../component/CoverPDF";
+import type {
+  CaseItem,
+  GetReferralCasesProps,
+  TReferralType,
+  TStatus,
+} from "../../../types/type";
 
 // ─── Config Maps ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
@@ -627,16 +535,99 @@ const DetailPanel = ({
             >
               {data.appointments && data.appointments.length > 0 ? (
                 data.appointments.map((apt: any, i: number) => (
-                  // ... render appointment items
-                  <div
+                  <motion.div
                     key={i}
-                    className="p-4 bg-white rounded-lg border text-sm"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="group relative"
                   >
-                    Appointment {i + 1}
-                  </div>
+                    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-10 bg-gradient-to-b from-teal-400 to-teal-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-teal-200 hover:shadow-md transition-all">
+                      {/* Appointment Icon & Number */}
+                      <div className="flex items-center gap-3 sm:w-48">
+                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
+                          <span className="material-symbols-outlined text-white text-lg">
+                            event
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">ใบนัดหมาย</p>
+                          <p className="font-medium text-gray-800">
+                            #{String(i + 1).padStart(2, "0")}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Date & Time */}
+                      <div className="flex-1 flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2 bg-teal-50 px-3 py-1.5 rounded-lg">
+                          <span className="material-symbols-outlined text-teal-600 text-base">
+                            calendar_month
+                          </span>
+                          <span className="text-sm font-medium text-teal-700">
+                            {apt.date ? fmtDate(apt.date) : ""}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg">
+                          <span className="material-symbols-outlined text-amber-600 text-base">
+                            schedule
+                          </span>
+                          <span className="text-sm font-medium text-amber-700">
+                            {apt.date ? fmtTime(apt.date) : ""} - 15:00 น.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Download Button */}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white rounded-lg shadow-sm hover:shadow transition-all ml-auto"
+                      >
+                        <span className="material-symbols-outlined text-sm">
+                          download
+                        </span>
+                        <span className="text-sm font-medium">ดาวน์โหลด</span>
+                      </motion.button>
+                    </div>
+
+                    {/* Note Section (if exists) */}
+                    {apt.note && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="mt-2 ml-14 sm:ml-52"
+                      >
+                        <div className="p-3 bg-amber-50/50 rounded-lg border border-amber-100 flex items-start gap-2">
+                          <span className="material-symbols-outlined text-amber-600 text-base">
+                            note
+                          </span>
+                          <p className="text-sm text-gray-600 flex-1">
+                            {apt.note}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </motion.div>
                 ))
               ) : (
-                <EmptyState icon="📅" text="ไม่มีนัดหมาย" />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200"
+                >
+                  <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mb-4">
+                    <span className="text-3xl filter drop-shadow-sm">📅</span>
+                  </div>
+                  <p className="text-gray-700 font-medium mb-1">ไม่มีนัดหมาย</p>
+                  <p className="text-sm text-gray-400 text-center max-w-xs">
+                    ยังไม่มีใบนัดหมายในขณะนี้ สามารถสร้างนัดหมายใหม่ได้ที่เมนู
+                    "จองคิว"
+                  </p>
+                </motion.div>
               )}
             </motion.div>
           )}
@@ -649,6 +640,17 @@ const DetailPanel = ({
               exit={{ opacity: 0 }}
               className="space-y-2"
             >
+              {/* 🔥 ปุ่มรวมไฟล์ */}
+              {data.medicalFiles?.length > 0 && (
+                <div className="flex justify-end mb-2">
+                  <CoverPDF
+                    medicalFiles={data.medicalFiles}
+                    baseUrl={import.meta.env.VITE_API_BASE_URL_FILE}
+                    outputFileName="medical-record.pdf"
+                  />
+                </div>
+              )}
+
               {data.medicalFiles && data.medicalFiles.length > 0 ? (
                 data.medicalFiles.map((f: any) => (
                   <div
@@ -658,6 +660,7 @@ const DetailPanel = ({
                     <span className="text-2xl">
                       <FileIcon category={f.category} />
                     </span>
+
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-slate-700 truncate">
                         {f.originalName || f.name}
@@ -666,6 +669,7 @@ const DetailPanel = ({
                         {fmtBytes(f.sizeBytes)}
                       </p>
                     </div>
+
                     <button
                       onClick={() => {
                         window.open(

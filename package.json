@@ -17,6 +17,7 @@
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.563.0",
     "material-symbols": "^0.34.1",
+    "pdf-lib": "^1.17.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-google-recaptcha-v3": "^1.11.0",

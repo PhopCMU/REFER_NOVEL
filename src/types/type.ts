@@ -299,7 +299,88 @@ export interface PostReferralPayload {
 }
 
 // ─── Case Referral Payload List data ───────────────────────────────────────────────────
+
+// ─── Types & Interfaces ──────────────────────────────────────────────────────
+export type TStatus =
+  | "PENDING"
+  | "RECEIVED"
+  | "CONFIRMED"
+  | "APPOINTED"
+  | "COMPLETED"
+  | "CANCELLED";
+export type TReferralType = "CONTINUOUS" | "SPECIALIST" | "ONE_TIME";
+
 export interface GetReferralCasesProps {
   timeStart: string;
   timeEnd: string;
+}
+
+export interface Hospital {
+  id: string;
+  name: string;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Veterinarian {
+  id: string;
+  vet_codeId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
+export interface Pet {
+  id: string;
+  animal_codeId: string;
+  name: string;
+  color: string;
+  sex: "M" | "F" | "UNKNOWN";
+  weight: string;
+  age: string;
+  sterilization: string;
+  species: "Dog" | "Cat" | "Exotic";
+  breed: string;
+  exoticdescription?: string | null; // มีในข้อมูลจริง
+  ownerId: string;
+}
+
+export interface ServiceReferral {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface StatusLog {
+  id: string;
+  caseId: string;
+  oldStatus: TStatus;
+  newStatus: TStatus;
+  changedBy: string | null;
+  note: string;
+  createdAt: string;
+}
+
+export interface CaseItem {
+  id: string;
+  referenceNo: string;
+  title: string;
+  description: string;
+  serviceCode: string;
+  status: TStatus;
+  referralType: TReferralType;
+  hospital: Hospital;
+  veterinarian: Veterinarian;
+  pet: Pet;
+  serviceReferral: ServiceReferral;
+  medicalFiles: MedicalFile[]; // มีในข้อมูลจริง
+  caseStatusLogs: StatusLog[]; // มีในข้อมูลจริง
+  appointments: any[]; // มีในข้อมูลจริง (เป็น array ว่าง)
+  resultSummary: string | null;
+  createdAt: string;
+  updatedAt: string;
+  closedAt: string | null;
+  // NOTE: ไม่มี field owner ใน root object จาก DB จริง
 }

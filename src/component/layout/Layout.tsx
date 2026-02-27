@@ -20,7 +20,7 @@ export default function Layout() {
 
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ${
-          isSidebarOpen ? "md:ml-64" : "md:ml-18"
+          isSidebarOpen ? "md:ml-64" : "md:ml-20"
         }`}
       >
         <Header
@@ -28,7 +28,7 @@ export default function Layout() {
           toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         />
 
-        <main className="flex-1 p-2 md:p-2 overflow-auto">
+        <main className="flex-1 p-2 md:p-2 overflow-auto rounded-4xl">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

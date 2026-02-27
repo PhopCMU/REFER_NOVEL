@@ -318,7 +318,7 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
               </span>
             </div>
             <span className="font-medium">
-              สำหรับสัตวแพทย์ คณะสัตวแพทยศาสตร์ มหาวิทยาลัยเชียงใหม่
+              สำหรับเจ้าหน้าที่ คณะสัตวแพทยศาสตร์ มหาวิทยาลัยเชียงใหม่
             </span>
           </motion.div>
 

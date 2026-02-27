@@ -1,5 +1,6 @@
 import { useState } from "react";
 import InfoModal from "./InfoModal";
+import { motion } from "framer-motion";
 
 const Footer = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -7,71 +8,87 @@ const Footer = () => {
   const closeModal = () => setActiveModal(null);
 
   return (
-    <footer className="bg-white border-t border-gray-100 px-6 py-5 mt-auto">
+    <footer className="bg-slate-900 border-t border-slate-800/50 px-6 py-5 mt-auto">
       {/* Main Footer Content */}
-      <div className="flex flex-col md:flex-row items-center justify-between">
-        <div className="flex items-center space-x-2 mb-3 md:mb-0">
-          <span className="material-symbols-outlined text-blue-600 text-lg">
-            local_hospital
-          </span>
-          <p className="text-sm font-medium text-gray-700">
-            &copy; {new Date().getFullYear()} NOVEL & VET CMU Referral System
-            LLC. All rights reserved.
-          </p>
-          <a
-            href="#"
-            className="text-gray-400 hover:text-blue-600 transition-colors duration-200"
-            aria-label="Facebook"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </a>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Copyright Section */}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <span className="material-symbols-outlined text-white text-sm">
+              local_hospital
+            </span>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-400">
+              &copy; {new Date().getFullYear()} NOVEL & VET CMU Referral System
+            </p>
+            <p className="text-[10px] text-slate-600">
+              All rights reserved. Version {import.meta.env.VITE_VERSION_APP}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-5">
+        {/* Navigation Links */}
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveModal("privacy")}
-            className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm font-medium"
+            className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
           >
-            นโยบายความเป็นส่วนตัว
+            <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
+              นโยบายความเป็นส่วนตัว
+            </span>
+            <motion.div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+              layoutId="footerUnderline"
+            />
           </button>
+
+          <span className="text-slate-700 text-xs">•</span>
+
           <button
             type="button"
             onClick={() => setActiveModal("terms")}
-            className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm font-medium"
+            className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
           >
-            เงื่อนไขการใช้งาน
+            <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
+              เงื่อนไขการใช้งาน
+            </span>
+            <motion.div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+              layoutId="footerUnderline"
+            />
           </button>
+
+          <span className="text-slate-700 text-xs">•</span>
+
           <button
             type="button"
             onClick={() => setActiveModal("help")}
-            className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm font-medium"
+            className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
           >
-            การช่วยเหลือ
+            <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
+              การช่วยเหลือ
+            </span>
+            <motion.div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+              layoutId="footerUnderline"
+            />
           </button>
+        </div>
+
+        {/* Status Indicator */}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
+          </div>
+          <span className="text-xs text-slate-500">ระบบทำงานปกติ</span>
         </div>
       </div>
 
-      {/* Version */}
-      <div className="mt-4 pt-4 border-t border-gray-100 text-center">
-        <p className="text-xs text-gray-400">
-          Version 2.1.0 • Last updated: {new Date().toLocaleDateString("th-TH")}
-        </p>
-      </div>
-
       {/* Modals */}
-      {/* Privacy Policy */}
+      {/* Privacy Policy Modal */}
       <InfoModal
         isOpen={activeModal === "privacy"}
         onClose={closeModal}
@@ -79,59 +96,99 @@ const Footer = () => {
         icon="privacy_tip"
       >
         <div className="space-y-4">
-          <div className="flex items-start">
-            <span className="material-symbols-outlined text-blue-500 mr-3 mt-0.5">
-              security
-            </span>
-            <p className="text-gray-700">
-              เรารักษ์ข้อมูลส่วนบุคคลของท่านอย่างสูงสุด
-              ข้อมูลที่ท่านให้กับระบบจะถูกใช้เฉพาะเพื่อการส่งตัวสัตว์ป่วย
-              และการติดต่อระหว่างโรงพยาบาลเท่านั้น
-            </p>
-          </div>
-
-          <div className="flex items-start">
-            <span className="material-symbols-outlined text-blue-500 mr-3 mt-0.5">
-              visibility_off
-            </span>
-            <p className="text-gray-700">
-              เราไม่เปิดเผยข้อมูลให้กับบุคคลที่สามโดยไม่ได้รับความยินยอม
-              เว้นแต่ตามกฎหมายหรือหน่วยงานราชการร้องขอ
-            </p>
-          </div>
-
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-4">
-            <h4 className="font-semibold text-blue-800 flex items-center">
-              <span className="material-symbols-outlined text-blue-600 mr-2">
-                database
+          {/* Header Icon */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-white text-2xl">
+                privacy_tip
               </span>
-              ข้อมูลที่เราเก็บรวบรวม
-            </h4>
-            <ul className="list-none space-y-2 mt-3">
-              <li className="flex items-center">
-                <span className="material-symbols-outlined text-blue-500 text-sm mr-2">
-                  check_circle
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">
+                นโยบายความเป็นส่วนตัว
+              </h3>
+              <p className="text-xs text-slate-400">
+                อัปเดตล่าสุด: 1 มกราคม 2024
+              </p>
+            </div>
+          </div>
+
+          {/* Content Cards */}
+          <div className="space-y-3">
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/30 transition-colors group"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                  <span className="material-symbols-outlined text-blue-400 text-sm">
+                    security
+                  </span>
+                </div>
+                <p className="text-sm text-slate-300 flex-1">
+                  เรารักษ์ข้อมูลส่วนบุคคลของท่านอย่างสูงสุด
+                  ข้อมูลที่ท่านให้กับระบบจะถูกใช้เฉพาะเพื่อการส่งตัวสัตว์ป่วย
+                  และการติดต่อระหว่างโรงพยาบาลเท่านั้น
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/30 transition-colors group"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                  <span className="material-symbols-outlined text-blue-400 text-sm">
+                    visibility_off
+                  </span>
+                </div>
+                <p className="text-sm text-slate-300 flex-1">
+                  เราไม่เปิดเผยข้อมูลให้กับบุคคลที่สามโดยไม่ได้รับความยินยอม
+                  เว้นแต่ตามกฎหมายหรือหน่วยงานราชการร้องขอ
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="p-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl border border-blue-500/20"
+            >
+              <h4 className="font-semibold text-white flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-blue-400">
+                  database
                 </span>
-                <span>ชื่อ นามสกุล สังกัดหน่วยงาน</span>
-              </li>
-              <li className="flex items-center">
-                <span className="material-symbols-outlined text-blue-500 text-sm mr-2">
-                  check_circle
-                </span>
-                <span>อีเมลและเบอร์ติดต่อ</span>
-              </li>
-              <li className="flex items-center">
-                <span className="material-symbols-outlined text-blue-500 text-sm mr-2">
-                  check_circle
-                </span>
-                <span>ข้อมูลการใช้งานระบบ</span>
-              </li>
-            </ul>
+                ข้อมูลที่เราเก็บรวบรวม
+              </h4>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  "ชื่อ นามสกุล สังกัดหน่วยงาน",
+                  "อีเมลและเบอร์ติดต่อ",
+                  "ข้อมูลการใช้งานระบบ",
+                ].map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 text-sm text-slate-300"
+                  >
+                    <span className="material-symbols-outlined text-blue-400 text-sm">
+                      check_circle
+                    </span>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
       </InfoModal>
 
-      {/* Terms of Service */}
+      {/* Terms of Service Modal */}
       <InfoModal
         isOpen={activeModal === "terms"}
         onClose={closeModal}
@@ -139,43 +196,86 @@ const Footer = () => {
         icon="policy"
       >
         <div className="space-y-4">
-          <div className="flex items-start">
-            <span className="material-symbols-outlined text-purple-500 mr-3 mt-0.5">
-              verified_user
-            </span>
-            <p className="text-gray-700">
-              การใช้งานระบบส่งตัวสัตว์ป่วยต้องเป็นผู้ลงทะเบียนและได้รับอนุญาตจากทางคณะสัตวแพทยศาสตร์
-              มหาวิทยาลัยเชียงใหม่
-            </p>
-          </div>
-
-          <div className="flex items-start">
-            <span className="material-symbols-outlined text-purple-500 mr-3 mt-0.5">
-              block
-            </span>
-            <p className="text-gray-700">
-              ผู้ใช้ต้องไม่กระทำการใด ๆ ที่ละเมิดกฎหมาย หรือทำให้ระบบขัดข้อง
-              เช่น การแฮก การใช้สคริปต์โจมตี
-            </p>
-          </div>
-
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 mt-4">
-            <h4 className="font-semibold text-purple-800 flex items-center">
-              <span className="material-symbols-outlined text-purple-600 mr-2">
-                warning
+          {/* Header Icon */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-white text-2xl">
+                policy
               </span>
-              ข้อจำกัดความรับผิดชอบ
-            </h4>
-            <p className="text-gray-700 mt-2">
-              ทีมพัฒนาไม่รับผิดชอบต่อความเสียหายที่เกิดจากการใช้งานผิดวัตถุประสงค์
-              หรือการล่าช้าในการส่งตัว ซึ่งเกิดจากปัจจัยภายนอก เช่น
-              สัญญาณอินเทอร์เน็ต หรือการยืนยันล่าช้าจากโรงพยาบาลปลายทาง
-            </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">
+                เงื่อนไขการใช้งาน
+              </h3>
+              <p className="text-xs text-slate-400">
+                อัปเดตล่าสุด: 1 มกราคม 2024
+              </p>
+            </div>
+          </div>
+
+          {/* Content Cards */}
+          <div className="space-y-3">
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-purple-500/30 transition-colors group"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+                  <span className="material-symbols-outlined text-purple-400 text-sm">
+                    verified_user
+                  </span>
+                </div>
+                <p className="text-sm text-slate-300 flex-1">
+                  การใช้งานระบบส่งตัวสัตว์ป่วยต้องเป็นผู้ลงทะเบียนและได้รับอนุญาตจากทางคณะสัตวแพทยศาสตร์
+                  มหาวิทยาลัยเชียงใหม่
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-purple-500/30 transition-colors group"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+                  <span className="material-symbols-outlined text-purple-400 text-sm">
+                    block
+                  </span>
+                </div>
+                <p className="text-sm text-slate-300 flex-1">
+                  ผู้ใช้ต้องไม่กระทำการใด ๆ ที่ละเมิดกฎหมาย หรือทำให้ระบบขัดข้อง
+                  เช่น การแฮก การใช้สคริปต์โจมตี
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20"
+            >
+              <h4 className="font-semibold text-white flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-purple-400">
+                  warning
+                </span>
+                ข้อจำกัดความรับผิดชอบ
+              </h4>
+              <p className="text-sm text-slate-300">
+                ทีมพัฒนาไม่รับผิดชอบต่อความเสียหายที่เกิดจากการใช้งานผิดวัตถุประสงค์
+                หรือการล่าช้าในการส่งตัว ซึ่งเกิดจากปัจจัยภายนอก เช่น
+                สัญญาณอินเทอร์เน็ต หรือการยืนยันล่าช้าจากโรงพยาบาลปลายทาง
+              </p>
+            </motion.div>
           </div>
         </div>
       </InfoModal>
 
-      {/* Help & Support */}
+      {/* Help & Support Modal */}
       <InfoModal
         isOpen={activeModal === "help"}
         onClose={closeModal}
@@ -183,61 +283,105 @@ const Footer = () => {
         icon="support_agent"
       >
         <div className="space-y-4">
-          <div className="flex items-start">
-            <span className="material-symbols-outlined text-green-500 mr-3 mt-0.5">
-              help
-            </span>
-            <p className="text-gray-700">
-              หากท่านมีปัญหาในการใช้งานระบบ หรือต้องการความช่วยเหลือ
-              กรุณาติดต่อทีมสนับสนุนได้ที่:
-            </p>
+          {/* Header Icon */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-white text-2xl">
+                support_agent
+              </span>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">การช่วยเหลือ</h3>
+              <p className="text-xs text-slate-400">
+                ทีมสนับสนุนพร้อมให้บริการ
+              </p>
+            </div>
           </div>
 
-          <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-            <ul className="space-y-3">
-              <li className="flex items-center">
-                <span className="material-symbols-outlined text-green-600 mr-3">
-                  mail
-                </span>
-                <div>
-                  <strong className="text-gray-800">อีเมล:</strong>
-                  <p className="text-gray-700">support@novelvetcmu.ac.th</p>
+          {/* Content Cards */}
+          <div className="space-y-3">
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <span className="material-symbols-outlined text-green-400 text-sm">
+                    help
+                  </span>
                 </div>
-              </li>
-              <li className="flex items-center">
-                <span className="material-symbols-outlined text-green-600 mr-3">
-                  call
-                </span>
-                <div>
-                  <strong className="text-gray-800">โทร:</strong>
-                  <p className="text-gray-700">053-946-100 ต่อ 1234</p>
-                </div>
-              </li>
-              <li className="flex items-center">
-                <span className="material-symbols-outlined text-green-600 mr-3">
-                  schedule
-                </span>
-                <div>
-                  <strong className="text-gray-800">เวลางาน:</strong>
-                  <p className="text-gray-700">
-                    จันทร์ - ศุกร์ 08:30 - 16:30 น.
-                  </p>
-                </div>
-              </li>
-            </ul>
-          </div>
+                <p className="text-sm text-slate-300">
+                  หากท่านมีปัญหาในการใช้งานระบบ หรือต้องการความช่วยเหลือ
+                  กรุณาติดต่อทีมสนับสนุนได้ที่:
+                </p>
+              </div>
+            </motion.div>
 
-          <div className="flex items-start mt-4">
-            <span className="material-symbols-outlined text-green-500 mr-3 mt-0.5">
-              menu_book
-            </span>
-            <p className="text-gray-700">
-              หรือเยี่ยมชม{" "}
-              <a href="#" className="text-blue-600 hover:underline font-medium">
-                ศูนย์ช่วยเหลือออนไลน์
-              </a>{" "}
-              เพื่อดูคู่มือการใช้งานแบบละเอียด
-            </p>
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20"
+            >
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: "mail",
+                    label: "อีเมล",
+                    value: "sophon.m@cmu.ac.th",
+                  },
+                  {
+                    icon: "call",
+                    label: "โทร",
+                    value: "053-948-031, 053-948-112",
+                  },
+                  {
+                    icon: "schedule",
+                    label: "เวลางาน",
+                    value: "จันทร์ - อาทิตย์ 08:30 - 16:30 น.",
+                  },
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-green-400 text-base">
+                      {item.icon}
+                    </span>
+                    <div>
+                      <p className="text-xs text-green-400">{item.label}</p>
+                      <p className="text-sm text-white font-medium">
+                        {item.value}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-green-500/30 transition-colors group"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
+                  <span className="material-symbols-outlined text-green-400 text-sm">
+                    menu_book
+                  </span>
+                </div>
+                <p className="text-sm text-slate-300">
+                  หรือเยี่ยมชม{" "}
+                  <a
+                    href="#"
+                    className="text-green-400 hover:text-green-300 font-medium underline decoration-green-500/30"
+                  >
+                    ศูนย์ช่วยเหลือออนไลน์
+                  </a>{" "}
+                  เพื่อดูคู่มือการใช้งานแบบละเอียด
+                </p>
+              </div>
+            </motion.div>
           </div>
         </div>
       </InfoModal>
