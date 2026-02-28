@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Dog, Home, Podcast, Search, Send } from "lucide-react";
+import { ArrowUpFromLine, Dog, Home, Search, Send } from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,10 +16,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
 
   const menuItems = [
     {
-      name: "ภาพรวมระบบ",
+      name: "แดชบอร์ด",
       icon: Home,
       path: "/novel/dashboard",
-      showIf: (user: any) => user.aud === "vet",
+      showIf: (user: any) => user.aud === "vet" || user.aud === "admin",
       badge: null,
     },
     {
@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
       icon: Dog,
       path: "/novel/animals",
       showIf: (user: any) => user.aud === "vet",
-      badge: "new",
+      badge: null,
     },
     {
       name: "ส่งตัวสัตว์ป่วย",
@@ -41,13 +41,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
       icon: Search,
       path: "/novel/status",
       showIf: (user: any) => user.aud === "vet",
-      badge: "3",
+      badge: null,
     },
+
     {
-      name: "ข้อมูลสัตว์ป่วย (NOVEL)",
-      icon: Podcast,
-      path: "/novel/novel-report",
-      showIf: (user: any) => user.aud === "vet-novel",
+      name: "Case Referral",
+      icon: ArrowUpFromLine,
+      path: "/novel/case-referral",
+      showIf: (user: any) => user.aud === "admin",
       badge: null,
     },
   ];
@@ -107,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
         </div>
 
         {/* User Info - แสดงเมื่อ Sidebar เปิด */}
-        <AnimatePresence>
+        {/* <AnimatePresence>
           {isOpen && user && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -132,7 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
+        </AnimatePresence> */}
       </div>
 
       {/* Navigation */}
@@ -203,6 +204,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
                 >
                   {item.name}
                 </motion.span>
+
+                {/* Badge */}
+                {item.badge && (
+                  <motion.span
+                    className="ml-3 text-xs font-semibold whitespace-nowrap flex-1 text-right"
+                    initial={{ opacity: 1 }}
+                    animate={{
+                      opacity: isOpen ? 1 : 0,
+                      display: isOpen ? "block" : "none",
+                    }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {item.badge}
+                  </motion.span>
+                )}
               </button>
 
               {/* Tooltip */}

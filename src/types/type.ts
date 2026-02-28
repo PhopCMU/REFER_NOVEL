@@ -382,5 +382,28 @@ export interface CaseItem {
   createdAt: string;
   updatedAt: string;
   closedAt: string | null;
+  firstName?: string;
+  lastName?: string;
   // NOTE: ไม่มี field owner ใน root object จาก DB จริง
+}
+
+// --- CmuItAccount ---
+export interface CmuItAccount {
+  id?: string;
+  cmuitaccount: string;
+  cmuitaccount_name: string;
+  firstname_EN: string;
+  firstname_TH: string;
+  itaccounttype_EN: string;
+  itaccounttype_TH: string;
+  itaccounttype_id?: string;
+  lastname_EN: string;
+  lastname_TH: string;
+  organization_code: string;
+  organization_name_EN: string;
+  organization_name_TH: string;
+  prename_EN: string;
+  prename_TH: string;
+  prename_id?: string;
+  student_id?: string;
 }

@@ -11,6 +11,7 @@ import type { DataFormLoginProps, DataHospitalProps } from "../../types/type";
 import { LoadingForm } from "../../component/LoadingForm";
 import { PostLogin } from "../../api/PostApi";
 import { saveToken } from "../../utils/authUtils";
+import { SignInCMUItAccount } from "./SignInCMU";
 
 interface FormErrors {
   email?: string;
@@ -125,10 +126,6 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
       navigate("/dashboard");
       setIsSubmitting(false);
     }, 2000);
-  };
-
-  const handleSubmitVetCmu = () => {
-    showToast.info("กำลังเชื่อมต่อกับระบบ CMU Account...");
   };
 
   // แปลงให้เข้ากับ Select component
@@ -321,40 +318,9 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
               สำหรับเจ้าหน้าที่ คณะสัตวแพทยศาสตร์ มหาวิทยาลัยเชียงใหม่
             </span>
           </motion.div>
-
-          <motion.button
-            whileHover={{
-              scale: 1.02,
-              boxShadow: "0 10px 25px rgba(139, 92, 246, 0.3)",
-            }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleSubmitVetCmu}
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-base font-medium transition-all duration-200"
-          >
-            <span className="material-symbols-outlined">badge</span>
-            เข้าสู่ระบบด้วย CMU Account
-            <span className="material-symbols-outlined text-sm">
-              arrow_forward
-            </span>
-          </motion.button>
         </motion.div>
 
-        {/* External Vet Section */}
-        {/* <motion.div className="space-y-3 mt-4">
-          <motion.div
-            whileHover={{ scale: 1.005 }}
-            className="flex items-center p-4 rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 text-blue-800 gap-3 text-sm shadow-sm"
-          >
-            <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg">
-              <span className="material-symbols-outlined text-blue-600">
-                business
-              </span>
-            </div>
-            <span className="font-medium">
-              สำหรับสัตวแพทย์ โรงพยาบาลสัตว์หรือคลินิกภายนอก
-            </span>
-          </motion.div>
-        </motion.div> */}
+        <SignInCMUItAccount />
       </div>
     </div>
   );

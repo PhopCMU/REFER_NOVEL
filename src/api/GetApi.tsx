@@ -58,3 +58,27 @@ export const GetCaseReferral = async (payload: GetReferralCasesProps) => {
     }
   }
 };
+
+export const GetCaseReferralAdmin = async (payload: GetReferralCasesProps) => {
+  try {
+    const encyptedDataQuery = encryptDataNew(payload);
+    const encodedURL = encodeURIComponent(encyptedDataQuery);
+    const resp = await apiWithAuth.get(
+      `/case/counter/cases-referrals?data=${encodedURL}`,
+    );
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in GetCaseReferral: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetCaseReferral: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};

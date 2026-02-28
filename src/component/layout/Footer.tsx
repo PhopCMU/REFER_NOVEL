@@ -2,10 +2,12 @@ import { useState } from "react";
 import InfoModal from "./InfoModal";
 import { motion } from "framer-motion";
 
-const Footer = () => {
+const Footer = ({ user }: { user: any }) => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   const closeModal = () => setActiveModal(null);
+
+  console.log(user.aud);
 
   return (
     <footer className="bg-slate-900 border-t border-slate-800/50 px-6 py-5 mt-auto">
@@ -18,63 +20,78 @@ const Footer = () => {
               local_hospital
             </span>
           </div>
-          <div>
-            <p className="text-xs font-medium text-slate-400">
+
+          <div className="text-xs font-medium text-slate-400">
+            <div className="flex gap-2">
               &copy; {new Date().getFullYear()} NOVEL & VET CMU Referral System
-            </p>
-            <p className="text-[10px] text-slate-600">
-              All rights reserved. Version {import.meta.env.VITE_VERSION_APP}
-            </p>
+              {window.location.hostname !== "localhost" && (
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
+                  </div>
+                  <span className="text-xs text-slate-500">ระบบทำงานปกติ</span>
+                </div>
+              )}
+            </div>
           </div>
+          <p className="text-[10px] text-slate-600">
+            All rights reserved. Version {import.meta.env.VITE_VERSION_APP}
+          </p>
         </div>
 
         {/* Navigation Links */}
+
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveModal("privacy")}
-            className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
-          >
-            <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
-              นโยบายความเป็นส่วนตัว
-            </span>
-            <motion.div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
-              layoutId="footerUnderline"
-            />
-          </button>
+          {user.aud === "vet" && (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveModal("privacy")}
+                className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
+              >
+                <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
+                  นโยบายความเป็นส่วนตัว
+                </span>
+                <motion.div
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+                  layoutId="footerUnderline"
+                />
+              </button>
 
-          <span className="text-slate-700 text-xs">•</span>
+              <span className="text-slate-700 text-xs">•</span>
 
-          <button
-            type="button"
-            onClick={() => setActiveModal("terms")}
-            className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
-          >
-            <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
-              เงื่อนไขการใช้งาน
-            </span>
-            <motion.div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
-              layoutId="footerUnderline"
-            />
-          </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal("terms")}
+                className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
+              >
+                <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
+                  เงื่อนไขการใช้งาน
+                </span>
+                <motion.div
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+                  layoutId="footerUnderline"
+                />
+              </button>
 
-          <span className="text-slate-700 text-xs">•</span>
+              <span className="text-slate-700 text-xs">•</span>
 
-          <button
-            type="button"
-            onClick={() => setActiveModal("help")}
-            className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
-          >
-            <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
-              การช่วยเหลือ
-            </span>
-            <motion.div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
-              layoutId="footerUnderline"
-            />
-          </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal("help")}
+                className="group relative px-3 py-1.5 rounded-lg hover:bg-slate-800/50 transition-all duration-200"
+              >
+                <span className="text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">
+                  การช่วยเหลือ
+                </span>
+                <motion.div
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+                  layoutId="footerUnderline"
+                />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Status Indicator */}
@@ -83,7 +100,7 @@ const Footer = () => {
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
           </div>
-          <span className="text-xs text-slate-500">ระบบทำงานปกติ</span>
+          <span className="text-xs text-slate-500"></span>
         </div>
       </div>
 

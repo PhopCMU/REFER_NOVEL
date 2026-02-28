@@ -39,7 +39,7 @@ export default function Layout() {
           </motion.div>
         </main>
 
-        <Footer />
+        <Footer user={userLogin} />
       </div>
     </div>
   );

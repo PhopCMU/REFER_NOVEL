@@ -1,6 +1,7 @@
 import { api } from "../api/Axios";
-
 import axios from "axios";
+import type { CmuItAccount } from "../types/type";
+import { encryptDataNew } from "./helpers";
 
 const TOKEN_KEY = "referral_token";
 
@@ -146,7 +147,7 @@ export const isAuthenticated = async (): Promise<boolean> => {
 
   try {
     // ส่งไปให้ Backend ตรวจสอบ Signature (Verify ด้วย Secret Key)
-    const response = await api.get("/api/v1/referral/auth/info", {
+    const response = await api.get("/auth/info", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -175,6 +176,7 @@ export const getUserInfo = async (token: string) => {
         headers: { Authorization: `Bearer ${token}` },
       },
     );
+
     return res.data;
   } catch (error) {
     console.error("Get user info error:", error);
@@ -186,14 +188,79 @@ export const getUserInfo = async (token: string) => {
 // Register / Encode User → Get App Token
 // ========================
 
-export const userEncode = async (userInfo: any) => {
+export const exchangeCodeForSession = async (code: string) => {
   try {
-    const response = await api.post("/api/auth/add/account", userInfo);
+    const exchangeRes = await api.post("/auth/exchange-code", { code });
+    let userInfo;
 
-    console.log("User registration response:", response.data);
+    if (!exchangeRes.data) {
+      return {
+        status: 4000,
+        message: "User registration failed",
+        success: false,
+      };
+    }
 
-    if (response.data?.token.access_token) {
-      return { accessToken: response.data.token.access_token };
+    if (exchangeRes.data?.accessToken) {
+      userInfo = await getUserInfo(exchangeRes.data.accessToken);
+    } else if (exchangeRes.data?.cmuitaccount_name) {
+      userInfo = exchangeRes.data;
+    } else {
+      return {
+        status: 4000,
+        message: "User registration failed",
+        success: false,
+      };
+    }
+
+    if (!userInfo?.cmuitaccount_name) {
+      return {
+        status: 4001,
+        message: "ไม่พบข้อมูลบัญชี CMU IT Account ของคุณในระบบ",
+        success: false,
+      };
+    }
+
+    const registerRes = await userEncode(userInfo);
+    if (!registerRes?.accessToken) {
+      return {
+        status: 4002,
+        message: "ระบบยืนยันตัวตนล้มเหลว",
+        success: false,
+      };
+    }
+
+    saveToken(registerRes.accessToken);
+
+    // ✅ สำเร็จ: return ข้อมูล token และ user
+    return {
+      status: 200,
+      message: "เข้าสู่ระบบสำเร็จ",
+      success: true,
+      data: registerRes,
+    };
+  } catch (error) {
+    console.error("Exchange code error:", error);
+    return {
+      status: 5000,
+      message: "Exchange code failed",
+      success: false,
+    };
+  }
+};
+
+export const userEncode = async (userInfo: CmuItAccount) => {
+  try {
+    const encyptedDataBody = encryptDataNew(userInfo);
+
+    const response = await api.post("/auth/cmuitaccount", {
+      encodedData: encyptedDataBody,
+    });
+
+    console.log("User registration response:", response.data.token);
+
+    if (response.data?.token) {
+      return { accessToken: response.data.token };
     }
     return null;
   } catch (error) {

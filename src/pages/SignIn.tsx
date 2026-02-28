@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import images from "../constants/image";
 import SignInForm from "./Forms/SignInForm";
 import SignUpForm from "./Forms/SignUpForm";
@@ -10,7 +10,10 @@ import type { FeedbackProps } from "../types/type";
 import { PostFeedback } from "../api/PostApi";
 import { LoadingForm } from "../component/LoadingForm";
 import { useNavigate } from "react-router-dom";
-import { isAuthenticatedLocally } from "../utils/authUtils";
+import {
+  exchangeCodeForSession,
+  isAuthenticatedLocally,
+} from "../utils/authUtils";
 
 export default function AuthPage() {
   const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">(
@@ -21,9 +24,14 @@ export default function AuthPage() {
   const [rating, setRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isExchangingCode, setIsExchangingCode] = useState(false);
+  const [messages, setMessages] = useState<string>("");
   const [recaptchaReady, setRecaptchaReady] = useState(false);
   // === Router === //
   const navigate = useNavigate();
+  const query = new URLSearchParams(location.search);
+  const code = query.get("code");
+  const hasExchangedCode = useRef(false);
 
   const { executeRecaptcha } = useGoogleReCaptcha();
   useEffect(() => {
@@ -38,7 +46,87 @@ export default function AuthPage() {
       navigate("/novel/dashboard", { replace: true });
       return;
     }
-  }, [navigate]);
+
+    // ✅ Handle code exchange with proper error handling
+    if (code && !hasExchangedCode.current) {
+      hasExchangedCode.current = true;
+
+      const handleCodeExchange = async () => {
+        setIsExchangingCode(true);
+        try {
+          const result = await exchangeCodeForSession(code);
+
+          // ✅ ตรวจสอบ status และแสดงข้อความตามกรณี
+          switch (result.status) {
+            case 200: // ✅ สำเร็จ
+              setLoading(true);
+              setMessages(result.message || "กเข้าสู่ระบบสำเร็จ");
+              setTimeout(() => {
+                setLoading(false);
+                setMessages("");
+                navigate("/novel/dashboard", { replace: true });
+              }, 2000);
+              break;
+
+            case 4000: // ❌ User registration failed
+              // showToast.error(result.message || "การลงทะเบียนผู้ใช้ล้มเหลว");
+              // Optional: redirect ไปหน้า signup
+              // setAuthMode("signup");
+              setLoading(true);
+              setMessages(result.message || "การลงทะเบียนผู้ใช้ล้มเหลว");
+              setTimeout(() => {
+                setLoading(false);
+                setMessages("");
+              }, 1500);
+              break;
+
+            case 4001: // ❌ ไม่พบ CMU IT Account
+              setLoading(true);
+              setMessages(
+                result.message ||
+                  "ไม่พบข้อมูลบัญชี CMU IT Account ของคุณในระบบ",
+              );
+              setTimeout(() => {
+                setLoading(false);
+                setMessages("");
+              }, 1500);
+              break;
+
+            case 4002: // ❌ ระบบยืนยันตัวตนล้มเหลว
+              setMessages(result.message || "ระบบยืนยันตัวตนล้มเหลว");
+              setTimeout(() => {
+                setLoading(false);
+                setMessages("");
+              }, 1500);
+              break;
+
+            case 5000: // ❌ Server error
+              setMessages(
+                result.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์",
+              );
+              setTimeout(() => {
+                setLoading(false);
+                setMessages("");
+              }, 1500);
+              break;
+            default:
+              if (!result.success) {
+                showToast.error(
+                  result.message || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
+                );
+              }
+          }
+        } catch (error) {
+          console.error("Error in handleCodeExchange:", error);
+          showToast.error("เกิดข้อผิดพลาดในการประมวลผล");
+        } finally {
+          setIsExchangingCode(false);
+        }
+      };
+
+      handleCodeExchange();
+    }
+  }, [code, navigate]);
 
   const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +142,7 @@ export default function AuthPage() {
     }
 
     setLoading(true);
+    setMessages("กําลังส่งความคิดเห็น...");
     try {
       const token = await executeRecaptcha("feedback");
       if (!token) {
@@ -70,28 +159,45 @@ export default function AuthPage() {
       const resp = await PostFeedback(payload);
 
       if (!resp) {
-        showToast.error("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
+        setMessages("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
+        setTimeout(() => {
+          setLoading(false);
+          setMessages("");
+        }, 1200);
         return;
       }
-      // ส่งข้อมูลไปยัง backend หรือ process ต่อได้ที่นี่
 
-      showToast.success("ขอบคุณสำหรับความคิดเห็นของคุณ!");
-      setIsModalOpen(false);
-      setRating(null);
-      setComment("");
+      setMessages("ส่งสำเร็จ! ขอบขอบคุณสำหรับความคิดเห็นของคุณ!");
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setLoading(false);
+        setMessages("");
+        setRating(null);
+        setComment("");
+      }, 2000);
     } catch (error) {
-      showToast.error("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
-    } finally {
-      setLoading(false);
+      setMessages("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
+      setTimeout(() => {
+        setLoading(false);
+        setMessages("");
+      }, 1500);
     }
   };
 
-  if (!recaptchaReady) {
-    return <LoadingForm text="กำลังโหลด reCAPTCHA..." />;
+  if (!recaptchaReady || isExchangingCode) {
+    return (
+      <LoadingForm
+        text={
+          isExchangingCode
+            ? "กำลังเข้าสู่ระบบด้วย CMU Account..."
+            : "กำลังโหลด reCAPTCHA..."
+        }
+      />
+    );
   }
 
   if (loading) {
-    return <LoadingForm text="กำลังส่งข้อมูล..." />;
+    return <LoadingForm text={messages} />;
   }
 
   return (

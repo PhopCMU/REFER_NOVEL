@@ -1,5 +1,6 @@
 import CryptoJS from "crypto-js";
 import type {
+  CmuItAccount,
   DataFormLoginProps,
   DataFormSubmitProps,
   FeedbackProps,
@@ -29,6 +30,7 @@ export const encryptDataNew = (
     | PayloadCheckOtpProps
     | PayloadResetPassword
     | GetReferralCasesProps
+    | CmuItAccount
     | string,
 ) => {
   const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";

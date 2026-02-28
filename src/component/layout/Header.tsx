@@ -191,7 +191,7 @@ const Header = ({
       {/* Right: User Profile */}
       <div className="flex items-center gap-4" ref={profileRef}>
         {/* Quick Actions */}
-        <motion.div
+        {/* <motion.div
           className="hidden lg:flex items-center gap-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -204,7 +204,7 @@ const Header = ({
           <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-800/50 rounded-lg transition-all">
             <span className="material-symbols-outlined text-lg">help</span>
           </button>
-        </motion.div>
+        </motion.div> */}
 
         {/* Vertical Divider */}
         <div className="hidden lg:block w-px h-8 bg-slate-800"></div>
@@ -222,7 +222,7 @@ const Header = ({
               domain
             </span>
             <span className="text-xs font-medium text-slate-300">
-              {user?.hospitalName || "โรงพยาบาล"}
+              {user?.hospitalName || "Novel"}
             </span>
           </div>
 
