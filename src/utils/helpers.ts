@@ -13,6 +13,7 @@ import type {
   PayloadSendLinkResetPassword,
   PayloadUpdateOwner,
   ReferralDataPayload,
+  UpdateCaseStatusProps,
   WorkplacePayload,
 } from "../types/type";
 
@@ -31,6 +32,7 @@ export const encryptDataNew = (
     | PayloadResetPassword
     | GetReferralCasesProps
     | CmuItAccount
+    | UpdateCaseStatusProps
     | string,
 ) => {
   const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";

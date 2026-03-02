@@ -7,8 +7,6 @@ const Footer = ({ user }: { user: any }) => {
 
   const closeModal = () => setActiveModal(null);
 
-  console.log(user.aud);
-
   return (
     <footer className="bg-slate-900 border-t border-slate-800/50 px-6 py-5 mt-auto">
       {/* Main Footer Content */}

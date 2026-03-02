@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GetCaseReferral, GetCaseReferralAdmin } from "../../../api/GetApi";
+import { GetCaseReferralAdmin } from "../../../api/GetApi";
 import { getEndOfDay, getStartOfDay } from "../../../utils/helpers";
 import CoverPDF from "../../../component/CoverPDF";
 import type {
@@ -8,7 +8,11 @@ import type {
   GetReferralCasesProps,
   TReferralType,
   TStatus,
+  UpdateCaseStatusProps,
 } from "../../../types/type";
+import { getUserFromToken } from "../../../utils/authUtils";
+import { PostUpdateCaseStatus } from "../../../api/PostApi";
+import { showToast } from "../../../utils/showToast";
 
 // ─── Config Maps ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
@@ -312,17 +316,15 @@ const UploadAppointmentModal = ({
       formData.append("file", file);
       formData.append("caseId", caseId);
       formData.append("category", "HISTORY"); // ใบนัดจัดอยู่ในหมวด HISTORY
-      formData.append(
-        "note",
-        `เจ้าหน้าที่ชื่อ ${firstName} ${lastName} ออกใบนัด เมื่อวันที่ ${todayTH}`,
-      );
+
+      console.log("Uploading file", ...formData);
 
       // TODO: เรียก API Upload จริง
       // await uploadMedicalFile(formData);
 
-      await new Promise((r) => setTimeout(r, 1500)); // mock delay
-      onSuccess();
-      onClose();
+      // await new Promise((r) => setTimeout(r, 1500)); // mock delay
+      // onSuccess();
+      // onClose();
     } catch (err) {
       console.error("Upload failed", err);
     } finally {
@@ -526,7 +528,7 @@ const ConfirmStatusModal = ({
           initial={{ scale: 0.9, y: 20, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
         >
           <div className="p-6 text-center">
             <motion.div
@@ -803,6 +805,21 @@ const DetailPanel = ({
                 />
               </Section>
 
+              <Section title="🐾 ข้อมูลเจ้าของ">
+                <Row
+                  label="ชื่อ-นามสกุล"
+                  value={
+                    data?.pet?.owner?.firstName +
+                    " " +
+                    data?.pet?.owner?.lastName
+                  }
+                />
+                <Row
+                  label="เบอร์ติดต่อ"
+                  value={`${data.pet?.owner?.phone || ""}`}
+                />
+              </Section>
+
               <Section title="🐾 ข้อมูลสัตว์เลี้ยง">
                 <Row label="ชื่อ" value={data.pet?.name} />
                 <Row
@@ -956,43 +973,50 @@ const DetailPanel = ({
                 </div>
               )}
               {data.medicalFiles && data.medicalFiles.length > 0 ? (
-                data.medicalFiles.map((f: any) => (
-                  <div
-                    key={f.id}
-                    className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
-                  >
-                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-xl border border-indigo-100 flex-shrink-0">
-                      {f.category === "HISTORY"
-                        ? "📄"
-                        : f.category === "LAB"
-                          ? "🧪"
-                          : f.category === "XRAY"
-                            ? "🩻"
-                            : f.category === "PHOTO"
-                              ? "📷"
-                              : "🔬"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-gray-800 truncate">
-                        {f.originalName || f.name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {f.category} · {fmtBytes(f.sizeBytes)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() =>
-                        window.open(
-                          `${import.meta.env.VITE_API_BASE_URL_FILE}${f.fileUrl}`,
-                          "_blank",
-                        )
-                      }
-                      className="flex-shrink-0 text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-100 transition-colors border border-indigo-100"
+                data.medicalFiles
+                  // เพิ่มการ Filter เพื่อไม่เอา APPOINTMENT
+                  .filter((f: any) => f.category !== "APPOINTMENT")
+                  .map((f: any) => (
+                    <div
+                      key={f.id}
+                      className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
                     >
-                      ⬇️ ดาวน์โหลด
-                    </button>
-                  </div>
-                ))
+                      <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-xl border border-indigo-100 flex-shrink-0">
+                        {
+                          f.category === "HISTORY"
+                            ? "📄"
+                            : f.category === "LAB"
+                              ? "🧪"
+                              : f.category === "XRAY"
+                                ? "🩻"
+                                : f.category === "PHOTO"
+                                  ? "📷"
+                                  : f.category === "BIOPSY"
+                                    ? "🔬"
+                                    : "📁" /* กรณีอื่นๆ */
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-800 truncate">
+                          {f.originalName || f.name}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {f.category} · {fmtBytes(f.sizeBytes)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() =>
+                          window.open(
+                            `${import.meta.env.VITE_API_BASE_URL_FILE}${f.fileUrl}`,
+                            "_blank",
+                          )
+                        }
+                        className="flex-shrink-0 text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-100 transition-colors border border-indigo-100"
+                      >
+                        ⬇️ ดาวน์โหลด
+                      </button>
+                    </div>
+                  ))
               ) : (
                 <Empty
                   icon="📂"
@@ -1027,7 +1051,7 @@ const DetailPanel = ({
             nextStatus === "RECEIVED"
               ? `เจ้าหน้าที่ชื่อ ${userLogin?.firstName || ""} ${userLogin?.lastName || ""}`
               : nextStatus === "APPOINTED"
-                ? `เจ้าหน้าที่ชื่อ ${userLogin?.firstName || ""} ${userLogin?.lastName || ""}`
+                ? `เจ้าหน้าที่ชื่อ ${userLogin?.firstName || ""} ${userLogin?.lastName || ""} ออกใบนัด วันที่ ${new Date().toLocaleDateString("th-TH", { day: "2-digit", month: "long", year: "numeric" })}`
                 : undefined
           }
           onClose={() => setShowConfirm(false)}
@@ -1068,7 +1092,7 @@ const Section = ({
   </div>
 );
 
-const Row = ({ label, value }: { label: string; value: string }) => (
+const Row = ({ label, value }: { label: string; value: any }) => (
   <div className="flex gap-3 text-sm">
     <span className="text-gray-400 w-28 shrink-0 font-medium">{label}</span>
     <span className="text-gray-700 font-semibold">{value}</span>
@@ -1094,7 +1118,7 @@ const Empty = ({
 );
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-export default function CounterPage({ userLogin }: { userLogin: any }) {
+export default function CounterPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [cases, setCases] = useState<CaseItem[]>([]);
@@ -1103,8 +1127,9 @@ export default function CounterPage({ userLogin }: { userLogin: any }) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const initRef = useRef(false);
+  const userLogin = getUserFromToken();
 
-  console.log("userLogin: ", userLogin);
+  // console.log("userLogin: ", userLogin);
 
   const fetchDataCases = async (start: string, end: string) => {
     setIsLoading(true);
@@ -1152,14 +1177,26 @@ export default function CounterPage({ userLogin }: { userLogin: any }) {
       if (newStatus === "RECEIVED") {
         return (
           note.trim() ||
-          `เจ้าหน้าที่ชื่อ ${userLogin.firstName} ${userLogin.lastName} ได้รับเคส`
+          `เจ้าหน้าที่ชื่อ ${userLogin?.firstName} ${userLogin?.lastName}`
         );
       }
       return note;
     })();
 
-    // TODO: call API เปลี่ยนสถานะจริง
-    // await UpdateCaseStatus({ caseId: id, status: newStatus, note: autoNote });
+    const payload: UpdateCaseStatusProps = {
+      caseId: id,
+      status: newStatus,
+      note: autoNote,
+    };
+
+    const resp = await PostUpdateCaseStatus(payload);
+
+    if (!resp.success) {
+      showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการแก้ไขสถานะ");
+      return;
+    }
+
+    // await fetchDataCases(getStartOfDay(new Date()), getEndOfDay(new Date()));
 
     // Mock update locally
     setCases((prev: any) =>

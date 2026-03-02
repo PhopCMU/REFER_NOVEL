@@ -8,6 +8,7 @@ import type {
   PayloadResetPassword,
   PayloadSendLinkResetPassword,
   PostReferralPayload,
+  UpdateCaseStatusProps,
   WorkplacePayload,
 } from "../types/type";
 import { encryptDataNew } from "../utils/helpers";
@@ -243,6 +244,27 @@ export const PostReferralCases = async (payload: PostReferralPayload) => {
 
     return resp.data;
   } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in PostReferralCases: ", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Error in PostReferralCases: ", error.message);
+        return error.message;
+      }
+    }
+    throw error;
+  }
+};
+
+export const PostUpdateCaseStatus = async (payload: UpdateCaseStatusProps) => {
+  try {
+    const encyptedDataBody = encryptDataNew(payload);
+    const resp = await apiWithAuth.post("/case/counter/update-case-status", {
+      encodedData: encyptedDataBody,
+    });
+    return resp.data;
+  } catch (error) {
     if (error instanceof AxiosError) {
       if (error.response) {
         console.error("Error in PostReferralCases: ", error.response.data);

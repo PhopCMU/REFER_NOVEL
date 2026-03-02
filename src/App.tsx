@@ -15,10 +15,8 @@ import FormRepassword from "./pages/Forms/FormRepassword";
 import AnimalReferralMonitor from "./pages/Dashboard/vets/animalreferralmonitor";
 
 import CounterPage from "./pages/Dashboard/counters/counter";
-import { getUserFromToken } from "./utils/authUtils";
 
 export default function App() {
-  const userLogin = getUserFromToken();
   return (
     <BrowserRouter>
       <Routes>
@@ -37,10 +35,7 @@ export default function App() {
             <Route path="animals" element={<VetsPage />} />
             <Route path="referral" element={<ReferralsPage />} />
             <Route path="status" element={<AnimalReferralMonitor />} />
-            <Route
-              path="case-referral"
-              element={<CounterPage userLogin={userLogin} />}
-            />
+            <Route path="case-referral" element={<CounterPage />} />
           </Route>
         </Route>
 

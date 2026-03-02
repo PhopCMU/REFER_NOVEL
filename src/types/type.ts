@@ -324,11 +324,11 @@ export interface Hospital {
 }
 
 export interface Veterinarian {
-  id: string;
-  vet_codeId: string;
+  id?: string;
+  vet_codeId?: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone: string;
 }
 
@@ -336,6 +336,7 @@ export interface Pet {
   id: string;
   animal_codeId: string;
   name: string;
+  owner?: Veterinarian;
   color: string;
   sex: "M" | "F" | "UNKNOWN";
   weight: string;
@@ -406,4 +407,12 @@ export interface CmuItAccount {
   prename_TH: string;
   prename_id?: string;
   student_id?: string;
+}
+
+// --- Update Case Status ---
+export interface UpdateCaseStatusProps {
+  caseId: string;
+
+  status: TStatus;
+  note: string;
 }
