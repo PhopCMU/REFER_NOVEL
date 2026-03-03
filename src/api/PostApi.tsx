@@ -8,6 +8,7 @@ import type {
   PayloadResetPassword,
   PayloadSendLinkResetPassword,
   PostReferralPayload,
+  PostReferralPayloadEncrypted,
   UpdateCaseStatusProps,
   WorkplacePayload,
 } from "../types/type";
@@ -273,6 +274,34 @@ export const PostUpdateCaseStatus = async (payload: UpdateCaseStatusProps) => {
         console.error("Error in PostReferralCases: ", error.message);
         return error.message;
       }
+    }
+    throw error;
+  }
+};
+
+export const PostAppointment = async (
+  payload: PostReferralPayloadEncrypted,
+) => {
+  try {
+    const formData = new FormData();
+
+    // ส่ง caseId ที่เข้ารหัส
+    const encryptedMetadata = encryptDataNew(payload.caseId);
+    formData.append("encodedData", encryptedMetadata);
+
+    // ส่งไฟล์จริง (ไฟล์เดียว)
+    formData.append("files", payload.files[0]);
+
+    const resp = await apiWithAuth.post(
+      "/case/referral-appointment",
+      formData,
+      { timeout: 120000 },
+    );
+
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { success: false };
     }
     throw error;
   }

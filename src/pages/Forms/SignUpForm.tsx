@@ -217,13 +217,13 @@ export default function SignUpForm() {
   };
 
   const addWorkplace = () => {
-    if (formData.workplaces.length < 5) {
+    if (formData.workplaces.length < 10) {
       setFormData((prev) => ({
         ...prev,
         workplaces: [...prev.workplaces, ""],
       }));
     } else {
-      showToast.info("เพิ่มได้สูงสุด 5 แห่ง");
+      showToast.info("เพิ่มได้สูงสุด 10 แห่ง");
     }
   };
 

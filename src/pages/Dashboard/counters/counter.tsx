@@ -6,12 +6,13 @@ import CoverPDF from "../../../component/CoverPDF";
 import type {
   CaseItem,
   GetReferralCasesProps,
+  PostReferralPayloadEncrypted,
   TReferralType,
   TStatus,
   UpdateCaseStatusProps,
 } from "../../../types/type";
 import { getUserFromToken } from "../../../utils/authUtils";
-import { PostUpdateCaseStatus } from "../../../api/PostApi";
+import { PostAppointment, PostUpdateCaseStatus } from "../../../api/PostApi";
 import { showToast } from "../../../utils/showToast";
 
 // ─── Config Maps ─────────────────────────────────────────────────────────────
@@ -286,18 +287,14 @@ const UploadAppointmentModal = ({
   firstName: string;
   lastName: string;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: () => Promise<void>; // 🔥 ให้เป็น async ได้
 }) => {
   const [file, setFile] = useState<File | null>(null);
+  const [appointmentDate, setAppointmentDate] = useState("");
+  const [appointmentTime, setAppointmentTime] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const todayTH = new Date().toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -309,24 +306,36 @@ const UploadAppointmentModal = ({
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !appointmentDate || !appointmentTime) {
+      showToast.error("กรุณาเลือกวันและเวลาให้ครบถ้วน");
+      return;
+    }
+
     setUploading(true);
+
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("caseId", caseId);
-      formData.append("category", "HISTORY"); // ใบนัดจัดอยู่ในหมวด HISTORY
+      const appointmentDateTimeString = `${appointmentDate} ${appointmentTime}`;
 
-      console.log("Uploading file", ...formData);
+      const payload: PostReferralPayloadEncrypted = {
+        caseId: caseId,
+        files: [file],
+        appointmentDateTime: appointmentDateTimeString, // 🔥 ส่งเป็น string
+      };
 
-      // TODO: เรียก API Upload จริง
-      // await uploadMedicalFile(formData);
+      const resp = await PostAppointment(payload);
 
-      // await new Promise((r) => setTimeout(r, 1500)); // mock delay
-      // onSuccess();
-      // onClose();
+      if (!resp.success) {
+        showToast.error("Error uploading file");
+        return;
+      }
+
+      showToast.success("อัปโหลดสำเร็จ");
+
+      await onSuccess(); // 🔥 reload case เดิม
+      onClose();
     } catch (err) {
       console.error("Upload failed", err);
+      showToast.error("เกิดข้อผิดพลาด");
     } finally {
       setUploading(false);
     }
@@ -335,46 +344,45 @@ const UploadAppointmentModal = ({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
-        >
+        <motion.div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-cyan-500 to-teal-500 p-5 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">
-                  📄
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">อัปโหลดใบนัด</h3>
-                  <p className="text-xs text-cyan-100">
-                    เจ้าหน้าที่:{" "}
-                    <span className="font-semibold text-white">
-                      {firstName} {lastName}
-                    </span>{" "}
-                    · {todayTH}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
-              >
-                ✕
-              </button>
-            </div>
+            <h3 className="font-bold text-lg">อัปโหลดใบนัด</h3>
+            <p className="text-xs mt-1">
+              เจ้าหน้าที่: {firstName} {lastName}
+            </p>
           </div>
 
-          <div className="p-5">
+          <div className="p-5 space-y-4">
+            {/* 🔥 เลือกวัน */}
+            <div>
+              <label className="text-sm font-semibold text-gray-600">
+                วันที่นัดหมาย
+              </label>
+              <input
+                type="date"
+                value={appointmentDate}
+                onChange={(e) => setAppointmentDate(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border rounded-xl text-sm"
+              />
+            </div>
+
+            {/* 🔥 เลือกเวลา */}
+            <div>
+              <label className="text-sm font-semibold text-gray-600">
+                เวลานัดหมาย
+              </label>
+              <input
+                type="time"
+                value={appointmentTime}
+                onChange={(e) => setAppointmentTime(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border rounded-xl text-sm"
+              />
+            </div>
+
             {/* Drop Zone */}
             <div
               onDragOver={(e) => {
@@ -384,12 +392,12 @@ const UploadAppointmentModal = ({
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+              className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition ${
                 dragOver
                   ? "border-cyan-400 bg-cyan-50"
                   : file
                     ? "border-teal-400 bg-teal-50"
-                    : "border-gray-200 hover:border-cyan-300 hover:bg-gray-50"
+                    : "border-gray-200"
               }`}
             >
               <input
@@ -402,75 +410,38 @@ const UploadAppointmentModal = ({
                   if (f && f.type === "application/pdf") setFile(f);
                 }}
               />
+
               {file ? (
-                <div>
-                  <div className="text-4xl mb-2">📄</div>
+                <>
                   <p className="font-bold text-teal-700 text-sm">{file.name}</p>
                   <p className="text-xs text-gray-400 mt-1">
                     {fmtBytes(file.size)}
                   </p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFile(null);
-                    }}
-                    className="mt-3 text-xs text-red-500 hover:text-red-700 underline"
-                  >
-                    เอาออก
-                  </button>
-                </div>
+                </>
               ) : (
-                <div>
-                  <div className="text-4xl mb-3">☁️</div>
-                  <p className="text-sm font-semibold text-gray-600">
-                    ลากไฟล์มาวางที่นี่
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    หรือคลิกเพื่อเลือกไฟล์ PDF
-                  </p>
-                </div>
+                <p className="text-sm text-gray-500">
+                  คลิกหรือลากไฟล์ PDF มาวาง
+                </p>
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 mt-4">
+            {/* Buttons */}
+            <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2 rounded-xl border text-sm"
               >
                 ยกเลิก
               </button>
+
               <button
                 onClick={handleUpload}
-                disabled={!file || uploading}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={
+                  !file || !appointmentDate || !appointmentTime || uploading
+                }
+                className="flex-1 py-2 rounded-xl bg-cyan-500 text-white text-sm disabled:opacity-50"
               >
-                {uploading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    กำลังอัปโหลด...
-                  </>
-                ) : (
-                  "📤 อัปโหลดใบนัด"
-                )}
+                {uploading ? "กำลังอัปโหลด..." : "📤 อัปโหลด"}
               </button>
             </div>
           </div>
@@ -588,15 +559,18 @@ const DetailPanel = ({
   data,
   onClose,
   onStatusUpdate,
+  onReloadCase,
   userLogin,
 }: {
   data: CaseItem | null;
   onClose: () => void;
+
   onStatusUpdate: (
     id: string,
     newStatus: TStatus,
     note: string,
   ) => Promise<void>;
+  onReloadCase: (id: string) => Promise<void>;
   userLogin: any;
 }) => {
   const [tab, setTab] = useState("overview");
@@ -700,13 +674,22 @@ const DetailPanel = ({
 
           {/* Counter Action Buttons */}
           <div className="flex gap-2 pb-4">
-            {/* Upload ใบนัด */}
-            <button
-              onClick={() => setShowUpload(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-50 text-teal-700 text-sm font-semibold border border-teal-200 hover:bg-teal-100 transition-colors"
-            >
-              <span>📤</span> อัปโหลดใบนัด
-            </button>
+            {/* Upload Appointment */}
+            {data.status === "APPOINTED" ? (
+              <button
+                onClick={() => setShowUpload(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-50 text-teal-700 text-sm font-semibold border border-teal-200 hover:bg-teal-100 transition-colors"
+              >
+                <span>📤</span> อัปโหลดใบนัด
+              </button>
+            ) : (
+              <button
+                disabled
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-400 text-sm font-semibold border border-gray-200 cursor-not-allowed"
+              >
+                <span>📤</span> ต้องยืนยันเคสก่อนจึงอัปโหลดได้
+              </button>
+            )}
 
             {/* Advance Status */}
             {canAdvance && nextStatus && (
@@ -904,47 +887,64 @@ const DetailPanel = ({
               className="p-5 space-y-3"
             >
               {data.appointments && data.appointments.length > 0 ? (
-                data.appointments.map((apt: any, i: number) => (
-                  <motion.div
-                    key={apt.id || i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                          {i + 1}
+                data.appointments.map((apt: any, i: number) => {
+                  // 🔥 หาไฟล์ที่ผูกกับ appointment นี้
+                  const appointmentFile = data.medicalFiles?.find(
+                    (f: any) =>
+                      f.category === "APPOINTMENT" &&
+                      f.appointmentId === apt.id,
+                  );
+
+                  return (
+                    <motion.div
+                      key={apt.id || i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+                            {i + 1}
+                          </div>
+                          <span className="font-semibold text-sm text-gray-700">
+                            ใบนัดหมาย #{String(i + 1).padStart(2, "0")}
+                          </span>
                         </div>
-                        <span className="font-semibold text-sm text-gray-700">
-                          ใบนัดหมาย #{String(i + 1).padStart(2, "0")}
+
+                        {appointmentFile && (
+                          <button
+                            onClick={() =>
+                              window.open(
+                                `${import.meta.env.VITE_API_BASE_URL_FILE}${appointmentFile.fileUrl}`,
+                                "_blank",
+                              )
+                            }
+                            className="flex items-center gap-1.5 text-xs bg-teal-50 text-teal-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-teal-100 transition-colors border border-teal-100"
+                          >
+                            ⬇️ ดาวน์โหลด
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <span className="flex items-center gap-1.5 text-sm bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg border border-teal-100">
+                          📅 {apt.date ? fmtDate(apt.date) : "-"}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg border border-amber-100">
+                          🕐 {apt.date ? fmtTime(apt.date) : "-"}
                         </span>
                       </div>
-                      <button
-                        onClick={() => {
-                          // TODO: download appointment PDF
-                        }}
-                        className="flex items-center gap-1.5 text-xs bg-teal-50 text-teal-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-teal-100 transition-colors border border-teal-100"
-                      >
-                        ⬇️ ดาวน์โหลด
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="flex items-center gap-1.5 text-sm bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg border border-teal-100">
-                        📅 {apt.date ? fmtDate(apt.date) : "-"}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg border border-amber-100">
-                        🕐 {apt.date ? fmtTime(apt.date) : "-"}
-                      </span>
-                    </div>
-                    {apt.note && (
-                      <div className="mt-3 text-sm text-gray-600 bg-amber-50/60 rounded-xl p-3 border border-amber-100">
-                        📝 {apt.note}
-                      </div>
-                    )}
-                  </motion.div>
-                ))
+
+                      {apt.note && (
+                        <div className="mt-3 text-sm text-gray-600 bg-amber-50/60 rounded-xl p-3 border border-amber-100">
+                          📝 {apt.note}
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })
               ) : (
                 <Empty
                   icon="📅"
@@ -1036,8 +1036,8 @@ const DetailPanel = ({
           firstName={data?.firstName ?? ""}
           lastName={data?.lastName ?? ""}
           onClose={() => setShowUpload(false)}
-          onSuccess={() => {
-            // TODO: refresh case data
+          onSuccess={async () => {
+            await onReloadCase(data.id);
           }}
         />
       )}
@@ -1129,7 +1129,31 @@ export default function CounterPage() {
   const initRef = useRef(false);
   const userLogin = getUserFromToken();
 
-  // console.log("userLogin: ", userLogin);
+  const onReloadCase = async (caseId: string) => {
+    try {
+      const payload: GetReferralCasesProps = {
+        timeStart: getStartOfDay(new Date()),
+        timeEnd: getEndOfDay(new Date()),
+      };
+
+      const result = await GetCaseReferralAdmin(payload);
+
+      const list =
+        result && Array.isArray(result.data)
+          ? result.data
+          : Array.isArray(result)
+            ? result
+            : [];
+
+      const updatedCase = list.find((c: CaseItem) => c.id === caseId);
+
+      if (!updatedCase) return;
+
+      setCases((prev) => prev.map((c) => (c.id === caseId ? updatedCase : c)));
+    } catch (err) {
+      console.error("Reload case failed", err);
+    }
+  };
 
   const fetchDataCases = async (start: string, end: string) => {
     setIsLoading(true);
@@ -1417,6 +1441,7 @@ export default function CounterPage() {
           data={selectedCase}
           onClose={() => setSelected(null)}
           onStatusUpdate={handleStatusUpdate}
+          onReloadCase={onReloadCase} // 🔥 เพิ่ม
           userLogin={userLogin}
         />
       </div>

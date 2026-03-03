@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowUpFromLine, Dog, Home, Search, Send } from "lucide-react";
+import {
+  ArrowUpFromLine,
+  BoxSelect,
+  Dog,
+  Home,
+  Hospital,
+  Search,
+  Send,
+} from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -49,6 +57,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
       icon: ArrowUpFromLine,
       path: "/novel/case-referral",
       showIf: (user: any) => user.aud === "admin",
+      badge: null,
+    },
+    {
+      name: "กำหนดสิทธิ์",
+      icon: BoxSelect,
+      path: "/novel/permission",
+      showIf: (user: any) => user.aud === "admin" && user.role === "ADMIN",
+      badge: null,
+    },
+    {
+      name: "โรงพยาบาล/คลินิก",
+      icon: Hospital,
+      path: "/novel/hospital",
+      showIf: (user: any) => user.aud === "admin" && user.role === "ADMIN",
       badge: null,
     },
   ];

@@ -134,7 +134,8 @@ export type MedicalFileCategory =
   | "LAB"
   | "XRAY"
   | "PHOTO"
-  | "BIOPSY";
+  | "BIOPSY"
+  | "APPOINTMENT";
 
 export interface MedicalFileCategoryConfig {
   key: MedicalFileCategory;
@@ -296,6 +297,12 @@ export interface PostReferralPayload {
     }>;
   };
   files: File[]; // File Objects จริงๆ
+}
+
+export interface PostReferralPayloadEncrypted {
+  caseId: string;
+  files: File[]; // File Objects จริงๆ
+  appointmentDateTime: string;
 }
 
 // ─── Case Referral Payload List data ───────────────────────────────────────────────────
