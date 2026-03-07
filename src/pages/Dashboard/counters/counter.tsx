@@ -174,14 +174,14 @@ const fmtDateTime = (d: string | null | undefined) =>
 const fmtBytes = (b: number) =>
   b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`;
 
-const getInitials = (name: string) => {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-};
+// const getInitials = (name: string) => {
+//   return name
+//     .split(" ")
+//     .map((n) => n[0])
+//     .join("")
+//     .toUpperCase()
+//     .slice(0, 2);
+// };
 
 // ─── Sub Components ────────────────────────────────────────────────────────────
 const StatusPill = ({
