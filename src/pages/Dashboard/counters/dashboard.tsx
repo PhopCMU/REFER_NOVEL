@@ -14,7 +14,7 @@ export default function DashboardAdmin() {
         theme="light"
       />
       <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        ยินดีต้อนรับสู่ Dashboard Admin
+        ยินดีต้อนรับสู่ Dashboard Admin (ออกแบบใหม่)
       </h1>
       <p className="text-gray-600">ระบบจัดการการส่งตัวสัตว์ป่วย</p>
 

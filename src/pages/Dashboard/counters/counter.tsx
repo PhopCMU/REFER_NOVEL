@@ -1037,7 +1037,7 @@ const DetailPanel = ({
               <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="text-lg">📋</span>
-                  รายละเอียดเคส
+                  รายละเอียดเคส #{data.referenceNo}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <InfoItem label="หัวข้อ" value={data.title} />
@@ -1160,7 +1160,7 @@ const DetailPanel = ({
               <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="text-lg">🐾</span>
-                  ข้อมูลสัตว์เลี้ยง
+                  ข้อมูลสัตว์เลี้ยง #{(data?.pet as any)?.animal_codeId}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <InfoItem label="ชื่อ" value={data.pet?.name} />
