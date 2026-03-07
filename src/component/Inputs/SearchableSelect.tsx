@@ -40,7 +40,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   // ค้นหาใน label เท่านั้น
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    option.label.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // หา label ของ value ที่เลือก
@@ -86,7 +86,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
       <div className="relative">
         {icon && (
-          <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 pointer-events-none">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-500 pointer-events-none text-xl">
             {icon}
           </span>
         )}
@@ -98,44 +98,64 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
           disabled={disabled}
-          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gradient-to-r from-gray-50 to-white transition-all duration-200 cursor-pointer
-            ${icon ? "pl-10" : "pl-3"}
-            ${disabled ? "bg-gray-100 text-gray-500" : ""}
-            ${error ? "border-red-500 focus:ring-red-500" : ""}
-          `}
+          className={`w-full px-3 py-2.5 border rounded-xl focus:outline-none transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md
+        ${icon ? "pl-10" : "pl-3"}
+        ${
+          disabled
+            ? "bg-gray-50 text-gray-500 border-gray-200 cursor-not-allowed"
+            : error
+              ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white"
+              : "border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white hover:border-indigo-300"
+        }
+      `}
           autoComplete="off"
         />
 
         {/* Dropdown Arrow */}
         <span
-          className={`material-symbols-outlined absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`material-symbols-outlined absolute right-3 top-1/2 transform -translate-y-1/2 transition-all duration-300 text-gray-400 ${
+            isOpen ? "rotate-180 text-indigo-500" : ""
+          } ${!disabled ? "pointer-events-none" : "opacity-50"}`}
         >
           expand_more
         </span>
 
         {/* Dropdown List */}
-        {isOpen && (
-          <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+        {isOpen && !disabled && (
+          <ul className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200">
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
+              filteredOptions.map((option, index) => (
                 <li
                   key={option.value}
                   onClick={() => handleSelect(option)}
-                  className="px-4 py-2 hover:bg-indigo-50 cursor-pointer text-gray-700 hover:text-indigo-700"
+                  className={`px-4 py-2.5 cursor-pointer transition-all duration-150
+                ${index !== filteredOptions.length - 1 ? "border-b border-gray-50" : ""}
+                hover:bg-gradient-to-r hover:from-indigo-50 hover:to-white hover:pl-5
+                text-gray-700 hover:text-indigo-700 font-medium
+                active:bg-indigo-100
+              `}
                 >
                   {option.label}
                 </li>
               ))
             ) : (
-              <li className="px-4 py-2 text-gray-500 italic">ไม่พบข้อมูล</li>
+              <li className="px-4 py-3 text-gray-400 italic text-center bg-gray-50">
+                <span className="material-symbols-outlined text-base align-text-bottom mr-1">
+                  search_off
+                </span>
+                ไม่พบข้อมูล
+              </li>
             )}
           </ul>
         )}
       </div>
 
-      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-500 mt-1.5 flex items-center gap-1">
+          <span className="material-symbols-outlined text-base">error</span>
+          {error}
+        </p>
+      )}
     </div>
   );
 };

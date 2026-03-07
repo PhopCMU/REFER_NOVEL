@@ -286,7 +286,7 @@ export const PostAppointment = async (
     const formData = new FormData();
 
     // ส่ง caseId ที่เข้ารหัส
-    const encryptedMetadata = encryptDataNew(payload.caseId);
+    const encryptedMetadata = encryptDataNew(payload);
     formData.append("encodedData", encryptedMetadata);
 
     // ส่งไฟล์จริง (ไฟล์เดียว)

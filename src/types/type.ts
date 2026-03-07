@@ -392,6 +392,8 @@ export interface CaseItem {
   closedAt: string | null;
   firstName?: string;
   lastName?: string;
+  address?: string;
+  phone?: string;
   // NOTE: ไม่มี field owner ใน root object จาก DB จริง
 }
 

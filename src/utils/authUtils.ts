@@ -257,8 +257,6 @@ export const userEncode = async (userInfo: CmuItAccount) => {
       encodedData: encyptedDataBody,
     });
 
-    console.log("User registration response:", response.data.token);
-
     if (response.data?.token) {
       return { accessToken: response.data.token };
     }

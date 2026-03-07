@@ -261,7 +261,6 @@ const CaseCard = ({
             <span className="text-lg">{SPECIES_EMOJI[data.pet.species]}</span>
             <span className="font-bold text-sm text-slate-800 truncate">
               {data.pet.name}
-              {<>{console.log("card", data)}</>}
             </span>
             <Badge
               label={TYPE_CONFIG[data.referralType]?.label}
@@ -415,6 +414,17 @@ const DetailPanel = ({
               <InfoSection title="📋 รายละเอียดเคส">
                 <InfoRow label="หัวข้อ" value={data.title} />
                 <InfoRow label="รายละเอียด" value={data.description || "-"} />
+                <InfoRow
+                  label="ประเภท"
+                  value={
+                    TYPE_CONFIG[data.referralType as keyof typeof TYPE_CONFIG]
+                      ?.label || data.referralType
+                  }
+                />
+                <InfoRow
+                  label="บริการ"
+                  value={`${data.serviceCode} · ${data.serviceReferral?.name} `}
+                />
                 <InfoRow label="วันที่ส่งตัว" value={fmtDate(data.createdAt)} />
                 <InfoRow label="อัปเดตล่าสุด" value={fmtDate(data.updatedAt)} />
                 {data.closedAt && (
@@ -423,6 +433,7 @@ const DetailPanel = ({
                     value={fmtDate(data.closedAt)}
                   />
                 )}
+
                 {data.resultSummary && (
                   <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-sm">
                     <span className="font-bold">🎯 สรุปผล:</span>{" "}
@@ -497,11 +508,11 @@ const DetailPanel = ({
                       </div>
                       <div className="flex-1 pt-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-slate-400">
+                          {/* <span className="text-xs text-slate-400">
                             {STATUS_CONFIG[log.oldStatus as TStatus]?.label ||
                               log.oldStatus}
                           </span>
-                          <span className="text-slate-300">→</span>
+                          <span className="text-slate-300">→</span> */}
                           <Badge
                             label={nc?.label || log.newStatus}
                             color={nc?.color}
@@ -530,105 +541,87 @@ const DetailPanel = ({
               key="appointments"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               className="space-y-3"
             >
-              {data.appointments && data.appointments.length > 0 ? (
-                data.appointments.map((apt: any, i: number) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="group relative"
-                  >
-                    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-10 bg-gradient-to-b from-teal-400 to-teal-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+              {data.appointments && data.appointments.length > 0
+                ? data.appointments.map((apt: any, i: number) => {
+                    const appointmentFile = data.medicalFiles?.find(
+                      (f: any) =>
+                        f.category === "APPOINTMENT" &&
+                        f.appointmentId === apt.id,
+                    );
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-teal-200 hover:shadow-md transition-all">
-                      {/* Appointment Icon & Number */}
-                      <div className="flex items-center gap-3 sm:w-48">
-                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
-                          <span className="material-symbols-outlined text-white text-lg">
-                            event
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">ใบนัดหมาย</p>
-                          <p className="font-medium text-gray-800">
-                            #{String(i + 1).padStart(2, "0")}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Date & Time */}
-                      <div className="flex-1 flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-2 bg-teal-50 px-3 py-1.5 rounded-lg">
-                          <span className="material-symbols-outlined text-teal-600 text-base">
-                            calendar_month
-                          </span>
-                          <span className="text-sm font-medium text-teal-700">
-                            {apt.date ? fmtDate(apt.date) : ""}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg">
-                          <span className="material-symbols-outlined text-amber-600 text-base">
-                            schedule
-                          </span>
-                          <span className="text-sm font-medium text-amber-700">
-                            {apt.date ? fmtTime(apt.date) : ""} - 15:00 น.
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Download Button */}
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white rounded-lg shadow-sm hover:shadow transition-all ml-auto"
-                      >
-                        <span className="material-symbols-outlined text-sm">
-                          download
-                        </span>
-                        <span className="text-sm font-medium">ดาวน์โหลด</span>
-                      </motion.button>
-                    </div>
-
-                    {/* Note Section (if exists) */}
-                    {apt.note && (
+                    return (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="mt-2 ml-14 sm:ml-52"
+                        key={apt.id || i}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow"
                       >
-                        <div className="p-3 bg-amber-50/50 rounded-lg border border-amber-100 flex items-start gap-2">
-                          <span className="material-symbols-outlined text-amber-600 text-base">
-                            note
-                          </span>
-                          <p className="text-sm text-gray-600 flex-1">
-                            {apt.note}
-                          </p>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold">
+                              #{i + 1}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-800">
+                                ใบนัดหมาย
+                              </h4>
+                              <p className="text-xs text-gray-500">
+                                {appointmentFile ? "อัปโหลดแล้ว" : "รออัปโหลด"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {appointmentFile && (
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  `${import.meta.env.VITE_API_BASE_URL_FILE}${appointmentFile.fileUrl}`,
+                                  "_blank",
+                                )
+                              }
+                              className="flex items-center gap-2 px-3 py-2 bg-cyan-50 text-cyan-600 rounded-lg text-sm font-medium hover:bg-cyan-100 transition-colors border border-cyan-200"
+                            >
+                              <span>⬇️</span>
+                              ดาวน์โหลด
+                            </button>
+                          )}
                         </div>
+
+                        <div className="flex gap-3 mb-3">
+                          <div className="flex-1 bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-500 mb-1">
+                              วันที่นัดหมาย
+                            </p>
+                            <p className="font-medium text-gray-800">
+                              {apt.date ? fmtDate(apt.date) : "-"}
+                            </p>
+                          </div>
+                          <div className="flex-1 bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-500 mb-1">
+                              เวลานัดหมาย
+                            </p>
+                            <p className="font-medium text-gray-800">
+                              {apt.date ? fmtTime(apt.date) : "-"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {apt.note && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                            <p className="text-xs text-amber-600 mb-1">
+                              📝 หมายเหตุ
+                            </p>
+                            <p className="text-sm text-amber-800">{apt.note}</p>
+                          </div>
+                        )}
                       </motion.div>
-                    )}
-                  </motion.div>
-                ))
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200"
-                >
-                  <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-3xl filter drop-shadow-sm">📅</span>
-                  </div>
-                  <p className="text-gray-700 font-medium mb-1">ไม่มีนัดหมาย</p>
-                  <p className="text-sm text-gray-400 text-center max-w-xs">
-                    ยังไม่มีใบนัดหมายในขณะนี้ สามารถสร้างนัดหมายใหม่ได้ที่เมนู
-                    "จองคิว"
-                  </p>
-                </motion.div>
-              )}
+                    );
+                  })
+                : null}
             </motion.div>
           )}
 
@@ -747,7 +740,6 @@ export default function AnimalReferralCase() {
 
       // GetCaseReferral คืนค่า resp.data มาแล้ว (ซึ่งก็คือ { data: [...] })
       const result = await GetCaseReferral(payload);
-      console.log("result", result.data);
 
       // --- FIX: ตรวจสอบ result.data เพราะ structure คือ { data: [...] } ---
       if (result && Array.isArray(result.data)) {
