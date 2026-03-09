@@ -56,7 +56,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
       name: "Case Referral",
       icon: ArrowUpFromLine,
       path: "/novel/case-referral",
-      showIf: (user: any) => user.aud === "admin",
+      showIf: (user: any) =>
+        user.aud === "admin" &&
+        (user.role === "ADMIN" || user.role === "COUNTER"),
       badge: null,
     },
     {
@@ -69,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
     {
       name: "โรงพยาบาล/คลินิก",
       icon: Hospital,
-      path: "/novel/hospital",
+      path: "/novel/hospitals",
       showIf: (user: any) => user.aud === "admin" && user.role === "ADMIN",
       badge: null,
     },

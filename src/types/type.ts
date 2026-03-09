@@ -425,3 +425,154 @@ export interface UpdateCaseStatusProps {
   status: TStatus;
   note: string;
 }
+
+export interface ApiCaseData {
+  id: string;
+  referenceNo: string;
+  title: string;
+  description: string;
+  referralType: string;
+  status: string;
+  serviceCode: string;
+  createdAt: string;
+  updatedAt: string;
+  pet: {
+    id: string;
+    animal_codeId: string;
+    name: string;
+    species: string;
+    breed: string;
+    age: string;
+    sex: string;
+    color: string;
+    weight: string;
+    sterilization: string;
+    exoticdescription: string;
+    ownerId: string;
+    createdAt: string;
+    updatedAt: string;
+    owner: {
+      id: string;
+      owner_codeId: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      hospitalId: string;
+      veterinarianId: string;
+      address: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+  };
+  hospital: {
+    id: string;
+    name: string;
+    type: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  veterinarian: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+  };
+  serviceReferral: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  medicalFiles: Array<{
+    id: string;
+    category: string;
+    name: string;
+    originalName: string;
+    fileUrl: string;
+    fileType: string;
+    createdAt: string;
+  }>;
+  appointments: Array<{
+    id: string;
+    date: string;
+    note: string;
+  }>;
+  caseStatusLogs: Array<{
+    id: string;
+    oldStatus: string;
+    newStatus: string;
+    note: string;
+    createdAt: string;
+  }>;
+}
+
+export interface DashboardCase {
+  id: string;
+  referenceNo: string;
+  title: string;
+  referralType: string;
+  status: string;
+  serviceCode: string;
+  serviceName: string;
+  petName: string;
+  petSpecies: string;
+  petBreed: string;
+  petAge: string;
+  petSex: string;
+  petColor: string;
+  petWeight: string;
+  ownerName: string;
+  ownerPhone: string;
+  ownerAddress: string;
+  hospitalName: string;
+  vetName: string;
+  vetPhone: string;
+  createdAt: string;
+  updatedAt: string;
+  appointments: number;
+  medicalFiles: number;
+  caseStatusLogs: Array<{
+    oldStatus: string;
+    newStatus: string;
+    note: string;
+    createdAt: string;
+  }>;
+}
+
+// 🔁 ฟังก์ชันแปลงข้อมูลจาก API เป็นรูปแบบที่ Dashboard ใช้
+export function transformCaseData(apiCase: ApiCaseData): DashboardCase {
+  return {
+    id: apiCase.id,
+    referenceNo: apiCase.referenceNo,
+    title: apiCase.title,
+    referralType: apiCase.referralType,
+    status: apiCase.status,
+    serviceCode: apiCase.serviceCode,
+    serviceName: apiCase.serviceReferral?.name || "",
+    petName: apiCase.pet?.name || "-",
+    petSpecies: apiCase.pet?.species || "",
+    petBreed: apiCase.pet?.breed || "",
+    petAge: apiCase.pet?.age || "",
+    petSex: apiCase.pet?.sex || "",
+    petColor: apiCase.pet?.color || "",
+    petWeight: apiCase.pet?.weight || "",
+    ownerName:
+      `${apiCase.pet?.owner?.firstName || ""} ${apiCase.pet?.owner?.lastName || ""}`.trim(),
+    ownerPhone: apiCase.pet?.owner?.phone || "",
+    ownerAddress: apiCase.pet?.owner?.address || "",
+    hospitalName: apiCase.hospital?.name || "",
+    vetName:
+      `${apiCase.veterinarian?.firstName || ""} ${apiCase.veterinarian?.lastName || ""}`.trim(),
+    vetPhone: apiCase.veterinarian?.phone || "",
+    createdAt: apiCase.createdAt,
+    updatedAt: apiCase.updatedAt,
+    appointments: apiCase.appointments?.length || 0,
+    medicalFiles: apiCase.medicalFiles?.length || 0,
+    caseStatusLogs:
+      apiCase.caseStatusLogs?.map((log) => ({
+        oldStatus: log.oldStatus,
+        newStatus: log.newStatus,
+        note: log.note,
+        createdAt: log.createdAt,
+      })) || [],
+  };
+}

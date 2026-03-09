@@ -82,3 +82,29 @@ export const GetCaseReferralAdmin = async (payload: GetReferralCasesProps) => {
     }
   }
 };
+
+export const GetHospitalData = async (limits: number, year: number) => {
+  try {
+    const payload = { limits, year };
+
+    const encyptedDataQuery = encryptDataNew(payload);
+    const encodedURL = encodeURIComponent(encyptedDataQuery);
+    const resp = await apiWithAuth.get(
+      `/hospitals/list/admin?data=${encodedURL}`,
+    );
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in GetHospitalData: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetHospitalData: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};

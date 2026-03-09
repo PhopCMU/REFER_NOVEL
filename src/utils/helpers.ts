@@ -35,7 +35,10 @@ export const encryptDataNew = (
     | CmuItAccount
     | UpdateCaseStatusProps
     | PostReferralPayloadEncrypted
-    | string,
+    | string
+    | number
+    | boolean
+    | object,
 ) => {
   const secretKey = import.meta.env.VITE_CRYPTO_KEY || "";
 
