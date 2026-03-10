@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GetHospitalData } from "../../api/GetApi";
 
@@ -331,6 +331,21 @@ function HospitalRow({
 }
 
 function CaseTable({ referrals }: { referrals: CaseReferral[] }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 8;
+
+  // คำนวณข้อมูลสำหรับหน้าปัจจุบัน
+  const totalPages = Math.ceil(referrals.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedReferrals = referrals.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
+
+  // Reset page เมื่อข้อมูลเปลี่ยน
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [referrals]);
   if (referrals.length === 0) {
     return (
       <motion.div
@@ -348,7 +363,7 @@ function CaseTable({ referrals }: { referrals: CaseReferral[] }) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="overflow-x-auto"
+      className="overflow-x-auto overflow-hidden"
     >
       <table className="w-full text-sm">
         <thead>
@@ -370,9 +385,15 @@ function CaseTable({ referrals }: { referrals: CaseReferral[] }) {
             ))}
           </tr>
         </thead>
-        <tbody>
-          <AnimatePresence>
-            {referrals.map((r, i) => (
+        <AnimatePresence mode="wait">
+          <motion.tbody
+            key={currentPage} // Key ไว้ที่ tbody เพื่อให้ AnimatePresence ตรวจจับการเปลี่ยนหน้า
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {paginatedReferrals.map((r, i) => (
               <motion.tr
                 key={r.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -380,9 +401,9 @@ function CaseTable({ referrals }: { referrals: CaseReferral[] }) {
                 exit={{ opacity: 0 }}
                 transition={{ delay: i * 0.03 }}
                 className={`
-                  border-b border-slate-100 hover:bg-slate-50 transition-colors
-                  ${i % 2 === 0 ? "bg-white" : "bg-slate-50/50"}
-                `}
+              border-b border-slate-100 hover:bg-slate-50 transition-colors
+              ${i % 2 === 0 ? "bg-white" : "bg-slate-50/50"}
+            `}
               >
                 <td className="px-3 py-3 text-slate-500 font-mono text-xs">
                   {r.referenceNo}
@@ -412,9 +433,150 @@ function CaseTable({ referrals }: { referrals: CaseReferral[] }) {
                 </td>
               </motion.tr>
             ))}
-          </AnimatePresence>
-        </tbody>
+          </motion.tbody>
+        </AnimatePresence>
       </table>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200"
+        >
+          {/* Info */}
+          <div className="text-xs text-slate-500">
+            แสดง {startIndex + 1} -{" "}
+            {Math.min(startIndex + ITEMS_PER_PAGE, referrals.length)} จาก{" "}
+            {referrals.length} เคส
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-center gap-1.5">
+            {/* First Page */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className={`
+                w-8 h-8 rounded-lg text-sm font-medium flex items-center justify-center
+                transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                ${
+                  currentPage === 1
+                    ? "bg-slate-100 text-slate-400"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                }
+              `}
+              title="หน้าแรก"
+            >
+              «
+            </motion.button>
+
+            {/* Previous */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className={`
+                w-8 h-8 rounded-lg text-sm font-medium flex items-center justify-center
+                transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                ${
+                  currentPage === 1
+                    ? "bg-slate-100 text-slate-400"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                }
+              `}
+              title="ก่อนหน้า"
+            >
+              ‹
+            </motion.button>
+
+            {/* Page Numbers */}
+            <div className="flex items-center gap-1 mx-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((page) => {
+                  // แสดงหน้าแรก, หน้าสุดท้าย, และรอบๆ หน้าปัจจุบัน
+                  if (page === 1 || page === totalPages) return true;
+                  if (Math.abs(page - currentPage) <= 1) return true;
+                  return false;
+                })
+                .map((page, idx, arr) => {
+                  const prevPage = arr[idx - 1];
+                  const showEllipsis = prevPage && page - prevPage > 1;
+
+                  return (
+                    <Fragment key={page}>
+                      {showEllipsis && (
+                        <span className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">
+                          ...
+                        </span>
+                      )}
+                      <motion.button
+                        key={page}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(page)}
+                        className={`
+                          w-8 h-8 rounded-lg text-sm font-medium flex items-center justify-center
+                          transition-all duration-200
+                          ${
+                            currentPage === page
+                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
+                              : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                          }
+                        `}
+                      >
+                        {page}
+                      </motion.button>
+                    </Fragment>
+                  );
+                })}
+            </div>
+
+            {/* Next */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className={`
+                w-8 h-8 rounded-lg text-sm font-medium flex items-center justify-center
+                transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                ${
+                  currentPage === totalPages
+                    ? "bg-slate-100 text-slate-400"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                }
+              `}
+              title="ถัดไป"
+            >
+              ›
+            </motion.button>
+
+            {/* Last Page */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className={`
+                w-8 h-8 rounded-lg text-sm font-medium flex items-center justify-center
+                transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                ${
+                  currentPage === totalPages
+                    ? "bg-slate-100 text-slate-400"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                }
+              `}
+              title="หน้าสุดท้าย"
+            >
+              »
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
@@ -611,7 +773,7 @@ export default function HospitalData() {
               </span>
             </div>
 
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {isLoading ? (
                 <motion.div
                   key="loading"

@@ -108,3 +108,23 @@ export const GetHospitalData = async (limits: number, year: number) => {
     }
   }
 };
+
+export const GetCmuItAccount = async () => {
+  try {
+    const resp = await apiWithAuth.get(`/auth/cmu-it-account`);
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in GetCmuItAccount: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetCmuItAccount: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};

@@ -774,7 +774,6 @@ export default function AnimalReferralCase() {
 
   // --- Search Handler (Triggered by Button) ---
   const handleSearch = async () => {
-    // If user didn't select dates, default to Today
     let timeStart = startDate
       ? `${startDate}T00:00:00.000Z`
       : getStartOfDay(new Date());
@@ -782,17 +781,9 @@ export default function AnimalReferralCase() {
       ? `${endDate}T23:59:59.999Z`
       : getEndOfDay(new Date());
 
-    // If user selects only one date, make range cover that whole day?
-    // Logic below assumes if they pick start, end should be end of that start day if end is empty?
-    // But standard behavior is: if one is empty, maybe use today? Or let's just force both.
-    // For simplicity, we will use the logic:
-    // If inputs have values -> use them. Else -> Today.
-
     if (startDate && !endDate) {
-      // If start is picked but no end, default end to end of start day
       timeEnd = `${startDate}T23:59:59.999Z`;
     } else if (!startDate && endDate) {
-      // If end is picked but no start, default start to start of end day
       timeStart = `${endDate}T00:00:00.000Z`;
     }
 

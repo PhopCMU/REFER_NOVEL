@@ -122,3 +122,13 @@ export const getEndOfDay = (date: Date) => {
   d.setHours(23, 59, 59, 999);
   return d.toISOString();
 };
+
+// ─── Check Permission  ───────────────────────────────────────────────────
+export const checkPermission = (
+  permissions: string[],
+  requiredPermission: string,
+) => {
+  return permissions.includes(requiredPermission);
+};
+
+export const checkPermissionsPages = () => {};

@@ -317,15 +317,21 @@ const Header = ({
                         {user?.firstName} {user?.lastName}
                       </h3>
                       <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-lg text-xs font-medium border border-blue-500/30">
-                        {user?.ceLicense || "แพทย์"}
+                        {user?.ceLicense ?? ""}{" "}
+                        {user?.role === "ADMIN" ? "ผู้ดูแลระบบ" : ""}
+                        {user?.role === "COUNTER" ? "เคาเตอร์" : ""}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 flex items-center gap-1 mb-3">
-                      <span className="material-symbols-outlined text-sm">
-                        badge
-                      </span>
-                      {user?.hospitalName}
-                    </p>
+                    {(user as any)?.codeId && (
+                      <>
+                        <p className="text-xs text-slate-400 flex items-center gap-1 mb-3">
+                          <span className="material-symbols-outlined text-sm">
+                            badge
+                          </span>
+                          {(user as any)?.codeId ?? ""}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
 
