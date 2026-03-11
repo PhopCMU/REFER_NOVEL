@@ -337,7 +337,7 @@ const Header = ({
 
                 {/* Menu Items */}
                 <div className="p-2 border-t border-slate-700/50">
-                  <motion.button
+                  {/* <motion.button
                     whileHover={{ x: 4 }}
                     onClick={() => {
                       navigate("/novel/profile");
@@ -360,7 +360,7 @@ const Header = ({
                     <span className="material-symbols-outlined text-slate-600 text-base">
                       chevron_right
                     </span>
-                  </motion.button>
+                  </motion.button> */}
 
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent my-2"></div>
 

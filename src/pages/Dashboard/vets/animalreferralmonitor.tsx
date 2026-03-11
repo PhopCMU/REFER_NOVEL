@@ -645,37 +645,39 @@ const DetailPanel = ({
               )}
 
               {data.medicalFiles && data.medicalFiles.length > 0 ? (
-                data.medicalFiles.map((f: any) => (
-                  <div
-                    key={f.id}
-                    className="flex items-center gap-3 bg-white border border-slate-200 rounded-lg p-3"
-                  >
-                    <span className="text-2xl">
-                      <FileIcon category={f.category} />
-                    </span>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-slate-700 truncate">
-                        {f.originalName || f.name}
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        {fmtBytes(f.sizeBytes)}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        window.open(
-                          `${import.meta.env.VITE_API_BASE_URL_FILE}${f.fileUrl}`,
-                          "_blank",
-                        );
-                      }}
-                      className="text-xs bg-sky-50 text-sky-600 px-3 py-1.5 rounded-lg font-medium hover:bg-sky-100 transition-colors"
+                data.medicalFiles
+                  .filter((f: any) => f.category !== "APPOINTMENT") // ✅ กรองไฟล์นัดหมายออก
+                  .map((f: any) => (
+                    <div
+                      key={f.id}
+                      className="flex items-center gap-3 bg-white border border-slate-200 rounded-lg p-3"
                     >
-                      ดาวน์โหลด
-                    </button>
-                  </div>
-                ))
+                      <span className="text-2xl">
+                        <FileIcon category={f.category} />
+                      </span>
+
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-slate-700 truncate">
+                          {f.originalName || f.name}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {fmtBytes(f.sizeBytes)}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          window.open(
+                            `${import.meta.env.VITE_API_BASE_URL_FILE}${f.fileUrl}`,
+                            "_blank",
+                          );
+                        }}
+                        className="text-xs bg-sky-50 text-sky-600 px-3 py-1.5 rounded-lg font-medium hover:bg-sky-100 transition-colors"
+                      >
+                        ดาวน์โหลด
+                      </button>
+                    </div>
+                  ))
               ) : (
                 <EmptyState icon="📂" text="ไม่มีเอกสาร" />
               )}

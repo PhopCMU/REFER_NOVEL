@@ -543,90 +543,6 @@ export default function SignUpForm() {
         }}
       />
 
-      {/* Form Fields Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-        <Input
-          label="ชื่อ (ภาษาไทย)"
-          id="firstName"
-          name="firstName"
-          value={formData.firstName}
-          onChange={(e) => handleChange("firstName", e.target.value)}
-          placeholder="กรอกชื่อจริง"
-          required
-          icon="person"
-          error={errors.firstName}
-          className="bg-white"
-        />
-
-        <Input
-          label="นามสกุล (ภาษาไทย)"
-          id="lastName"
-          name="lastName"
-          value={formData.lastName}
-          onChange={(e) => handleChange("lastName", e.target.value)}
-          placeholder="กรอกนามสกุล"
-          required
-          icon="assignment_ind"
-          error={errors.lastName}
-          className="bg-white"
-        />
-
-        <Input
-          label="อีเมล"
-          type="email"
-          name="email"
-          id="email"
-          value={formData.email}
-          onChange={(e) => handleChange("email", e.target.value)}
-          placeholder="your.email@example.com"
-          required
-          icon="mail"
-          error={errors.email}
-          className="bg-white"
-        />
-
-        <Input
-          label="เลขใบอนุญาต CE"
-          id="ceLicense"
-          name="ceLicense"
-          value={formData.ceLicense}
-          onChange={(e) => handleChange("ceLicense", e.target.value)}
-          placeholder="CE12345678"
-          required
-          icon="medical_services"
-          error={errors.ceLicense}
-          className="bg-white"
-        />
-
-        <Input
-          label="เบอร์โทรศัพท์"
-          type="tel"
-          id="phone"
-          name="phone"
-          value={formData.phone}
-          onChange={(e) => handleChange("phone", e.target.value)}
-          placeholder="081-234-5678"
-          required
-          icon="call"
-          error={errors.phone}
-          className="bg-white"
-        />
-
-        <Input
-          label="Line ID"
-          type="text"
-          id="lineID"
-          name="lineID"
-          value={formData.lineID}
-          onChange={(e) => handleChange("lineID", e.target.value)}
-          placeholder="Line ID ของคุณ"
-          required
-          icon="chat"
-          error={errors.lineID}
-          className="bg-white"
-        />
-      </div>
-
       {/* Button Add Workplace */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -993,6 +909,90 @@ export default function SignUpForm() {
         )}
       </div>
 
+      {/* Form Fields Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <Input
+          label="ชื่อ (ภาษาไทย)"
+          id="firstName"
+          name="firstName"
+          value={formData.firstName}
+          onChange={(e) => handleChange("firstName", e.target.value)}
+          placeholder="กรอกชื่อจริง"
+          required
+          icon="person"
+          error={errors.firstName}
+          className="bg-white"
+        />
+
+        <Input
+          label="นามสกุล (ภาษาไทย)"
+          id="lastName"
+          name="lastName"
+          value={formData.lastName}
+          onChange={(e) => handleChange("lastName", e.target.value)}
+          placeholder="กรอกนามสกุล"
+          required
+          icon="assignment_ind"
+          error={errors.lastName}
+          className="bg-white"
+        />
+
+        <Input
+          label="อีเมล"
+          type="email"
+          name="email"
+          id="email"
+          value={formData.email}
+          onChange={(e) => handleChange("email", e.target.value)}
+          placeholder="your.email@example.com"
+          required
+          icon="mail"
+          error={errors.email}
+          className="bg-white"
+        />
+
+        <Input
+          label="เลขใบอนุญาต CE"
+          id="ceLicense"
+          name="ceLicense"
+          value={formData.ceLicense}
+          onChange={(e) => handleChange("ceLicense", e.target.value)}
+          placeholder="CE12345678"
+          required
+          icon="medical_services"
+          error={errors.ceLicense}
+          className="bg-white"
+        />
+
+        <Input
+          label="เบอร์โทรศัพท์"
+          type="tel"
+          id="phone"
+          name="phone"
+          value={formData.phone}
+          onChange={(e) => handleChange("phone", e.target.value)}
+          placeholder="081-234-5678"
+          required
+          icon="call"
+          error={errors.phone}
+          className="bg-white"
+        />
+
+        <Input
+          label="Line ID"
+          type="text"
+          id="lineID"
+          name="lineID"
+          value={formData.lineID}
+          onChange={(e) => handleChange("lineID", e.target.value)}
+          placeholder="Line ID ของคุณ"
+          required
+          icon="chat"
+          error={errors.lineID}
+          className="bg-white"
+        />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1315,7 +1315,7 @@ export default function SignUpForm() {
             <span className="material-symbols-outlined text-blue-500 mr-3 mt-0.5">
               security
             </span>
-            <p className="text-gray-700">
+            <p className="text-gray-50">
               เรารักษ์ข้อมูลส่วนบุคคลของท่านอย่างสูงสุด
               ข้อมูลที่ท่านให้กับระบบจะถูกใช้เฉพาะเพื่อการส่งตัวสัตว์ป่วย
               และการติดต่อระหว่างโรงพยาบาลเท่านั้น
@@ -1326,7 +1326,7 @@ export default function SignUpForm() {
             <span className="material-symbols-outlined text-blue-500 mr-3 mt-0.5">
               visibility_off
             </span>
-            <p className="text-gray-700">
+            <p className="text-gray-50">
               เราไม่เปิดเผยข้อมูลให้กับบุคคลที่สามโดยไม่ได้รับความยินยอม
               เว้นแต่ตามกฎหมายหรือหน่วยงานราชการร้องขอ
             </p>
@@ -1344,19 +1344,21 @@ export default function SignUpForm() {
                 <span className="material-symbols-outlined text-blue-500 text-sm mr-2">
                   check_circle
                 </span>
-                <span>ชื่อ นามสกุล สังกัดหน่วยงาน</span>
+                <span className="text-gray-900">
+                  ชื่อ นามสกุล สังกัดหน่วยงาน
+                </span>
               </li>
               <li className="flex items-center">
                 <span className="material-symbols-outlined text-blue-500 text-sm mr-2">
                   check_circle
                 </span>
-                <span>อีเมลและเบอร์ติดต่อ</span>
+                <span className="text-gray-900">อีเมลและเบอร์ติดต่อ</span>
               </li>
               <li className="flex items-center">
                 <span className="material-symbols-outlined text-blue-500 text-sm mr-2">
                   check_circle
                 </span>
-                <span>ข้อมูลการใช้งานระบบ</span>
+                <span className="text-gray-900">ข้อมูลการใช้งานระบบ</span>
               </li>
             </ul>
           </div>
@@ -1375,7 +1377,7 @@ export default function SignUpForm() {
             <span className="material-symbols-outlined text-purple-500 mr-3 mt-0.5">
               verified_user
             </span>
-            <p className="text-gray-700">
+            <p className="text-gray-50">
               การใช้งานระบบส่งตัวสัตว์ป่วยต้องเป็นผู้ลงทะเบียนและได้รับอนุญาตจากทางคณะสัตวแพทยศาสตร์
               มหาวิทยาลัยเชียงใหม่
             </p>
@@ -1385,7 +1387,7 @@ export default function SignUpForm() {
             <span className="material-symbols-outlined text-purple-500 mr-3 mt-0.5">
               block
             </span>
-            <p className="text-gray-700">
+            <p className="text-gray-50">
               ผู้ใช้ต้องไม่กระทำการใด ๆ ที่ละเมิดกฎหมาย หรือทำให้ระบบขัดข้อง
               เช่น การแฮก การใช้สคริปต์โจมตี
             </p>

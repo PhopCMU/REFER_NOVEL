@@ -1,6 +1,6 @@
 import type { ServiceReferral } from "../types/type";
 
-export const REFERRAL_SERVICES: ServiceReferral[] = [
+export const REFERRAL_SERVICES: any[] = [
   {
     id: "299bc437-8866-42cd-b907-339d0b30d80e",
     code: "OPH",
@@ -115,3 +115,5 @@ export function getServiceByCode(code: string): ServiceReferral | undefined {
 export function getActiveServices(): ServiceReferral[] {
   return REFERRAL_SERVICES.filter((s) => s.isActive);
 }
+
+

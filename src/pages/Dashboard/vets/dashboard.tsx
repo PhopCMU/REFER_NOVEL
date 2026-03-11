@@ -306,7 +306,7 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
   const stepIdx = STATUS_ORDER.indexOf(c.status);
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-screen overflow-y-auto pb-20">
       {/* Header */}
       <div className="flex items-start justify-between p-5 border-b border-slate-100 sticky top-0 bg-white z-10">
         <div>

@@ -14,6 +14,7 @@ import {
   exchangeCodeForSession,
   isAuthenticatedLocally,
 } from "../utils/authUtils";
+import file from "../constants/file";
 
 export default function AuthPage() {
   const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">(
@@ -204,7 +205,7 @@ export default function AuthPage() {
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
       <div className="w-full md:w-1/2 bg-white flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
+        <div className="w-full ">
           {/* Toggle Switch */}
           <div className="flex justify-center mb-8">
             <div className="bg-gray-100 p-1 rounded-full flex">
@@ -291,44 +292,165 @@ export default function AuthPage() {
             alt="Background"
             className="w-full h-full object-cover object-center"
           />
+          {/* Overlay Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-indigo-900/70" />
         </div>
-        <div className="absolute inset-0 bg-black/60 bg-opacity-30 flex items-center justify-center">
+
+        <div className="absolute inset-0 flex items-center justify-center p-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-center p-8 text-white"
+            transition={{ delay: 0.3 }}
+            className="text-center text-white w-full"
           >
+            {/* Logo/Icon */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.4, type: "spring" }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-white/50 backdrop-blur-sm rounded-2xl mb-6 border border-white/20"
+            >
+              <span className="material-symbols-outlined text-4xl text-white">
+                pet_supplies
+              </span>
+            </motion.div>
+
             {/* Title */}
-            <h2 className="text-5xl font-extrabold mb-4 tracking-tight">
-              Veterinary Referral CMU
+            <h2 className="text-4xl font-bold mb-3 tracking-tight">
+              Referral NOVEL
             </h2>
 
             {/* Subtitle */}
-            <p className="text-2xl font-medium mb-6">
-              Integrated platform for animal case transfer
-            </p>
+            {/* <p className="text-lg text-white/80 mb-8">
+              ระบบส่งต่อผู้ป่วยแบบครบวงจร
+            </p> */}
+
+            {/* Resource Cards - New Section */}
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              {/* For Veterinarians */}
+              <motion.div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/50 hover:bg-white/20 transition-all">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-1.5 bg-blue-400/20 rounded-lg">
+                    <span className="material-symbols-outlined text-blue-300 text-lg">
+                      stethoscope
+                    </span>
+                  </div>
+                  <h3 className="text-สเfont-medium text-white">
+                    สำหรับสัตวแพทย์
+                  </h3>
+                </div>
+                <ul className="space-y-2">
+                  <li>
+                    <button
+                      onClick={() =>
+                        window.open(
+                          window.location.origin + "" + file.manualsystem,
+                          "_blank",
+                        )
+                      }
+                      className="flex items-center gap-2 text-lg text-white/70 hover:text-white w-full text-left group"
+                    >
+                      <span className="material-symbols-outlined text-lg text-white/50 group-hover:text-white/80">
+                        menu_book
+                      </span>
+                      <span className="flex-1">คู่มือประกอบการใช้งานระบบ</span>
+                      <span className="material-symbols-outlined text-lg opacity-0 group-hover:opacity-100">
+                        arrow_forward
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() =>
+                        window.open(
+                          window.location.origin +
+                            "" +
+                            file.manualresetpassword,
+                          "_blank",
+                        )
+                      }
+                      className="flex items-center gap-2 text-lg text-white/70 hover:text-white w-full text-left group"
+                    >
+                      <span className="material-symbols-outlined text-lg text-white/50 group-hover:text-white/80">
+                        slideshow
+                      </span>
+                      <span className="flex-1">คู่มือการรีเซ็ตรหัสผ่าน</span>
+                      <span className="material-symbols-outlined text-lg opacity-0 group-hover:opacity-100">
+                        arrow_forward
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              </motion.div>
+
+              {/* For Staff */}
+              <motion.div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/20 transition-all">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-1.5 bg-purple-400/20 rounded-lg">
+                    <span className="material-symbols-outlined text-purple-300 text-lg">
+                      badge
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-medium text-white">
+                    สำหรับเจ้าหน้าที่
+                  </h3>
+                </div>
+                <ul className="space-y-2">
+                  <li>
+                    <button
+                      onClick={() =>
+                        window.open(
+                          window.location.origin + "" + file.manualstaff,
+                          "_blank",
+                        )
+                      }
+                      className="flex items-center gap-2 text-lg text-white/70 hover:text-white w-full text-left group"
+                    >
+                      <span className="material-symbols-outlined text-lg text-white/50 group-hover:text-white/80">
+                        menu_book
+                      </span>
+                      <span className="flex-1">คู่มือประกอบการใช้งานระบบ</span>
+                      <span className="material-symbols-outlined text-lg opacity-0 group-hover:opacity-100">
+                        arrow_forward
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() =>
+                        window.open(
+                          window.location.origin + "" + file.sop,
+                          "_blank",
+                        )
+                      }
+                      className="flex items-center gap-2 text-lg text-white/70 hover:text-white w-full text-left group"
+                    >
+                      <span className="material-symbols-outlined text-lg text-white/50 group-hover:text-white/80">
+                        description
+                      </span>
+                      <span className="flex-1">SOP</span>
+                      <span className="material-symbols-outlined text-lg opacity-0 group-hover:opacity-100">
+                        arrow_forward
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              </motion.div>
+            </div>
 
             {/* Satisfaction Button */}
             <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 4px 20px rgba(124, 58, 237, 0.5)",
-              }}
-              whileTap={{ scale: 0.98 }}
               onClick={() => setIsModalOpen(true)}
-              className="px-8 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 
-              text-xl font-semibold shadow-lg hover:shadow-xl
-              flex items-center justify-center gap-2 mx-auto"
+              className="px-6 py-2.5 rounded-lg bg-white text-gray-900 hover:bg-white/90 text-lg font-medium flex items-center justify-center gap-2 mx-auto shadow-lg transition-all"
             >
-              <span className="material-symbols-outlined text-2xl">
-                contract
-              </span>
+              <span className="material-symbols-outlined">contract</span>
               <span>ประเมินความพึงพอใจ</span>
             </motion.button>
+
+            {/* Footer Text */}
+            <p className=" text-white mt-6">
+              ศูนย์การเรียนรู้และส่งเสริมสุขภาพทางสัตวแพทย์ภาคเหนือ
+            </p>
           </motion.div>
         </div>
       </div>

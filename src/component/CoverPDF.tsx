@@ -156,12 +156,20 @@ async function mergeMedicalFilesToPDF(options: {
 }) {
   const { files, baseUrl, signal, onProgress } = options;
 
+  // ✅ กรองไฟล์ APPOINTMENT ออกก่อนประมวลผล
+  const filteredFiles = files.filter((f) => f.category !== "APPOINTMENT");
+
+  if (filteredFiles.length === 0) {
+    throw new Error("No valid files to merge (APPOINTMENT files excluded)");
+  }
+
   const mergedPdf = await PDFDocument.create();
 
   let processed = 0;
-  const total = files.length;
+  const total = filteredFiles.length;
 
-  for (const file of files) {
+  for (const file of filteredFiles) {
+    // ✅ ใช้ filteredFiles แทน files
     if (signal?.aborted) throw new Error("PDF generation cancelled");
 
     const url = resolveFileUrl(file.fileUrl, baseUrl);
@@ -203,9 +211,7 @@ async function mergeMedicalFilesToPDF(options: {
         console.warn("PDF load failed, skipped:", file.originalName);
       }
     } else if (
-      /* ================= OFFICE FILES =================
-       Must convert server-side
-    ================================================= */
+      /* ================= OFFICE FILES ================= */
       file.mimeType.includes("word") ||
       file.mimeType.includes("excel")
     ) {
