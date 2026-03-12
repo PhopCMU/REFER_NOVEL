@@ -113,13 +113,19 @@ const STAT_CARDS = [
 ];
 
 // ── Helper Functions ─────────────────────────────────────────────────────
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return "-";
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return "-";
+  }
 }
 
 // ── Components ───────────────────────────────────────────────────────────
@@ -191,11 +197,13 @@ export default function DashboardAdmin() {
   const handleSearch = async () => {
     setCurrentPage(1);
     let s = startDate
-      ? `${startDate}T00:00:00.000Z`
+      ? getStartOfDay(new Date(startDate))
       : getStartOfDay(new Date());
-    let e = endDate ? `${endDate}T23:59:59.999Z` : getEndOfDay(new Date());
-    if (startDate && !endDate) e = `${startDate}T23:59:59.999Z`;
-    else if (!startDate && endDate) s = `${endDate}T00:00:00.000Z`;
+    let e = endDate ? getEndOfDay(new Date(endDate)) : getEndOfDay(new Date());
+    
+    if (startDate && !endDate) e = getEndOfDay(new Date(startDate));
+    else if (!startDate && endDate) s = getStartOfDay(new Date(endDate));
+    
     await fetchDataCases(s, e);
   };
 
@@ -211,6 +219,7 @@ export default function DashboardAdmin() {
   }, [RAW_CASES]);
 
   const filtered = useMemo(() => {
+    if (!Array.isArray(RAW_CASES)) return [];
     let list = [...RAW_CASES];
 
     if (filterStatus !== "all") {
@@ -220,29 +229,31 @@ export default function DashboardAdmin() {
       list = list.filter((c) => c.petSpecies === filterSpecies);
     }
     if (search) {
-      const q = search.toLowerCase();
+      const q = search.toLowerCase().trim();
       list = list.filter(
         (c) =>
-          c.title.toLowerCase().includes(q) ||
-          c.referenceNo.toLowerCase().includes(q) ||
-          c.petName.toLowerCase().includes(q) ||
-          c.ownerName.toLowerCase().includes(q) ||
-          c.serviceName.toLowerCase().includes(q),
+          (c.title?.toLowerCase().includes(q) ?? false) ||
+          (c.referenceNo?.toLowerCase().includes(q) ?? false) ||
+          (c.petName?.toLowerCase().includes(q) ?? false) ||
+          (c.ownerName?.toLowerCase().includes(q) ?? false) ||
+          (c.serviceName?.toLowerCase().includes(q) ?? false),
       );
     }
 
     if (sortBy === "newest") {
-      list.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+      list.sort((a, b) => {
+        const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tB - tA;
+      });
     } else if (sortBy === "oldest") {
-      list.sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
+      list.sort((a, b) => {
+        const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tA - tB;
+      });
     } else if (sortBy === "status") {
-      list.sort((a, b) => a.status.localeCompare(b.status));
+      list.sort((a, b) => (a.status || "").localeCompare(b.status || ""));
     }
 
     return list;

@@ -394,6 +394,7 @@ export interface CaseItem {
   lastName?: string;
   address?: string;
   phone?: string;
+  [key: string]: any;
   // NOTE: ไม่มี field owner ใน root object จาก DB จริง
 }
 

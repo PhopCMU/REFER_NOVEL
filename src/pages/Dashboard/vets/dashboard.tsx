@@ -205,19 +205,25 @@ const STATUS_ORDER: CaseStatus[] = [
 
 const fmtDate = (iso: string | null | undefined): string => {
   if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "-";
+  }
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatCard({ status, count, total }: StatCardProps) {
-  const cfg = STATUS_CONFIG[status];
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-2 hover:shadow-md transition-shadow">
@@ -248,6 +254,9 @@ function FileChip({ category }: FileChipProps) {
     HISTORY: { label: "ประวัติ", cls: "bg-slate-100 text-slate-600" },
     PHOTO: { label: "รูปภาพ", cls: "bg-sky-50 text-sky-600" },
     LAB: { label: "แลบ", cls: "bg-purple-50 text-purple-600" },
+    XRAY: { label: "X-ray", cls: "bg-orange-50 text-orange-600" },
+    BIOPSY: { label: "ชิ้นเนื้อ", cls: "bg-rose-50 text-rose-600" },
+    APPOINTMENT: { label: "ใบนัด", cls: "bg-emerald-50 text-emerald-600" },
   };
   const m = map[category] || {
     label: category,
@@ -263,9 +272,11 @@ function FileChip({ category }: FileChipProps) {
 }
 
 function StatusTimeline({ logs }: StatusTimelineProps) {
-  const sorted = [...logs].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-  );
+  const sorted = [...(logs || [])].sort((a, b) => {
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return timeA - timeB;
+  });
   return (
     <div className="flex flex-col gap-2">
       {sorted.map((log, i) => (
@@ -301,8 +312,8 @@ function StatusTimeline({ logs }: StatusTimelineProps) {
 
 function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
   if (!c) return null;
-  const sCfg = STATUS_CONFIG[c.status];
-  const tCfg = TYPE_CONFIG[c.referralType];
+  const sCfg = STATUS_CONFIG[c.status] || STATUS_CONFIG.PENDING;
+  const tCfg = TYPE_CONFIG[c.referralType] || TYPE_CONFIG.ONE_TIME;
   const stepIdx = STATUS_ORDER.indexOf(c.status);
 
   return (
@@ -311,12 +322,14 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
       <div className="flex items-start justify-between p-5 border-b border-slate-100 sticky top-0 bg-white z-10">
         <div>
           <div className="text-xs text-slate-400 font-mono mb-1">
-            {c.referenceNo}
+            {c.referenceNo || "-"}
           </div>
           <div className="font-bold text-slate-800 text-lg leading-tight">
-            {c.title}
+            {c.title || "ไม่มีชื่อเคส"}
           </div>
-          <div className="text-sm text-slate-500 mt-1">{c.description}</div>
+          <div className="text-sm text-slate-500 mt-1">
+            {c.description || "-"}
+          </div>
         </div>
         <button
           onClick={onClose}
@@ -341,7 +354,7 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
             {tCfg.label}
           </span>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
-            {c.serviceCode}
+            {c.serviceCode || "-"}
           </span>
         </div>
 
@@ -354,13 +367,14 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
             {STATUS_ORDER.map((s, i) => {
               const done = i <= stepIdx;
               const cur = i === stepIdx;
+              const cfg = STATUS_CONFIG[s];
               return (
                 <div
                   key={s}
                   className="flex items-center flex-1 last:flex-none"
                 >
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-all ${done ? STATUS_CONFIG[s].bar + " text-white shadow-sm" : "bg-slate-100 text-slate-400"} ${cur ? "ring-2 ring-offset-1 ring-cyan-300" : ""}`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-all ${done ? cfg.bar + " text-white shadow-sm" : "bg-slate-100 text-slate-400"} ${cur ? "ring-2 ring-offset-1 ring-cyan-300" : ""}`}
                   >
                     {done && i < stepIdx ? "✓" : i + 1}
                   </div>
@@ -393,21 +407,30 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
           </div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm border border-slate-100">
-              {SPECIES_EMOJI[c.pet.species] || "🐾"}
+              {SPECIES_EMOJI[c.pet?.species] || "🐾"}
             </div>
             <div>
-              <div className="font-bold text-slate-800">{c.pet.name}</div>
+              <div className="font-bold text-slate-800">
+                {c.pet?.name || "-"}
+              </div>
               <div className="text-xs text-slate-500">
-                {c.pet.species} · {c.pet.breed}
+                {c.pet?.species || "-"} · {c.pet?.breed || "-"}
               </div>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[
-              ["เพศ", c.pet.sex === "M" ? "ตัวผู้ ♂" : "ตัวเมีย ♀"],
-              ["อายุ", c.pet.age],
-              ["น้ำหนัก", `${c.pet.weight} กก.`],
-              ["สี", c.pet.color],
+              [
+                "เพศ",
+                c.pet?.sex === "M"
+                  ? "ตัวผู้ ♂"
+                  : c.pet?.sex === "F"
+                    ? "ตัวเมีย ♀"
+                    : "-",
+              ],
+              ["อายุ", c.pet?.age || "-"],
+              ["น้ำหนัก", c.pet?.weight ? `${c.pet.weight} กก.` : "-"],
+              ["สี", c.pet?.color || "-"],
             ].map(([k, v]) => (
               <div
                 key={k}
@@ -429,14 +452,14 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
           </div>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-base font-bold text-indigo-500">
-              {c.pet.owner.firstName?.[0] || "อ"}
+              {c.pet?.owner?.firstName?.[0] || "อ"}
             </div>
             <div>
               <div className="text-sm font-semibold text-slate-800">
-                {c.pet.owner.firstName} {c.pet.owner.lastName}
+                {c.pet?.owner?.firstName || "-"} {c.pet?.owner?.lastName || ""}
               </div>
               <div className="text-xs text-slate-500">
-                📞 {c.pet.owner.phone}
+                📞 {c.pet?.owner?.phone || "-"}
               </div>
             </div>
           </div>
@@ -449,7 +472,7 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
               โรงพยาบาล
             </div>
             <div className="text-xs font-semibold text-slate-700">
-              🏥 {c.hospital.name}
+              🏥 {c.hospital?.name || "-"}
             </div>
           </div>
           <div className="bg-slate-50 rounded-xl p-3">
@@ -457,7 +480,8 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
               สัตวแพทย์
             </div>
             <div className="text-xs font-semibold text-slate-700">
-              👨‍⚕️ {c.veterinarian.firstName} {c.veterinarian.lastName}
+              👨‍⚕️ {c.veterinarian?.firstName || "-"}{" "}
+              {c.veterinarian?.lastName || ""}
             </div>
           </div>
         </div>
@@ -468,18 +492,21 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
             คลินิกที่ส่งต่อ
           </div>
           <div className="text-sm font-semibold text-indigo-700">
-            🏨 {c.serviceReferral.name}
+            🏨 {c.serviceReferral?.name || "-"}
           </div>
         </div>
 
         {/* Appointment */}
-        {c.appointments?.length > 0 && (
+        {c.appointments && c.appointments.length > 0 && (
           <div className="bg-cyan-50 border border-cyan-100 rounded-xl p-4">
             <div className="text-xs font-bold text-cyan-600 mb-2">
               📅 การนัดหมาย
             </div>
             {c.appointments.map((a, i) => (
-              <div key={`${a.date}-${i}`}>
+              <div
+                key={`${a.date}-${i}`}
+                className={i > 0 ? "mt-2 pt-2 border-t border-cyan-100" : ""}
+              >
                 <div className="text-xs font-semibold text-cyan-800">
                   {fmtDate(a.date)}
                 </div>
@@ -490,7 +517,7 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
         )}
 
         {/* Files */}
-        {c.medicalFiles?.length > 0 && (
+        {c.medicalFiles && c.medicalFiles.length > 0 && (
           <div>
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
               เอกสารแนบ
@@ -508,7 +535,7 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
             ประวัติสถานะ
           </div>
-          <StatusTimeline logs={c.caseStatusLogs} />
+          <StatusTimeline logs={c.caseStatusLogs || []} />
         </div>
 
         {/* Meta */}
@@ -521,7 +548,7 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
 }
 
 function CaseCard({ c, isSelected, onClick }: CaseCardProps) {
-  const sCfg = STATUS_CONFIG[c.status];
+  const sCfg = STATUS_CONFIG[c.status] || STATUS_CONFIG.PENDING;
   return (
     <div
       onClick={onClick}
@@ -533,10 +560,10 @@ function CaseCard({ c, isSelected, onClick }: CaseCardProps) {
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex-1 min-w-0">
           <div className="text-[10px] text-slate-400 font-mono truncate">
-            {c.referenceNo}
+            {c.referenceNo || "-"}
           </div>
           <div className="font-semibold text-slate-800 text-sm mt-0.5 truncate">
-            {c.title}
+            {c.title || "ไม่มีชื่อเคส"}
           </div>
         </div>
         <div
@@ -547,14 +574,14 @@ function CaseCard({ c, isSelected, onClick }: CaseCardProps) {
 
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg" aria-hidden="true">
-          {SPECIES_EMOJI[c.pet.species] || "🐾"}
+          {SPECIES_EMOJI[c.pet?.species] || "🐾"}
         </span>
         <div className="min-w-0">
           <div className="text-xs font-semibold text-slate-700 truncate">
-            {c.pet.name}
+            {c.pet?.name || "-"}
           </div>
           <div className="text-[10px] text-slate-400 truncate">
-            {c.pet.breed}
+            {c.pet?.breed || "-"}
           </div>
         </div>
       </div>
@@ -575,12 +602,11 @@ function CaseCard({ c, isSelected, onClick }: CaseCardProps) {
       </div>
 
       <div className="mt-3 pt-3 border-t border-slate-100 text-[10px] text-slate-400 flex justify-between">
-        <span>🏥 {c.hospital.name}</span>
-        <span>
-          {new Date(c.createdAt).toLocaleDateString("th-TH", {
-            day: "2-digit",
-            month: "short",
-          })}
+        <span className="truncate flex-1 mr-2">
+          🏥 {c.hospital?.name || "-"}
+        </span>
+        <span className="flex-shrink-0">
+          {fmtDate(c.createdAt).split(" ")[0]}
         </span>
       </div>
     </div>
@@ -611,16 +637,13 @@ export default function DashboardVet() {
       // GetCaseReferral คืนค่า resp.data มาแล้ว (ซึ่งก็คือ { data: [...] })
       const result = await GetCaseReferral(payload);
 
-      // --- FIX: ตรวจสอบ result.data เพราะ structure คือ { data: [...] } ---
       if (result && Array.isArray(result.data)) {
         setCases(result.data);
-      } else {
+      } else if (Array.isArray(result)) {
         // Fallback: ถ้า API เปลี่ยนโครงสร้างมาเป็น Array ตรงๆ
-        if (Array.isArray(result)) {
-          setCases(result);
-        } else {
-          setCases([]);
-        }
+        setCases(result);
+      } else {
+        setCases([]);
       }
     } catch (error) {
       console.error("Failed to fetch cases", error);
@@ -643,17 +666,18 @@ export default function DashboardVet() {
   }, []);
 
   const handleSearch = async () => {
+    // ใช้ helper functions เพื่อความสม่ำเสมอ
     let timeStart = startDate
-      ? `${startDate}T00:00:00.000Z`
+      ? getStartOfDay(new Date(startDate))
       : getStartOfDay(new Date());
     let timeEnd = endDate
-      ? `${endDate}T23:59:59.999Z`
+      ? getEndOfDay(new Date(endDate))
       : getEndOfDay(new Date());
 
     if (startDate && !endDate) {
-      timeEnd = `${startDate}T23:59:59.999Z`;
+      timeEnd = getEndOfDay(new Date(startDate));
     } else if (!startDate && endDate) {
-      timeStart = `${endDate}T00:00:00.000Z`;
+      timeStart = getStartOfDay(new Date(endDate));
     }
 
     fetchDataCases(timeStart, timeEnd);
@@ -668,20 +692,25 @@ export default function DashboardVet() {
       COMPLETED: 0,
       CANCELLED: 0,
     };
-    cases.forEach((c) => {
-      s[c.status] = (s[c.status] || 0) + 1;
-    });
+    if (Array.isArray(cases)) {
+      cases.forEach((c) => {
+        if (c.status && s[c.status] !== undefined) {
+          s[c.status]++;
+        }
+      });
+    }
     return s;
   }, [cases]);
 
   const filtered = useMemo(() => {
+    if (!Array.isArray(cases)) return [];
     return cases.filter((c) => {
       const q = search.toLowerCase();
       const matchSearch =
         !q ||
-        c.referenceNo.toLowerCase().includes(q) ||
-        c.title.toLowerCase().includes(q) ||
-        c.pet.name.toLowerCase().includes(q);
+        (c.referenceNo?.toLowerCase().includes(q) ?? false) ||
+        (c.title?.toLowerCase().includes(q) ?? false) ||
+        (c.pet?.name?.toLowerCase().includes(q) ?? false);
       const matchStatus = filterStatus === "ALL" || c.status === filterStatus;
       return matchSearch && matchStatus;
     });
@@ -708,12 +737,13 @@ export default function DashboardVet() {
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1">
             <div className="text-xs text-slate-400 mb-2 font-medium">
-              สัดส่วนเคสตามสถานะ
+              สัดส่วนเคสตามสถานะ (ไม่รวมยกเลิก)
             </div>
             <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
               {STATUS_ORDER.map((s) => {
+                const totalActive = cases.length - (stats["CANCELLED"] || 0);
                 const pct =
-                  cases.length > 0 ? (stats[s] / cases.length) * 100 : 0;
+                  totalActive > 0 ? (stats[s] / totalActive) * 100 : 0;
                 return pct > 0 ? (
                   <div
                     key={s}

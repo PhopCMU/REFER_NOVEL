@@ -48,6 +48,7 @@ export const CATEGORY_ALLOWED_TYPES: Record<
   XRAY: toMutable(ALLOWED_MIME_TYPES),
   PHOTO: toMutable(ALLOWED_MIME_TYPES.filter((t) => t.startsWith("image/"))),
   BIOPSY: toMutable(ALLOWED_MIME_TYPES),
+  APPOINTMENT: toMutable(ALLOWED_MIME_TYPES),
 };
 
 export function isValidMimeType(mimeType: string): mimeType is AllowedMimeType {

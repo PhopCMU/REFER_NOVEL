@@ -61,7 +61,7 @@ export default function AuthPage() {
           switch (result.status) {
             case 200: // ✅ สำเร็จ
               setLoading(true);
-              setMessages(result.message || "กเข้าสู่ระบบสำเร็จ");
+              setMessages(result.message || "เข้าสู่ระบบสำเร็จ");
               setTimeout(() => {
                 setLoading(false);
                 setMessages("");
@@ -344,7 +344,7 @@ export default function AuthPage() {
                     <button
                       onClick={() =>
                         window.open(
-                          window.location.origin + "" + file.manualsystem,
+                          window.location.origin + file.manualsystem,
                           "_blank",
                         )
                       }
@@ -363,9 +363,7 @@ export default function AuthPage() {
                     <button
                       onClick={() =>
                         window.open(
-                          window.location.origin +
-                            "" +
-                            file.manualresetpassword,
+                          window.location.origin + file.manualresetpassword,
                           "_blank",
                         )
                       }
@@ -400,7 +398,7 @@ export default function AuthPage() {
                     <button
                       onClick={() =>
                         window.open(
-                          window.location.origin + "" + file.manualstaff,
+                          window.location.origin + file.manualstaff,
                           "_blank",
                         )
                       }
@@ -419,7 +417,7 @@ export default function AuthPage() {
                     <button
                       onClick={() =>
                         window.open(
-                          window.location.origin + "" + file.sop,
+                          window.location.origin + file.sop,
                           "_blank",
                         )
                       }

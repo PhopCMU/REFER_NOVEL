@@ -19,7 +19,7 @@ import { PostReferralCases } from "../../../api/PostApi";
 
 export default function ReferralsPage() {
   // === Get user login === //
-  const userLogin = getUserFromToken()!;
+  const userLogin = getUserFromToken();
   // === State === //
   const [owners, setOwners] = useState<FormOwnerProp[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -42,11 +42,17 @@ export default function ReferralsPage() {
   }, []);
 
   const fetchDataOwners = async () => {
-    const veterinarianId = userLogin?.id;
-    const hospitalId = userLogin?.hospitalId;
+    if (!userLogin) {
+      showToast.error("Please log in to continue");
+      setLoading(false);
+      return;
+    }
+    const veterinarianId = userLogin.id;
+    const hospitalId = userLogin.hospitalId;
 
     if (!veterinarianId || !hospitalId) {
       showToast.error("Missing veterinarianId or hospitalId");
+      setLoading(false);
       return;
     }
 
@@ -65,12 +71,12 @@ export default function ReferralsPage() {
         showToast.error("Error fetching owners");
         return;
       }
-      // console.log("resp", resp._data);
-      if (resp._data.length === 0) {
+      
+      const data = resp._data || [];
+      if (data.length === 0) {
         showToast.error("No owners found");
-        return;
       }
-      setOwners(resp._data || []);
+      setOwners(data);
 
       setMessage("");
       setLoading(false);
@@ -139,6 +145,14 @@ export default function ReferralsPage() {
     // ✅ แสดง success toast
     showToast.success("ส่งเคสสำเร็จ");
   };
+
+  if (!userLogin && !loading) {
+    return (
+      <div className="p-12 text-center text-gray-500">
+        <p>Please log in to access this page.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return <LoadingForm text={message} />;
@@ -226,7 +240,7 @@ export default function ReferralsPage() {
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {currentOwners.map((owner: any, index) => (
+            {currentOwners.map((owner: FormOwnerProp, index) => (
               <motion.div
                 key={owner.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -243,15 +257,15 @@ export default function ReferralsPage() {
                       <div className="flex items-center gap-3 min-w-[200px]">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
                           <span className="text-white font-bold">
-                            {owner.firstName?.charAt(0) || "A"}
+                            {owner.firstName?.charAt(0) || "อ"}
                           </span>
                         </div>
                         <div>
                           <h3 className="font-medium text-gray-900">
-                            {owner.firstName} {owner.lastName}
+                            {owner.firstName || "-"} {owner.lastName || ""}
                           </h3>
                           <p className="text-xs text-gray-500">
-                            ID: {owner.id?.slice(-8)}
+                            ID: {owner.id?.slice(-8) || "-"}
                           </p>
                         </div>
                       </div>
@@ -282,7 +296,7 @@ export default function ReferralsPage() {
                           <span className="material-symbols-outlined text-blue-500 text-sm">
                             pets
                           </span>
-                          <span>{owner.animals.length} ตัว</span>
+                          <span>{((owner.animals || []) || []).length} ตัว</span>
                         </div>
                       </div>
                     </div>
@@ -295,7 +309,7 @@ export default function ReferralsPage() {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setExpandedOwner(
-                            expandedOwner === owner?.id ? "" : owner.id,
+                            expandedOwner === owner?.id ? "" : owner.id ?? "",
                           );
                         }}
                         className="p-2 text-gray-600 items-center flex text-xs gap-x-2 hover:bg-blue-50 rounded-lg transition-colors"
@@ -328,7 +342,7 @@ export default function ReferralsPage() {
                         className="mt-4 space-y-4 overflow-hidden"
                       >
                         {/* Pets Table or Empty State */}
-                        {owner.animals.length ? (
+                        {(owner.animals || []).length ? (
                           <motion.div
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -396,7 +410,7 @@ export default function ReferralsPage() {
                               </thead>
 
                               <tbody className="divide-y divide-gray-200">
-                                {owner.animals.map(
+                                {(owner.animals || []).map(
                                   (pet: any, petIndex: number) => (
                                     <motion.tr
                                       key={pet.id}
@@ -554,7 +568,7 @@ export default function ReferralsPage() {
                                         จำนวนสัตว์ป่วยทั้งหมด
                                       </span>
                                       <span className="bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-full text-xs">
-                                        {owner.animals.length} ตัว
+                                        {(owner.animals || []).length} ตัว
                                       </span>
                                     </div>
                                   </td>

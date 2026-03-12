@@ -27,7 +27,7 @@ import { toLowerStr } from "../../../utils/helpers";
 
 export default function VetsPage() {
   // === Get user login === //
-  const userLogin = getUserFromToken()!;
+  const userLogin = getUserFromToken();
   // === State === //
   const [owners, setOwners] = useState<FormOwnerProp[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -75,11 +75,17 @@ export default function VetsPage() {
   }, []);
 
   const fetchDataOwners = async () => {
-    const veterinarianId = userLogin?.id;
-    const hospitalId = userLogin?.hospitalId;
+    if (!userLogin) {
+      showToast.error("Please log in to continue");
+      setLoading(false);
+      return;
+    }
+    const veterinarianId = userLogin.id;
+    const hospitalId = userLogin.hospitalId;
 
     if (!veterinarianId || !hospitalId) {
       showToast.error("Missing veterinarianId or hospitalId");
+      setLoading(false);
       return;
     }
 
@@ -98,15 +104,14 @@ export default function VetsPage() {
         showToast.error("Error fetching owners");
         return;
       }
-      // console.log("resp", resp._data);
-      if (resp._data.length === 0) {
+      
+      const data = resp._data || [];
+      if (data.length === 0) {
         showToast.error("No owners found");
-        return;
       }
-      setOwners(resp._data || []);
+      setOwners(data);
 
       setMessage("");
-
       setLoading(false);
     } catch (error) {
       console.error("Error fetching owners:", error);
@@ -163,24 +168,29 @@ export default function VetsPage() {
 
   const validateForm = (ownerForm: FormOwnerProp) => {
     if (!ownerForm.firstName?.trim() || !ownerForm.lastName?.trim()) {
-      return showToast.error("กรุณากรอกชื่อและนามสกุล");
+      showToast.error("กรุณากรอกชื่อและนามสกุล");
+      return true;
     }
 
     // 2. ตรวจสอบเบอร์โทรศัพท์ (ตัวเลข 10 หลัก)
     if (!/^[0-9]{10}$/.test(ownerForm.phone)) {
-      return showToast.error("กรุณาตรวจสอบเบอร์โทรศัพท์ให้ครบ 10 หลัก");
+      showToast.error("กรุณาตรวจสอบเบอร์โทรศัพท์ให้ครบ 10 หลัก");
+      return true;
     }
 
     // 3. ตรวจสอบ Email (ใช้ Regex สำหรับ Email มาตรฐาน)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (ownerForm.email && !emailRegex.test(ownerForm.email)) {
-      return showToast.error("รูปแบบอีเมลไม่ถูกต้อง");
+      showToast.error("รูปแบบอีเมลไม่ถูกต้อง");
+      return true;
     }
 
     // 4. ตรวจสอบที่อยู่ (เช่น ต้องมีความยาวอย่างน้อย 5 ตัวอักษร)
     if (!ownerForm.address?.trim() || ownerForm.address.length < 5) {
-      return showToast.error("กรุณากรอกที่อยู่ให้ครบถ้วน");
+      showToast.error("กรุณากรอกที่อยู่ให้ครบถ้วน");
+      return true;
     }
+    return false;
   };
 
   // เพิ่มเจ้าของใหม่
@@ -221,7 +231,7 @@ export default function VetsPage() {
         const payload: PayloadCreatedOwner = {
           ...ownerForm,
           veterinarianId: userLogin?.id ?? "",
-          hospitalId: userLogin?.hospitalId,
+          hospitalId: userLogin?.hospitalId || "",
         };
 
         setLoading(true);
@@ -233,7 +243,7 @@ export default function VetsPage() {
           setLoading(false);
           setMessage("");
           setTimeout(() => {
-            showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการแก้ไขเจ้าของ");
+            showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการเพิ่มเจ้าของ");
           }, 1000);
 
           return;
@@ -246,7 +256,7 @@ export default function VetsPage() {
         }, 1500);
       }
     } catch (error) {
-      showToast.error("เกิดข้อผิดพลาดในการเพิ่มเจ้าของ");
+      showToast.error("เกิดข้อผิดพลาดในการดำเนินการ");
       setLoading(false);
       setMessage("");
     }
@@ -303,13 +313,15 @@ export default function VetsPage() {
     try {
       const isConfirm = await confirm({
         title: "ยืนยันการลบเจ้าของ",
-        message: "คุณแน่ใจหรือไม่ว่าต้องการลบเจ้าของชื่อ: " + owner.firstName,
+        message: "คุณแน่ใจหรือไม่ว่าต้องการลบเจ้าของชื่อ: " + (owner.firstName || ""),
         confirmText: "ยืนยัน",
         cancelText: "ยกเลิก",
         danger: true,
       });
       if (!isConfirm) return;
 
+      setLoading(true);
+      setMessage("กําลังลบข้อมูลเจ้าของ...");
       const resp = await DeleteOwner(owner.id);
       if (!resp.success) {
         showToast.error(resp);
@@ -318,18 +330,15 @@ export default function VetsPage() {
         return;
       }
 
-      setLoading(true);
-      setMessage("กําลังลบข้อมูลเจ้าของ...");
-
       setTimeout(async () => {
         setLoading(false);
         setMessage("");
         await fetchDataOwners();
       }, 2000);
-
-      await fetchDataOwners();
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการลบเจ้าของ");
+      setLoading(false);
+      setMessage("");
     }
   };
 
@@ -348,37 +357,46 @@ export default function VetsPage() {
 
   const validatePetForm = (petForm: FormPetProp) => {
     if (!petForm.name?.trim()) {
-      return showToast.error("กรุณากรอกชื่อและนามสกุล");
+      showToast.error("กรุณากรอกชื่อสัตว์");
+      return true;
     }
 
     if (!petForm.breed?.trim()) {
-      return showToast.error("กรุณากรอกสายพันธุ์");
+      showToast.error("กรุณากรอกสายพันธุ์");
+      return true;
     }
 
     if (!petForm.color?.trim()) {
-      return showToast.error("กรุณากรอกสี");
+      showToast.error("กรุณากรอกสี");
+      return true;
     }
 
     if (!petForm.sex?.trim()) {
-      return showToast.error("กรุณากรอกเพศ");
+      showToast.error("กรุณากรอกเพศ");
+      return true;
     }
     if (!petForm.age?.trim()) {
-      return showToast.error("กรุณากรอกอายุ");
+      showToast.error("กรุณากรอกอายุ");
+      return true;
     }
 
     if (!petForm.sterilization?.trim()) {
-      return showToast.error("กรุณากรอกประวัติการทำหมัน");
+      showToast.error("กรุณากรอกประวัติการทำหมัน");
+      return true;
     }
 
     if (!petForm.species?.trim()) {
-      return showToast.error("กรุณากรอกประเภทสัตว์");
+      showToast.error("กรุณากรอกประเภทสัตว์");
+      return true;
     } else {
       if (petForm.species === "Exotic") {
         if (!petForm.exoticdescription?.trim()) {
-          return showToast.error("กรุณากรอกรายละเอียดสัตว์ เช่น นก เต๋า อื่นๆ");
+          showToast.error("กรุณากรอกรายละเอียดสัตว์ เช่น นก เต๋า อื่นๆ");
+          return true;
         }
       }
     }
+    return false;
   };
 
   // เพิ่มหรืออัปเดตสัตว์
@@ -429,7 +447,7 @@ export default function VetsPage() {
           setLoading(false);
           setMessage("");
           setTimeout(() => {
-            showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการแก้ไขสัตว์");
+            showToast.error(resp ? resp : "เกิดข้อผิดพลาดในการเพิ่มสัตว์");
           }, 1500);
           return;
         }
@@ -443,7 +461,7 @@ export default function VetsPage() {
         }, 1000);
       }
     } catch (error) {
-      showToast.error("เกิดข้อผิดพลาดในการเพิ่มสัตว์");
+      showToast.error("เกิดข้อผิดพลาดในการดำเนินการ");
       setLoading(false);
       setMessage("");
     }
@@ -452,7 +470,6 @@ export default function VetsPage() {
   const editPet = async (ownerId: string, pet: FormPetProp) => {
     try {
       if (!ownerId) return showToast.error("กรุณาเลือกเจ้าของ");
-      if (validatePetForm(pet)) return;
       setEditingPetId(pet.id ?? "");
       setPetForm({
         ...pet,
@@ -471,13 +488,15 @@ export default function VetsPage() {
     try {
       const isConfirmed = await confirm({
         title: "ยืนยันการลบสัตว์",
-        message: "คุณต้องการลบสัตว์นี้หรือไม่?" + "\n" + pet.name,
+        message: "คุณต้องการลบสัตว์นี้หรือไม่?" + "\n" + (pet.name || ""),
         confirmText: "ยืนยัน",
         cancelText: "ยกเลิก",
       });
 
       if (!isConfirmed) return;
 
+      setLoading(true);
+      setMessage("กําลังลบข้อมูลสัตว์...");
       const resp = await DeletePet(pet.id);
 
       if (!resp.success) {
@@ -487,9 +506,6 @@ export default function VetsPage() {
         return;
       }
 
-      setLoading(true);
-      setMessage("กําลังลบข้อมูลสัตว์...");
-
       setTimeout(async () => {
         setLoading(false);
         setMessage("");
@@ -497,6 +513,8 @@ export default function VetsPage() {
       }, 2000);
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการลบสัตว์");
+      setLoading(false);
+      setMessage("");
     }
   };
 
@@ -910,7 +928,7 @@ export default function VetsPage() {
                           <span className="material-symbols-outlined text-blue-500 text-sm">
                             pets
                           </span>
-                          <span>{owner.animals.length} ตัว</span>
+                          <span>{(owner.animals || []).length} ตัว</span>
                         </div>
                       </div>
                     </div>
@@ -961,7 +979,7 @@ export default function VetsPage() {
                       </motion.button>
 
                       {/* Delete Button (เฉพาะไม่มีสัตว์) */}
-                      {owner.animals.length === 0 && (
+                      {(owner.animals || []).length === 0 && (
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -1223,7 +1241,7 @@ export default function VetsPage() {
                         </div>
 
                         {/* Pets Table or Empty State */}
-                        {owner.animals.length ? (
+                        {(owner.animals || []).length ? (
                           <motion.div
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -1305,7 +1323,7 @@ export default function VetsPage() {
                               </thead>
 
                               <tbody className="divide-y divide-gray-200">
-                                {owner.animals.map(
+                                {(owner.animals || []).map(
                                   (pet: any, petIndex: number) => (
                                     <motion.tr
                                       key={pet.id}
@@ -1565,7 +1583,7 @@ export default function VetsPage() {
                                         จำนวนสัตว์ป่วยทั้งหมด
                                       </span>
                                       <span className="bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-full text-xs">
-                                        {owner.animals.length} ตัว
+                                        {(owner.animals || []).length} ตัว
                                       </span>
                                     </div>
                                   </td>

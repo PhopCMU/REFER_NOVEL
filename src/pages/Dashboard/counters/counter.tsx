@@ -151,37 +151,44 @@ const NEXT_STATUS: Partial<Record<TStatus, TStatus>> = {
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const fmtDate = (d: string | null | undefined) =>
-  d
-    ? new Date(d).toLocaleDateString("th-TH", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "-";
+const fmtDate = (d: string | null | undefined): string => {
+  if (!d) return "-";
+  try {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "-";
+    return date.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return "-";
+  }
+};
 
-const fmtTime = (d: string | null | undefined) =>
-  d
-    ? new Date(d).toLocaleTimeString("th-TH", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "";
+const fmtTime = (d: string | null | undefined): string => {
+  if (!d) return "";
+  try {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString("th-TH", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+};
 
-const fmtDateTime = (d: string | null | undefined) =>
-  d ? `${fmtDate(d)} · ${fmtTime(d)}` : "-";
+const fmtDateTime = (d: string | null | undefined): string => {
+  const dateStr = fmtDate(d);
+  const timeStr = fmtTime(d);
+  if (dateStr === "-" || !timeStr) return dateStr;
+  return `${dateStr} · ${timeStr}`;
+};
 
 const fmtBytes = (b: number) =>
   b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`;
-
-// const getInitials = (name: string) => {
-//   return name
-//     .split(" ")
-//     .map((n) => n[0])
-//     .join("")
-//     .toUpperCase()
-//     .slice(0, 2);
-// };
 
 // ─── Sub Components ────────────────────────────────────────────────────────────
 const StatusPill = ({
@@ -191,8 +198,7 @@ const StatusPill = ({
   status: TStatus;
   size?: "sm" | "md" | "lg";
 }) => {
-  const c = STATUS_CONFIG[status];
-  if (!c) return null;
+  const c = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
 
   const sizeClasses = {
     sm: "text-xs px-2 py-0.5 gap-1",
@@ -211,7 +217,7 @@ const StatusPill = ({
 };
 
 const TypeBadge = ({ type }: { type: TReferralType }) => {
-  const c = TYPE_CONFIG[type];
+  const c = TYPE_CONFIG[type] || TYPE_CONFIG.ONE_TIME;
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${c.tailwindBg} border`}
@@ -310,8 +316,9 @@ const CaseCard = ({
   selected: boolean;
 }) => {
   // const sc = STATUS_CONFIG[data.status];
+  const species = data.pet?.species || "default";
   const speciesGradient =
-    SPECIES_COLOR[data.pet?.species] || "from-gray-400 to-gray-500";
+    SPECIES_COLOR[species] || "from-gray-400 to-gray-500";
 
   return (
     <motion.div
@@ -345,14 +352,14 @@ const CaseCard = ({
             <div
               className={`w-10 h-10 rounded-xl bg-gradient-to-br ${speciesGradient} flex items-center justify-center text-white text-lg shadow-md flex-shrink-0`}
             >
-              {SPECIES_EMOJI[data.pet?.species] || "🐾"}
+              {SPECIES_EMOJI[species] || "🐾"}
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-gray-900 truncate">
-                {data.pet?.name}
+                {data.pet?.name || "-"}
               </h3>
               <p className="text-xs text-gray-500 truncate flex items-center gap-1">
-                <span>{data.referenceNo}</span>
+                <span>{data.referenceNo || "-"}</span>
               </p>
               <p className="text-xs text-gray-500 truncate flex items-center gap-1">
                 <span>{fmtDate(data.createdAt)}</span>
@@ -365,12 +372,12 @@ const CaseCard = ({
         {/* Content */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-gray-800 line-clamp-1">
-            {data.title}
+            {data.title || "ไม่มีหัวข้อ"}
           </p>
 
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-600 border border-rose-200">
-              🏷️ {data.serviceCode}
+              🏷️ {data.serviceCode || "-"}
             </span>
             <TypeBadge type={data.referralType} />
           </div>
@@ -379,12 +386,12 @@ const CaseCard = ({
             <div className="flex items-center gap-1">
               <span className="text-gray-400">🏥</span>
               <span className="truncate max-w-[120px]">
-                {data.hospital?.name}
+                {data.hospital?.name || "-"}
               </span>
             </div>
             <div className="flex items-center gap-1">
               <span className="text-gray-400">👤</span>
-              <span>{data.pet?.owner?.firstName}</span>
+              <span>{data.pet?.owner?.firstName || "-"}</span>
             </div>
           </div>
         </div>
@@ -657,8 +664,8 @@ const ConfirmStatusModal = ({
   const [note, setNote] = useState(defaultNote ?? "");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState("");
-  const nc = STATUS_CONFIG[nextStatus];
-  const cc = STATUS_CONFIG[currentStatus];
+  const nc = STATUS_CONFIG[nextStatus] || STATUS_CONFIG.PENDING;
+  const cc = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.PENDING;
 
   const handleConfirm = async () => {
     if (!note || note.trim() === "") {
@@ -668,12 +675,14 @@ const ConfirmStatusModal = ({
     }
     setLoading(true);
     try {
-      let notes = defaultNote ?? "";
+      let finalNote = note;
       if (nextStatus === "CONFIRMED") {
-        notes = `สัตวแพทย์ชื่อ ${note}`;
+        finalNote = `สัตวแพทย์ชื่อ ${note}`;
       }
-      await onConfirm(notes ? notes : note);
+      await onConfirm(finalNote);
       onClose();
+    } catch (err) {
+      console.error("Status update confirmation failed", err);
     } finally {
       setLoading(false);
     }
@@ -897,15 +906,15 @@ const DetailPanel = ({
           <div className="flex items-center gap-4">
             <div
               className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${
-                SPECIES_COLOR[data.pet?.species] || "from-gray-200 to-gray-200"
+                SPECIES_COLOR[data.pet?.species || "default"] || "from-gray-200 to-gray-200"
               } flex items-center justify-center text-white text-2xl shadow-lg`}
             >
-              {SPECIES_EMOJI[data.pet?.species] || "🐾"}
+              {SPECIES_EMOJI[data.pet?.species || "default"] || "🐾"}
             </div>
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="font-bold text-2xl text-gray-900">
-                  {data.pet?.name}
+                  {data.pet?.name || "-"}
                 </h1>
                 <StatusPill status={data.status} />
               </div>
@@ -913,17 +922,17 @@ const DetailPanel = ({
                 <span>
                   {data.pet?.species === "Exotic"
                     ? data.pet?.exoticdescription || data.pet?.breed
-                    : data.pet?.breed}
+                    : data.pet?.breed || "-"}
                 </span>
                 <span>•</span>
-                <span>{data.pet?.sex === "M" ? "เพศผู้" : "เพศเมีย"}</span>
+                <span>{data.pet?.sex === "M" ? "เพศผู้" : data.pet?.sex === "F" ? "เพศเมีย" : "-"}</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="px-3 py-1.5 bg-gray-100 rounded-lg">
               <span className="text-xs font-mono text-gray-600">
-                {data.referenceNo}
+                {data.referenceNo || "-"}
               </span>
             </div>
             <button
@@ -960,12 +969,12 @@ const DetailPanel = ({
                 อัปโหลดใบนัด
               </button>
               <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                ต้องยืนยันเคสก่อนจึงอัปโหลดได้
+                ต้องได้รับใบนัดก่อนจึงอัปโหลดได้
               </div>
             </div>
           )}
 
-          {canAdvance && nextStatus && (
+          {canAdvance && nextStatus && STATUS_CONFIG[nextStatus] && (
             <button
               onClick={() => setShowConfirm(true)}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-bold shadow-lg transition-all bg-gradient-to-r ${STATUS_CONFIG[nextStatus].gradient} hover:shadow-xl`}
@@ -1037,7 +1046,7 @@ const DetailPanel = ({
               <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="text-lg">📋</span>
-                  รายละเอียดเคส #{data.referenceNo}
+                  รายละเอียดเคส #{data.referenceNo || "-"}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <InfoItem label="หัวข้อ" value={data.title} />
@@ -1047,7 +1056,7 @@ const DetailPanel = ({
                   />
                   <InfoItem
                     label="บริการ"
-                    value={`${data.serviceCode} · ${data.serviceReferral?.name}`}
+                    value={`${data.serviceCode || "-"} · ${data.serviceReferral?.name || "-"}`}
                   />
                   <InfoItem
                     label="วันที่ส่งตัว"
@@ -1096,7 +1105,7 @@ const DetailPanel = ({
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">
-                        {data.hospital?.name}
+                        {data.hospital?.name || "-"}
                       </p>
                       <p className="text-sm text-gray-500">สถานพยาบาล</p>
                     </div>
@@ -1107,8 +1116,7 @@ const DetailPanel = ({
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">
-                        {data.veterinarian?.firstName}{" "}
-                        {data.veterinarian?.lastName}
+                        {data.veterinarian?.firstName || "-"} {data.veterinarian?.lastName || ""}
                       </p>
                       <p className="text-sm text-gray-500">สัตวแพทย์</p>
                     </div>
@@ -1133,13 +1141,13 @@ const DetailPanel = ({
               <div className="flex flex-col gap-4bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="text-lg">👤</span>
-                  ข้อมูลเจ้าของ #{(data.pet?.owner as any)?.owner_codeId}
+                  ข้อมูลเจ้าของ #{((data.pet?.owner as any)?.owner_codeId) || "-"}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
                   <InfoItem
                     label="ชื่อ"
-                    value={`${data.pet?.owner?.firstName} ${data.pet?.owner?.lastName}`}
+                    value={`${data.pet?.owner?.firstName || "-"} ${data.pet?.owner?.lastName || ""}`}
                   />
                   <InfoItem
                     label="เบอร์ติดต่อ"
@@ -1160,7 +1168,7 @@ const DetailPanel = ({
               <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="text-lg">🐾</span>
-                  ข้อมูลสัตว์เลี้ยง #{(data?.pet as any)?.animal_codeId}
+                  ข้อมูลสัตว์เลี้ยง #{((data?.pet as any)?.animal_codeId) || "-"}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <InfoItem label="ชื่อ" value={data.pet?.name} />
@@ -1168,16 +1176,16 @@ const DetailPanel = ({
                     label="ชนิด / พันธุ์"
                     value={
                       data.pet?.species === "Exotic"
-                        ? `${data.pet?.exoticdescription || "Exotic"} (${data.pet?.breed})`
-                        : `${data.pet?.species} / ${data.pet?.breed}`
+                        ? `${data.pet?.exoticdescription || "Exotic"} (${data.pet?.breed || "-"})`
+                        : `${data.pet?.species || "-"} / ${data.pet?.breed || "-"}`
                     }
                   />
                   <InfoItem
                     label="เพศ / อายุ"
-                    value={`${data.pet?.sex === "M" ? "ชาย" : "หญิง"} / ${data.pet?.age}`}
+                    value={`${data.pet?.sex === "M" ? "ชาย" : data.pet?.sex === "F" ? "หญิง" : "-"} / ${data.pet?.age || "-"}`}
                   />
                   <InfoItem label="สี" value={data.pet?.color || "-"} />
-                  <InfoItem label="น้ำหนัก" value={`${data.pet?.weight} กก.`} />
+                  <InfoItem label="น้ำหนัก" value={data.pet?.weight ? `${data.pet.weight} กก.` : "-"} />
                   <InfoItem
                     label="ประสัติทำหมัน"
                     value={`${data.pet?.sterilization === "YES" ? "ทำแล้ว" : data.pet?.sterilization === "NO" ? "ยังไม่ได้ทำ" : "ไม่ทราบ"} `}
@@ -1200,7 +1208,6 @@ const DetailPanel = ({
                   .reverse()
                   .map((log: any, i: number) => {
                     const nc = STATUS_CONFIG[log.newStatus as TStatus];
-                    // const oc = STATUS_CONFIG[log.oldStatus as TStatus];
                     return (
                       <motion.div
                         key={log.id || i}
@@ -1217,9 +1224,9 @@ const DetailPanel = ({
                         {/* Timeline Dot */}
                         <div
                           className={`absolute left-0 w-6 h-6 rounded-full border-2 bg-white flex items-center justify-center`}
-                          style={{ borderColor: nc?.color }}
+                          style={{ borderColor: nc?.color || "#e2e8f0" }}
                         >
-                          <span className="text-xs">{nc?.icon}</span>
+                          <span className="text-xs">{nc?.icon || "•"}</span>
                         </div>
 
                         {/* Content */}
@@ -1230,10 +1237,6 @@ const DetailPanel = ({
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mb-3">
-                            {/* <span className="text-sm text-gray-600">
-                              {oc?.label || log.oldStatus}
-                            </span>
-                            <span className="text-gray-400">→</span> */}
                             <StatusPill status={log.newStatus} size="sm" />
                           </div>
                           {log.note && (
@@ -1354,7 +1357,7 @@ const DetailPanel = ({
               exit={{ opacity: 0, y: -10 }}
               className="space-y-3"
             >
-              {data.medicalFiles?.length > 0 && (
+              {data.medicalFiles && data.medicalFiles.length > 0 && (
                 <div className="flex justify-end mb-2">
                   <CoverPDF
                     medicalFiles={data.medicalFiles}
@@ -1403,14 +1406,14 @@ const DetailPanel = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-800 truncate group-hover:text-indigo-600 transition-colors">
-                            {f.originalName || f.name}
+                            {f.originalName || f.name || "-"}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
-                              {f.category}
+                              {f.category || "-"}
                             </span>
                             <span className="text-xs text-gray-400">
-                              {fmtBytes(f.sizeBytes)}
+                              {fmtBytes(f.sizeBytes || 0)}
                             </span>
                           </div>
                         </div>
@@ -1444,8 +1447,8 @@ const DetailPanel = ({
       {showUpload && (
         <UploadAppointmentModal
           caseId={data.id}
-          firstName={data?.firstName ?? " "}
-          lastName={data?.lastName ?? " "}
+          firstName={data.pet?.owner?.firstName ?? " "}
+          lastName={data.pet?.owner?.lastName ?? " "}
           onClose={() => setShowUpload(false)}
           onSuccess={onRefresh}
         />
@@ -1455,7 +1458,7 @@ const DetailPanel = ({
         <ConfirmStatusModal
           currentStatus={data.status}
           nextStatus={nextStatus}
-          caseRef={data.referenceNo}
+          caseRef={data.referenceNo || ""}
           defaultNote={
             nextStatus === "RECEIVED"
               ? `เจ้าหน้าที่ ${userLogin?.firstName || ""} ${userLogin?.lastName || ""}`
@@ -1481,7 +1484,7 @@ const DetailPanel = ({
         <ConfirmStatusModal
           currentStatus={data.status}
           nextStatus={"CANCELLED"}
-          caseRef={data.referenceNo}
+          caseRef={data.referenceNo || ""}
           onClose={() => setShowCancelConfirm(false)}
           onConfirm={async (note) => {
             await onStatusUpdate(data.id, "CANCELLED", note);
@@ -1555,11 +1558,13 @@ export default function CounterPage() {
 
   const handleSearch = async () => {
     let s = startDate
-      ? `${startDate}T00:00:00.000Z`
+      ? getStartOfDay(new Date(startDate))
       : getStartOfDay(new Date());
-    let e = endDate ? `${endDate}T23:59:59.999Z` : getEndOfDay(new Date());
-    if (startDate && !endDate) e = `${startDate}T23:59:59.999Z`;
-    else if (!startDate && endDate) s = `${endDate}T00:00:00.000Z`;
+    let e = endDate ? getEndOfDay(new Date(endDate)) : getEndOfDay(new Date());
+    
+    if (startDate && !endDate) e = getEndOfDay(new Date(startDate));
+    else if (!startDate && endDate) s = getStartOfDay(new Date(endDate));
+    
     await fetchDataCases(s, e);
   };
 
@@ -1572,7 +1577,7 @@ export default function CounterPage() {
       if (newStatus === "RECEIVED") {
         return (
           note.trim() ||
-          `เจ้าหน้าที่ ${userLogin?.firstName} ${userLogin?.lastName}`
+          `เจ้าหน้าที่ ${userLogin?.firstName || ""} ${userLogin?.lastName || ""}`
         );
       }
       return note;
@@ -1618,9 +1623,9 @@ export default function CounterPage() {
     return cases.filter((c) => {
       const matchSearch =
         !q ||
-        c.referenceNo.toLowerCase().includes(q) ||
-        c.title.toLowerCase().includes(q) ||
-        c.pet?.name.toLowerCase().includes(q);
+        (c.referenceNo?.toLowerCase().includes(q) ?? false) ||
+        (c.title?.toLowerCase().includes(q) ?? false) ||
+        (c.pet?.name?.toLowerCase().includes(q) ?? false);
       const matchStatus = filterStatus === "ALL" || c.status === filterStatus;
       return matchSearch && matchStatus;
     });

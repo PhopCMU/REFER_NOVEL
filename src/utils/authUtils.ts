@@ -93,9 +93,7 @@ export const getAdminFromToken = (): {
   if (!token) return null;
 
   try {
-    const payloadBase64 = token.split(".")[1];
-    const payloadJson = parseJwt(payloadBase64);
-    const payload = JSON.parse(payloadJson);
+    const payload = parseJwt(token);
     return payload;
   } catch (e) {
     console.error("Failed to parse token payload:", e);

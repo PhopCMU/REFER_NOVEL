@@ -206,8 +206,7 @@ const ProgressStepper = ({ status }: { status: TStatus }) => {
               <div
                 className="flex-1 h-1 mx-1 mb-4 rounded-full"
                 style={{
-                  backgroundColor:
-                    i < currentIdx ? (STATUS_ORDER[i] as any).color : "#e5e7eb",
+                  backgroundColor: i < currentIdx ? cfg.color : "#e5e7eb",
                 }}
               />
             )}
@@ -298,7 +297,7 @@ const DetailPanel = ({
   data,
   onClose,
 }: {
-  data: CaseItem | any;
+  data: CaseItem | null | undefined;
   onClose: () => void;
 }) => {
   const [tab, setTab] = useState("overview");
@@ -743,16 +742,13 @@ export default function AnimalReferralCase() {
       // GetCaseReferral คืนค่า resp.data มาแล้ว (ซึ่งก็คือ { data: [...] })
       const result = await GetCaseReferral(payload);
 
-      // --- FIX: ตรวจสอบ result.data เพราะ structure คือ { data: [...] } ---
       if (result && Array.isArray(result.data)) {
         setCases(result.data);
-      } else {
+      } else if (Array.isArray(result)) {
         // Fallback: ถ้า API เปลี่ยนโครงสร้างมาเป็น Array ตรงๆ
-        if (Array.isArray(result)) {
-          setCases(result);
-        } else {
-          setCases([]);
-        }
+        setCases(result);
+      } else {
+        setCases([]);
       }
     } catch (error) {
       console.error("Failed to fetch cases", error);
