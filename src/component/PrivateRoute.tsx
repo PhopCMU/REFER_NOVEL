@@ -19,7 +19,6 @@ const PrivateRoute: React.FC<Props> = ({ children }) => {
   }, []);
 
   if (!authChecked) {
-    if (!authChecked) {
       return (
         <div className="min-h-screen bg-linear-to-br from-gray-900 to-black flex flex-col items-center justify-center p-4">
           <div className="relative">
@@ -82,7 +81,6 @@ const PrivateRoute: React.FC<Props> = ({ children }) => {
         </div>
       );
     }
-  }
 
   return isAuth ? <>{children}</> : <Navigate to="/sign-in" replace />;
 };
