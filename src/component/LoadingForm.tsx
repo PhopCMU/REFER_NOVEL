@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-export const LoadingForm = (LoadingText: { text: string }) => {
+export const LoadingForm = ({ text }: { text: string }) => {
   const boxAnimations = [
     // Row 1
     {
@@ -71,10 +71,7 @@ export const LoadingForm = (LoadingText: { text: string }) => {
                 duration: 4,
                 repeat: Infinity,
                 ease: "easeInOut",
-                times: [
-                  0, 0.0909, 0.1818, 0.2727, 0.3636, 0.4545, 0.5455, 0.6364,
-                  0.7273, 0.8182, 0.9091, 1,
-                ],
+                times: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
               }}
             />
           ))}
@@ -92,7 +89,7 @@ export const LoadingForm = (LoadingText: { text: string }) => {
             ease: "easeInOut",
           }}
         >
-          <span className="text-gray-500 font-medium">{LoadingText.text}</span>
+          <span className="text-gray-500 font-medium">{text}</span>
           <motion.span
             className="inline-block"
             animate={{ opacity: [0, 1] }}
