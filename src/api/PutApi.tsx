@@ -63,3 +63,35 @@ export const PutcheckOtp = async (payload: PayloadCheckOtpProps) => {
     }
   }
 };
+
+export const PutMedicalFile = async (
+  fileId: string,
+  data: { category: string },
+) => {
+  // console.log(`Updating file ${fileId} with`, data);
+
+  const payload = {
+    fileId,
+    category: data.category,
+  };
+
+  try {
+    const encryptedDataQuery = encryptDataNew(payload);
+    const encodedURL = encodeURIComponent(encryptedDataQuery);
+    const resp = await apiWithAuth.put(
+      `/case/file/category?data=${encodedURL}`,
+    );
+
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in PutMedicalFile: ", error.response.data.message);
+        return error.response.data.message;
+      } else {
+        console.error("Error in PutMedicalFile: ", error);
+        return error;
+      }
+    }
+  }
+};

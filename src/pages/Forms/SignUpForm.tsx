@@ -152,16 +152,14 @@ export default function SignUpForm() {
 
   const handleChangeWorkplace = (field: "type" | "name", value: string) => {
     if (field === "name") {
-      const cleanedValue = sanitizeInputName(value); // 🧹 ทำความสะอาดก่อน
-
-      setFormDataWorkplace((prev) => ({ ...prev, name: cleanedValue }));
+      setFormDataWorkplace((prev) => ({ ...prev, name: value })); // Store raw value
 
       if (error) setError("");
 
-      if (formDataWorkplace.type === "hospital") {
-        const filtered = filterHospitals(cleanedValue);
+      if (formDataWorkplace.type === "hospital" && value.trim()) {
+        const filtered = filterHospitals(value);
         setSuggestions(filtered);
-        setShowSuggestions(true);
+        setShowSuggestions(filtered.length > 0);
       } else {
         setSuggestions([]);
         setShowSuggestions(false);
@@ -170,6 +168,7 @@ export default function SignUpForm() {
       setFormDataWorkplace((prev) => ({
         ...prev,
         type: value as "hospital" | "clinic",
+        name: "", // Clear name when type changes
       }));
       setSuggestions([]);
       setShowSuggestions(false);
@@ -178,36 +177,27 @@ export default function SignUpForm() {
 
   // เลือกจาก suggestion
   const handleSelectSuggestion = (hospitalName: string) => {
-    const cleanedName = sanitizeInputName(hospitalName); // 🧹 ตัดตอนเลือกด้วย
+    const cleanedName = sanitizeInputName(hospitalName); // Sanitize it once upon selection
 
     setFormDataWorkplace((prev) => ({ ...prev, name: cleanedName }));
     setSuggestions([]);
     setShowSuggestions(false);
-
-    if (!isThaiOnly(cleanedName)) {
-      setError("กรุณากรอกเป็นภาษาไทยเท่านั้น");
-    } else if (
-      formDataWorkplace.type === "hospital" &&
-      isHospitalExists(cleanedName)
-    ) {
-      setError("ข้อมูลนี้มีอยู่แล้วในระบบ");
-    } else {
-      setError("");
-    }
+    setError(""); // Clear any previous error
   };
   // ตรวจสอบก่อนบันทึก
   const validateWorkplace = (): boolean => {
-    if (!formDataWorkplace.name.trim()) {
+    const cleanedName = sanitizeInputName(formDataWorkplace.name);
+    if (!cleanedName.trim()) {
       setError("กรุณากรอกชื่อสถานที่");
       return false;
     }
-    if (!isThaiOnly(formDataWorkplace.name)) {
+    if (!isThaiOnly(cleanedName)) {
       setError("กรุณากรอกเป็นภาษาไทยเท่านั้น");
       return false;
     }
     if (
       formDataWorkplace.type === "hospital" &&
-      isHospitalExists(formDataWorkplace.name)
+      isHospitalExists(cleanedName)
     ) {
       setError("ข้อมูลนี้มีอยู่แล้วในระบบ");
       return false;
@@ -357,11 +347,14 @@ export default function SignUpForm() {
       const token = await executeRecaptcha("hospital_workplace");
       if (!token) {
         showToast.error("ยืนยัน reCAPTCHA ไม่สำเร็จ");
+        setIsLoading(false); // Stop loading
         return;
       }
 
+      const cleanedName = sanitizeInputName(formDataWorkplace.name);
+
       const payload: WorkplacePayload = {
-        name: formDataWorkplace.name,
+        name: cleanedName,
         type: formDataWorkplace.type,
         recaptchaToken: token,
       };
@@ -369,11 +362,12 @@ export default function SignUpForm() {
       const resp = await PostAddWorksplace(payload);
 
       if (!resp.success) {
-        showToast.error("เกิดข้อผิดพลาดในการเพิ่มสถานที่");
+        showToast.error(resp.message || "เกิดข้อผิดพลาดในการเพิ่มสถานที่");
+        setIsLoading(false); // Stop loading
         return;
       }
 
-      const meg = `เพิ่ม "${formDataWorkplace.name}" (${
+      const meg = `เพิ่ม "${cleanedName}" (${
         formDataWorkplace.type === "hospital" ? "โรงพยาบาลสัตว์" : "คลินิก"
       }) สำเร็จ!`;
 
@@ -383,6 +377,7 @@ export default function SignUpForm() {
       await fetchDataHospitalWorkplace();
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการเพิ่มสถานที่");
+      setIsLoading(false); // Stop loading
     }
   };
 
@@ -620,6 +615,9 @@ export default function SignUpForm() {
                     business
                   </span>
                   ชื่อสถานที่ทำงาน
+                  <span className="text-red-500 text-sm">
+                    กรอกเป็นภาษาไทยเท่านั้น
+                  </span>
                   <span className="text-blue-600 font-medium">
                     (
                     {formDataWorkplace.type === "hospital"
@@ -637,20 +635,9 @@ export default function SignUpForm() {
                     <input
                       type="text"
                       value={formDataWorkplace.name}
-                      onChange={(e) => {
-                        handleChangeWorkplace("name", e.target.value);
-                        // เรียกฟังก์ชันค้นหาเมื่อพิมพ์
-                        if (
-                          formDataWorkplace.type === "hospital" &&
-                          e.target.value.trim()
-                        ) {
-                          const filtered = filterHospitals(e.target.value);
-                          setSuggestions(filtered);
-                          setShowSuggestions(filtered.length > 0);
-                        } else {
-                          setShowSuggestions(false);
-                        }
-                      }}
+                      onChange={(e) =>
+                        handleChangeWorkplace("name", e.target.value)
+                      }
                       onFocus={() => {
                         if (
                           formDataWorkplace.type === "hospital" &&
@@ -852,7 +839,7 @@ export default function SignUpForm() {
             สถานที่ทำงาน
           </label>
           <span className="text-xs text-gray-500">
-            ({formData.workplaces.length}/5)
+            ({formData.workplaces.length}/10)
           </span>
         </div>
 
@@ -893,7 +880,7 @@ export default function SignUpForm() {
           </motion.div>
         ))}
 
-        {formData.workplaces.length < 5 && (
+        {formData.workplaces.length < 10 && (
           <motion.button
             type="button"
             onClick={addWorkplace}

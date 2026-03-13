@@ -104,7 +104,7 @@ export default function VetsPage() {
         showToast.error("Error fetching owners");
         return;
       }
-      
+
       const data = resp._data || [];
       if (data.length === 0) {
         showToast.error("No owners found");
@@ -313,7 +313,8 @@ export default function VetsPage() {
     try {
       const isConfirm = await confirm({
         title: "ยืนยันการลบเจ้าของ",
-        message: "คุณแน่ใจหรือไม่ว่าต้องการลบเจ้าของชื่อ: " + (owner.firstName || ""),
+        message:
+          "คุณแน่ใจหรือไม่ว่าต้องการลบเจ้าของชื่อ: " + (owner.firstName || ""),
         confirmText: "ยืนยัน",
         cancelText: "ยกเลิก",
         danger: true,
@@ -355,6 +356,28 @@ export default function VetsPage() {
     setIsEditingOwner(false);
   };
 
+  const isValidAge = (age: string): boolean => {
+    const cleanedAge = age.trim();
+    if (!cleanedAge) return false;
+
+    const hasYear = cleanedAge.includes("ปี");
+    const hasMonth = cleanedAge.includes("เดือน");
+
+    if (!hasYear && !hasMonth) {
+      return false;
+    }
+    const stripped = cleanedAge
+      .replace(/ปี/g, "")
+      .replace(/เดือน/g, "")
+      .replace(/\s/g, "");
+
+    if (stripped === "" || !/^\d+$/.test(stripped)) {
+      return false;
+    }
+
+    return true;
+  };
+
   const validatePetForm = (petForm: FormPetProp) => {
     if (!petForm.name?.trim()) {
       showToast.error("กรุณากรอกชื่อสัตว์");
@@ -377,6 +400,12 @@ export default function VetsPage() {
     }
     if (!petForm.age?.trim()) {
       showToast.error("กรุณากรอกอายุ");
+      return true;
+    }
+    if (!isValidAge(petForm.age)) {
+      showToast.error(
+        "รูปแบบอายุไม่ถูกต้อง กรุณากรอก เช่น '1 ปี 2 เดือน', '3 ปี', หรือ '4 เดือน'",
+      );
       return true;
     }
 
@@ -533,6 +562,7 @@ export default function VetsPage() {
       exoticdescription: "",
       breed: "",
     });
+    setEditingPetId("");
   };
 
   const isEditing = Boolean(editingPetId);
@@ -588,7 +618,10 @@ export default function VetsPage() {
           <span className=" text-teal-800 font-bold">เพิ่มข้อมูลเจ้าของ:</span>
           {showCreateOwnerForm ? (
             <button
-              onClick={() => setShowCreateOwnerForm(false)}
+              onClick={() => {
+                setShowCreateOwnerForm(false);
+                resetOwnerForm();
+              }}
               className="bg-teal-50 text-teal-800 hover:bg-teal-100 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 cursor-pointer border border-teal-200"
             >
               <ArrowBigUp className="text-sm" />
@@ -676,12 +709,12 @@ export default function VetsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
+                Email
               </label>
               <input
                 type="email"
                 name="email"
-                placeholder="กรอกอีเมล"
+                placeholder="กรอกอีเมล (ถ้ามี)"
                 value={ownerForm.email}
                 onChange={changeOwnerForm}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -1149,8 +1182,8 @@ export default function VetsPage() {
                                     onChange={changePetForm}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
                                   >
-                                    <option value="M">ชาย</option>
-                                    <option value="F">หญิง</option>
+                                    <option value="M">ผู้</option>
+                                    <option value="F">เมีย</option>
                                   </select>
                                 </div>
 
@@ -1174,16 +1207,19 @@ export default function VetsPage() {
                                 {/* อายุ */}
                                 <div>
                                   <label className="block text-xs font-medium text-gray-600 mb-1">
-                                    อายุ
+                                    อายุ <span className="text-red-500">*</span>
                                   </label>
                                   <input
                                     type="text"
                                     name="age"
-                                    placeholder="1 ปี 2 เดือน"
+                                    placeholder="เช่น 1 ปี 2 เดือน"
                                     value={petForm.age}
                                     onChange={changePetForm}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
                                   />
+                                  <p className="text-xs text-gray-500 mt-1 px-1">
+                                    ต้องมี 'ปี' หรือ 'เดือน' ต่อท้ายตัวเลข
+                                  </p>
                                 </div>
 
                                 {/* น้ำหนัก */}

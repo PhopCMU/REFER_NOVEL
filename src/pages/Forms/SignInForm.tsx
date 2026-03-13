@@ -33,6 +33,7 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [selectedHospital, setSelectedHospital] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -206,7 +207,7 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
         {/* Password */}
         <Input
           label="รหัสผ่าน"
-          type="password"
+          type={showPassword ? "text" : "password"}
           id="password"
           name="password"
           value={password}
@@ -217,6 +218,31 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
           error={errors.password}
           disabled={isSubmitting}
         />
+
+        {/* Show Password Toggle */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center justify-start gap-2 cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            id="showPasswordSignIn"
+            checked={showPassword}
+            onChange={() => setShowPassword(!showPassword)}
+            className="w-4 h-4 accent-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          />
+          <label
+            htmlFor="showPasswordSignIn"
+            className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-base">
+              {showPassword ? "visibility" : "visibility_off"}
+            </span>
+            {showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+          </label>
+        </motion.div>
 
         <SearchableSelect
           label="เลือกคลินิกหรือโรงพยาบาลสัตว์"

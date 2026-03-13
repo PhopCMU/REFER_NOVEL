@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GetCaseReferral } from "../../../api/GetApi";
+import { showToast } from "../../../utils/showToast";
 
 import { getEndOfDay, getStartOfDay } from "../../../utils/helpers";
 import CoverPDF from "../../../component/CoverPDF";
@@ -10,6 +11,10 @@ import type {
   TReferralType,
   TStatus,
 } from "../../../types/type";
+import { PostMedicalFile } from "../../../api/PostApi";
+import { PutMedicalFile } from "../../../api/PutApi";
+import { useConfirmTailwind } from "../../../hook/useConfirmTailwind";
+import { DeleteMedicalFile } from "../../../api/DeleteApi";
 
 // ─── Config Maps ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
@@ -293,14 +298,332 @@ const CaseCard = ({
   );
 };
 
+const MEDICAL_FILE_CATEGORIES = [
+  { id: "HISTORY", label: "ประวัติการรักษา" },
+  { id: "LAB", label: "ผลเลือด / ผล Lab" },
+  { id: "XRAY", label: "ภาพ X-Ray / Ultrasound" },
+  { id: "PHOTO", label: "รูปถ่าย" },
+  { id: "BIOPSY", label: "ผล Biopsy / Cytology" },
+];
+
+// New Modal Component for Adding/Editing Files
+const FileEditModal = ({
+  file,
+  caseId,
+  animalCodeId,
+  onClose,
+  onSuccess,
+}: {
+  file: any | null;
+  caseId: string;
+  animalCodeId: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [category, setCategory] = useState(file ? file.category : "HISTORY");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [meg, setMeg] = useState("");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file && !selectedFile) {
+      showToast.error("กรุณาเลือกไฟล์ที่ต้องการอัปโหลด");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      let response;
+      if (file) {
+        // Editing existing file's category
+        response = await PutMedicalFile(file.id, { category });
+        if (response.success) {
+          showToast.success("แก้ไขไฟล์จำลองสำเร็จ");
+          onSuccess();
+        }
+      } else if (selectedFile) {
+        // Adding a new file
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("caseId", caseId);
+        formData.append("animalCodeId", animalCodeId);
+        formData.append("category", category);
+        response = await PostMedicalFile(formData);
+        if (response.success) {
+          showToast.success("อัปโหลดไฟล์จำลองสำเร็จ");
+          onSuccess();
+        } else {
+          setMeg(response.message);
+          setTimeout(() => {
+            setMeg("");
+          }, 3000);
+        }
+      }
+    } catch (error) {
+      showToast.error("เกิดข้อผิดพลาดในการดำเนินการ");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, y: 10, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.95, y: 10, opacity: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="bg-white rounded-xl shadow-xl w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.2 }}
+          className="p-5 border-b border-gray-100"
+        >
+          <div className="flex items-center gap-3">
+            <motion.div
+              initial={{ scale: 0.8, rotate: -10 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{
+                delay: 0.15,
+                type: "spring",
+                stiffness: 300,
+                damping: 20,
+              }}
+              className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-blue-600">
+                {file ? "edit_document" : "upload_file"}
+              </span>
+            </motion.div>
+            <div>
+              <h3 className="font-semibold text-gray-800">
+                {file ? "แก้ไขประเภทไฟล์" : "อัปโหลดไฟล์ใหม่"}
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {file
+                  ? "เปลี่ยนประเภทของไฟล์เอกสาร"
+                  : "อัปโหลดไฟล์เอกสารสำหรับเคสนี้"}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Body */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.2 }}
+          className="p-5"
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!file && (
+              <motion.div
+                initial={{ opacity: 0, x: -5 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25, duration: 0.2 }}
+              >
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                  เลือกไฟล์
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    required
+                  />
+                  <motion.div
+                    whileHover={{ scale: 1.01, backgroundColor: "#f9fafb" }}
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-400 flex items-center gap-2 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-gray-400 text-lg">
+                      upload
+                    </span>
+                    <span className="flex-1 truncate">
+                      {selectedFile
+                        ? selectedFile.name
+                        : "คลิกเพื่อเลือกไฟล์..."}
+                    </span>
+                  </motion.div>
+                </div>
+                {selectedFile && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-2 mt-2 text-xs"
+                  >
+                    <span className="material-symbols-outlined text-gray-400 text-sm">
+                      description
+                    </span>
+                    <span className="text-gray-600 truncate flex-1">
+                      {selectedFile.name}
+                    </span>
+                    <span className="text-gray-400">
+                      ({fmtBytes(selectedFile.size)})
+                    </span>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
+            <motion.div
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.2 }}
+            >
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                ประเภทไฟล์
+              </label>
+              <motion.select
+                whileFocus={{ scale: 1.01 }}
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full p-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 outline-none bg-white transition-all"
+              >
+                {MEDICAL_FILE_CATEGORIES.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.label}
+                  </option>
+                ))}
+              </motion.select>
+              {meg && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-red-500 mt-1.5 flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    error
+                  </span>
+                  {meg}
+                </motion.p>
+              )}
+            </motion.div>
+          </form>
+        </motion.div>
+
+        {/* Footer */}
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.2 }}
+          className="px-5 py-4 bg-gray-50 rounded-b-xl border-t border-gray-100"
+        >
+          <div className="flex justify-end gap-2">
+            <motion.button
+              type="button"
+              onClick={onClose}
+              whileHover={{ scale: 1.02, backgroundColor: "#f9fafb" }}
+              whileTap={{ scale: 0.98 }}
+              className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              ยกเลิก
+            </motion.button>
+            <motion.button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              whileHover={!isSubmitting ? { scale: 1.02 } : {}}
+              whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors flex items-center gap-1"
+            >
+              {isSubmitting ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  <span>กำลังบันทึก...</span>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-sm">
+                    {file ? "save" : "upload"}
+                  </span>
+                  <span>{file ? "บันทึก" : "อัปโหลด"}</span>
+                </>
+              )}
+            </motion.button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const DetailPanel = ({
   data,
   onClose,
+  onDataChange,
 }: {
   data: CaseItem | null | undefined;
   onClose: () => void;
+  onDataChange: () => void;
 }) => {
   const [tab, setTab] = useState("overview");
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [editingFile, setEditingFile] = useState<any | null>(null);
+  // === Confirm === //
+  const { confirm, ConfirmModal } = useConfirmTailwind();
+
+  const handleAddFileClick = () => {
+    setEditingFile(null);
+    setShowFileModal(true);
+  };
+
+  const handleEditFileClick = (file: any) => {
+    setEditingFile(file);
+    setShowFileModal(true);
+  };
+
+  const handleDeleteFileClick = async (file: any) => {
+    if (!file.id) return;
+
+    const isConfirm = await confirm({
+      title: "ยืนยันการลบเจ้าของ",
+      message: `คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์: ${file.originalName}?`,
+      confirmText: "ยืนยัน",
+      cancelText: "ยกเลิก",
+      danger: true,
+    });
+    if (!isConfirm) return;
+
+    const response = await DeleteMedicalFile(file.id);
+    if (response.success) {
+      showToast.success("ลบไฟล์จำลองสำเร็จ");
+      onDataChange();
+    }
+  };
+
+  const handleModalSuccess = () => {
+    setShowFileModal(false);
+    onDataChange();
+  };
 
   if (!data)
     return (
@@ -339,6 +662,8 @@ const DetailPanel = ({
       animate={{ opacity: 1, x: 0 }}
       className="h-full flex flex-col bg-white"
     >
+      {/* Confirm Modal */}
+      <ConfirmModal />
       <div className="p-5 border-b border-slate-100 bg-white sticky top-0 z-10">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -392,7 +717,11 @@ const DetailPanel = ({
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-[2px] ${tab === t.id ? "border-sky-500 text-sky-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
+              className={`px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-[2px] ${
+                tab === t.id
+                  ? "border-sky-500 text-sky-600"
+                  : "border-transparent text-slate-400 hover:text-slate-600"
+              }`}
             >
               {t.label}
             </button>
@@ -448,7 +777,9 @@ const DetailPanel = ({
                 />
                 <InfoRow
                   label="สัตวแพทย์"
-                  value={`${data.veterinarian?.firstName || ""} ${data.veterinarian?.lastName || ""}`}
+                  value={`${data.veterinarian?.firstName || ""} ${
+                    data.veterinarian?.lastName || ""
+                  }`}
                 />
                 <InfoRow
                   label="ติดต่อ"
@@ -462,13 +793,17 @@ const DetailPanel = ({
                   label="ชนิด / พันธุ์"
                   value={
                     data.pet.species === "Exotic"
-                      ? `${data.pet.exoticdescription || "Exotic"} (${data.pet.breed})`
+                      ? `${data.pet.exoticdescription || "Exotic"} (${
+                          data.pet.breed
+                        })`
                       : `${data.pet.species} / ${data.pet.breed}`
                   }
                 />
                 <InfoRow
                   label="เพศ / อายุ"
-                  value={`${data.pet.sex === "M" ? "ชาย" : "หญิง"} / ${data.pet.age}`}
+                  value={`${
+                    data.pet.sex === "M" ? "ชาย" : "หญิง"
+                  } / ${data.pet.age}`}
                 />
                 <InfoRow label="สี" value={data.pet.color} />
                 <InfoRow label="น้ำหนัก" value={`${data.pet.weight} กก.`} />
@@ -500,7 +835,9 @@ const DetailPanel = ({
                       className="relative flex gap-4 mb-6"
                     >
                       <div
-                        className={`z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm ${nc?.tailwindBg || "bg-gray-100"} border-2`}
+                        className={`z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                          nc?.tailwindBg || "bg-gray-100"
+                        } border-2`}
                         style={{ borderColor: nc?.color }}
                       >
                         {nc?.icon || "?"}
@@ -578,7 +915,9 @@ const DetailPanel = ({
                             <button
                               onClick={() =>
                                 window.open(
-                                  `${import.meta.env.VITE_API_BASE_URL_FILE}${appointmentFile.fileUrl}`,
+                                  `${
+                                    import.meta.env.VITE_API_BASE_URL_FILE
+                                  }${appointmentFile.fileUrl}`,
                                   "_blank",
                                 )
                               }
@@ -630,20 +969,34 @@ const DetailPanel = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="space-y-2"
+              className="space-y-2 flex-1 justify-between"
             >
-              {/* 🔥 ปุ่มรวมไฟล์ */}
-              {data.medicalFiles?.length > 0 && (
-                <div className="flex justify-end mb-2">
-                  <CoverPDF
-                    medicalFiles={data.medicalFiles}
-                    baseUrl={import.meta.env.VITE_API_BASE_URL_FILE}
-                    outputFileName="medical-record.pdf"
-                  />
+              <div className=" mb-4">
+                <div className="flex justify-between gap-2">
+                  {data.medicalFiles && data.medicalFiles.length > 0 && (
+                    <CoverPDF
+                      medicalFiles={data.medicalFiles}
+                      baseUrl={import.meta.env.VITE_API_BASE_URL_FILE}
+                      outputFileName="medical-record.pdf"
+                    />
+                  )}
+                  <div className="flex flex-col gap-3 p-4 bg-white rounded-xl border border-gray-200 shadow-sm w-56">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleAddFileClick}
+                      className="relative overflow-hidden px-5 py-3.5 rounded-lg font-medium text-sm
+      transition-all duration-200 shadow-sm bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-green-500/25 hover:shadow-md"
+                    >
+                      + เพิ่มไฟล์
+                    </motion.button>
+                  </div>
                 </div>
-              )}
+              </div>
 
-              {data.medicalFiles && data.medicalFiles.length > 0 ? (
+              {data.medicalFiles &&
+              data.medicalFiles.filter((f: any) => f.category !== "APPOINTMENT")
+                .length > 0 ? (
                 data.medicalFiles
                   .filter((f: any) => f.category !== "APPOINTMENT") // ✅ กรองไฟล์นัดหมายออก
                   .map((f: any) => (
@@ -660,27 +1013,59 @@ const DetailPanel = ({
                           {f.originalName || f.name}
                         </p>
                         <p className="text-xs text-slate-400">
-                          {fmtBytes(f.sizeBytes)}
+                          {fmtBytes(f.sizeBytes)} ·{" "}
+                          {
+                            MEDICAL_FILE_CATEGORIES.find(
+                              (c) => c.id === f.category,
+                            )?.label
+                          }
                         </p>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          window.open(
-                            `${import.meta.env.VITE_API_BASE_URL_FILE}${f.fileUrl}`,
-                            "_blank",
-                          );
-                        }}
-                        className="text-xs bg-sky-50 text-sky-600 px-3 py-1.5 rounded-lg font-medium hover:bg-sky-100 transition-colors"
-                      >
-                        ดาวน์โหลด
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            window.open(
+                              `${import.meta.env.VITE_API_BASE_URL_FILE}${
+                                f.fileUrl
+                              }`,
+                              "_blank",
+                            );
+                          }}
+                          className="text-xs bg-sky-50 text-sky-600 px-3 py-1.5 rounded-lg font-medium hover:bg-sky-100 transition-colors"
+                        >
+                          Preview
+                        </button>
+                        <button
+                          onClick={() => handleEditFileClick(f)}
+                          className="text-xs bg-amber-50 text-amber-600 px-3 py-1.5 rounded-lg font-medium hover:bg-amber-100 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFileClick(f)}
+                          className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-medium hover:bg-red-100 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   ))
               ) : (
                 <EmptyState icon="📂" text="ไม่มีเอกสาร" />
               )}
             </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {showFileModal && (
+            <FileEditModal
+              file={editingFile}
+              caseId={data.id}
+              animalCodeId={data?.pet?.animal_codeId}
+              onClose={() => setShowFileModal(false)}
+              onSuccess={handleModalSuccess}
+            />
           )}
         </AnimatePresence>
       </div>
@@ -971,7 +1356,11 @@ export default function AnimalReferralCase() {
 
       {/* Main Content */}
       <div className="flex-1 relative">
-        <DetailPanel data={selectedCase} onClose={() => setSelected(null)} />
+        <DetailPanel
+          data={selectedCase}
+          onClose={() => setSelected(null)}
+          onDataChange={handleSearch}
+        />
       </div>
     </div>
   );

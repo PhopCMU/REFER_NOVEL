@@ -258,6 +258,27 @@ export const PostReferralCases = async (payload: PostReferralPayload) => {
   }
 };
 
+export const PostMedicalFile = async (formData: FormData) => {
+  try {
+    const resp = await apiWithAuth.post("/case/medical-file", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in PostReferralCases: ", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Error in PostReferralCases: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
+
 export const PostUpdateCaseStatus = async (payload: UpdateCaseStatusProps) => {
   try {
     const encyptedDataBody = encryptDataNew(payload);
