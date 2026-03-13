@@ -59,6 +59,33 @@ export const DeleteMedicalFile = async (fileId: string) => {
       }
     }
   }
+};
 
-  return { success: true };
+export const DeleteMedicalAppointmentFile = async (
+  aptId: string,
+  fileId: string,
+) => {
+  const payload = {
+    fileId: fileId,
+    appointment: aptId,
+  };
+
+  try {
+    const encryptedDataQuery = encryptDataNew(payload);
+    const encodedURL = encodeURIComponent(encryptedDataQuery);
+    const resp = await apiWithAuth.delete(
+      `/case/counter/file/delete?data=${encodedURL}`,
+    );
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in DeleteOwner: ", error.response.data.message);
+        return error.response.data.message;
+      } else {
+        console.error("Error in DeleteOwner: ", error.message);
+        return error.message;
+      }
+    }
+  }
 };

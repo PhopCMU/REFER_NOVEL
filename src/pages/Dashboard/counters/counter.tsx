@@ -15,6 +15,8 @@ import { getUserFromToken } from "../../../utils/authUtils";
 import { PostAppointment, PostUpdateCaseStatus } from "../../../api/PostApi";
 import { showToast } from "../../../utils/showToast";
 import { X } from "lucide-react";
+import { useConfirmTailwind } from "../../../hook/useConfirmTailwind";
+import { DeleteMedicalAppointmentFile } from "../../../api/DeleteApi";
 
 // ─── Config Maps ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
@@ -317,8 +319,7 @@ const CaseCard = ({
 }) => {
   // const sc = STATUS_CONFIG[data.status];
   const species = data.pet?.species || "default";
-  const speciesGradient =
-    SPECIES_COLOR[species] || "from-gray-400 to-gray-500";
+  const speciesGradient = SPECIES_COLOR[species] || "from-gray-400 to-gray-500";
 
   return (
     <motion.div
@@ -646,6 +647,7 @@ const UploadAppointmentModal = ({
 };
 
 // ─── Confirm Status Modal ──────────────────────────────────────────────────────
+
 const ConfirmStatusModal = ({
   currentStatus,
   nextStatus,
@@ -826,9 +828,36 @@ const DetailPanel = ({
   const [showConfirm, setShowConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
+  const { confirm, ConfirmModal } = useConfirmTailwind();
+
   useEffect(() => {
     setTab("overview");
   }, [data?.id]);
+
+  const handleDeleteAppointmentClick = async (
+    aptId: string,
+    appointment: string,
+  ) => {
+    if (!aptId) return;
+    if (!appointment) return;
+
+    const isConfirm = await confirm({
+      title: "ยืนยันการลบใบนัดหมาย",
+      message: "คุณแน่ใจหรือไม่ว่าต้องการลบใบนัดหมายนี้?",
+      confirmText: "ยืนยัน",
+      cancelText: "ยกเลิก",
+      danger: true,
+    });
+
+    if (!isConfirm) return;
+
+    const resp = await DeleteMedicalAppointmentFile(aptId, appointment);
+    if (resp.success) {
+      onRefresh();
+    } else {
+      showToast.error("เกิดข้อผิดพลาดในการลบใบนัดหมาย");
+    }
+  };
 
   if (!data) {
     return (
@@ -899,6 +928,7 @@ const DetailPanel = ({
       transition={{ duration: 0.3, type: "spring" }}
       className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-white"
     >
+      <ConfirmModal />
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         {/* Top Bar */}
@@ -906,7 +936,8 @@ const DetailPanel = ({
           <div className="flex items-center gap-4">
             <div
               className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${
-                SPECIES_COLOR[data.pet?.species || "default"] || "from-gray-200 to-gray-200"
+                SPECIES_COLOR[data.pet?.species || "default"] ||
+                "from-gray-200 to-gray-200"
               } flex items-center justify-center text-white text-2xl shadow-lg`}
             >
               {SPECIES_EMOJI[data.pet?.species || "default"] || "🐾"}
@@ -925,7 +956,13 @@ const DetailPanel = ({
                     : data.pet?.breed || "-"}
                 </span>
                 <span>•</span>
-                <span>{data.pet?.sex === "M" ? "เพศผู้" : data.pet?.sex === "F" ? "เพศเมีย" : "-"}</span>
+                <span>
+                  {data.pet?.sex === "M"
+                    ? "เพศผู้"
+                    : data.pet?.sex === "F"
+                      ? "เพศเมีย"
+                      : "-"}
+                </span>
               </div>
             </div>
           </div>
@@ -1116,7 +1153,8 @@ const DetailPanel = ({
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">
-                        {data.veterinarian?.firstName || "-"} {data.veterinarian?.lastName || ""}
+                        {data.veterinarian?.firstName || "-"}{" "}
+                        {data.veterinarian?.lastName || ""}
                       </p>
                       <p className="text-sm text-gray-500">สัตวแพทย์</p>
                     </div>
@@ -1141,7 +1179,7 @@ const DetailPanel = ({
               <div className="flex flex-col gap-4bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="text-lg">👤</span>
-                  ข้อมูลเจ้าของ #{((data.pet?.owner as any)?.owner_codeId) || "-"}
+                  ข้อมูลเจ้าของ #{(data.pet?.owner as any)?.owner_codeId || "-"}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -1168,7 +1206,7 @@ const DetailPanel = ({
               <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="text-lg">🐾</span>
-                  ข้อมูลสัตว์เลี้ยง #{((data?.pet as any)?.animal_codeId) || "-"}
+                  ข้อมูลสัตว์เลี้ยง #{(data?.pet as any)?.animal_codeId || "-"}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <InfoItem label="ชื่อ" value={data.pet?.name} />
@@ -1185,7 +1223,10 @@ const DetailPanel = ({
                     value={`${data.pet?.sex === "M" ? "ชาย" : data.pet?.sex === "F" ? "หญิง" : "-"} / ${data.pet?.age || "-"}`}
                   />
                   <InfoItem label="สี" value={data.pet?.color || "-"} />
-                  <InfoItem label="น้ำหนัก" value={data.pet?.weight ? `${data.pet.weight} กก.` : "-"} />
+                  <InfoItem
+                    label="น้ำหนัก"
+                    value={data.pet?.weight ? `${data.pet.weight} กก.` : "-"}
+                  />
                   <InfoItem
                     label="ประสัติทำหมัน"
                     value={`${data.pet?.sterilization === "YES" ? "ทำแล้ว" : data.pet?.sterilization === "NO" ? "ยังไม่ได้ทำ" : "ไม่ทราบ"} `}
@@ -1292,21 +1333,36 @@ const DetailPanel = ({
                             </p>
                           </div>
                         </div>
-
-                        {appointmentFile && (
+                        <div className="flex items-center gap-2">
+                          {appointmentFile && (
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  `${
+                                    import.meta.env.VITE_API_BASE_URL_FILE
+                                  }${appointmentFile.fileUrl}`,
+                                  "_blank",
+                                )
+                              }
+                              className="flex items-center gap-2 px-3 py-2 bg-cyan-50 text-cyan-600 rounded-lg text-sm font-medium hover:bg-cyan-100 transition-colors border border-cyan-200"
+                            >
+                              <span>⬇️</span>
+                              ดาวน์โหลด
+                            </button>
+                          )}
                           <button
                             onClick={() =>
-                              window.open(
-                                `${import.meta.env.VITE_API_BASE_URL_FILE}${appointmentFile.fileUrl}`,
-                                "_blank",
+                              handleDeleteAppointmentClick(
+                                apt.id,
+                                appointmentFile?.id || "",
                               )
                             }
-                            className="flex items-center gap-2 px-3 py-2 bg-cyan-50 text-cyan-600 rounded-lg text-sm font-medium hover:bg-cyan-100 transition-colors border border-cyan-200"
+                            className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors border border-red-200"
                           >
-                            <span>⬇️</span>
-                            ดาวน์โหลด
+                            <span>🗑️</span>
+                            ลบ
                           </button>
-                        )}
+                        </div>
                       </div>
 
                       <div className="flex gap-3 mb-3">
@@ -1561,10 +1617,10 @@ export default function CounterPage() {
       ? getStartOfDay(new Date(startDate))
       : getStartOfDay(new Date());
     let e = endDate ? getEndOfDay(new Date(endDate)) : getEndOfDay(new Date());
-    
+
     if (startDate && !endDate) e = getEndOfDay(new Date(startDate));
     else if (!startDate && endDate) s = getStartOfDay(new Date(endDate));
-    
+
     await fetchDataCases(s, e);
   };
 
