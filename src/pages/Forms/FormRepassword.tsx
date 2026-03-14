@@ -268,26 +268,26 @@ export default function FormRepassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 font-sans">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 font-sans">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* การ์ดหลักแบบโมเดิร์น */}
       <div className="w-full max-w-md rounded-3xl bg-white/80 backdrop-blur-xl p-8 shadow-2xl border border-white/50 relative overflow-hidden">
         {/* เอฟเฟกต์พื้นหลัง */}
-        <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-blue-400 to-cyan-300 rounded-full opacity-20 blur-3xl"></div>
-        <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-purple-400 to-pink-300 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute -top-20 -right-20 w-40 h-40 bg-linear-to-br from-blue-400 to-cyan-300 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-linear-to-br from-purple-400 to-pink-300 rounded-full opacity-20 blur-3xl"></div>
 
         {/* หัวข้อ */}
         <div className="relative z-10">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl shadow-lg flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-300">
+            <div className="w-16 h-16 bg-linear-to-br from-blue-600 to-cyan-600 rounded-2xl shadow-lg flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-300">
               <span className="material-symbols-outlined text-3xl text-white">
                 lock_reset
               </span>
             </div>
           </div>
 
-          <h2 className="mb-1 text-center text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+          <h2 className="mb-1 text-center text-3xl font-bold bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
             Reset Password
           </h2>
 
@@ -328,7 +328,7 @@ export default function FormRepassword() {
 
               <button
                 onClick={() => handleResendLink()}
-                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 py-3.5 font-bold text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                className="w-full rounded-xl bg-linear-to-r from-blue-600 to-cyan-600 py-3.5 font-bold text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
                 <span className="flex items-center justify-center gap-2">
                   <span className="material-symbols-outlined">refresh</span>
@@ -410,7 +410,7 @@ export default function FormRepassword() {
                 className={`w-full rounded-xl py-4 font-bold text-white shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 ${
                   otp.some((d) => !d)
                     ? "bg-gray-300 cursor-not-allowed shadow-none"
-                    : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:shadow-xl"
+                    : "bg-linear-to-r from-blue-600 to-cyan-600 hover:shadow-xl"
                 }`}
               >
                 <span className="flex items-center justify-center gap-2">
@@ -429,9 +429,9 @@ export default function FormRepassword() {
               className="space-y-5 relative z-10"
             >
               {/* Success Message */}
-              <div className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-4 border border-green-200">
+              <div className="rounded-xl bg-linear-to-r from-green-50 to-emerald-50 p-4 border border-green-200">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-white">
                       verified
                     </span>
@@ -469,7 +469,7 @@ export default function FormRepassword() {
                 </div>
 
                 {/* Password Requirements */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
+                <div className="bg-linear-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
                   <p className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-1">
                     <span className="material-symbols-outlined text-sm">
                       rule
@@ -577,7 +577,7 @@ export default function FormRepassword() {
                   /[A-Z]/.test(newPassword) &&
                   /[a-z]/.test(newPassword) &&
                   /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)
-                    ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-xl"
+                    ? "bg-linear-to-r from-green-600 to-emerald-600 hover:shadow-xl"
                     : "bg-gray-300 cursor-not-allowed shadow-none"
                 }`}
               >

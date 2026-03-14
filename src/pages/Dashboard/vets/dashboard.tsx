@@ -374,7 +374,7 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
                   className="flex items-center flex-1 last:flex-none"
                 >
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-all ${done ? cfg.bar + " text-white shadow-sm" : "bg-slate-100 text-slate-400"} ${cur ? "ring-2 ring-offset-1 ring-cyan-300" : ""}`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-all ${done ? cfg.bar + " text-white shadow-sm" : "bg-slate-100 text-slate-400"} ${cur ? "ring-2 ring-offset-1 ring-cyan-300" : ""}`}
                   >
                     {done && i < stepIdx ? "✓" : i + 1}
                   </div>
@@ -567,7 +567,7 @@ function CaseCard({ c, isSelected, onClick }: CaseCardProps) {
           </div>
         </div>
         <div
-          className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${sCfg.dot}`}
+          className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${sCfg.dot}`}
           aria-hidden="true"
         />
       </div>
@@ -605,9 +605,7 @@ function CaseCard({ c, isSelected, onClick }: CaseCardProps) {
         <span className="truncate flex-1 mr-2">
           🏥 {c.hospital?.name || "-"}
         </span>
-        <span className="flex-shrink-0">
-          {fmtDate(c.createdAt).split(" ")[0]}
-        </span>
+        <span className="shrink-0">{fmtDate(c.createdAt).split(" ")[0]}</span>
       </div>
     </div>
   );

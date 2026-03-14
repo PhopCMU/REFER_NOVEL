@@ -160,9 +160,9 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="flex items-center p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-sm"
+        className="flex items-center p-4 rounded-xl bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-sm"
       >
-        <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg mr-3">
+        <div className="shrink-0 p-2 bg-blue-100 rounded-lg mr-3">
           <span className="material-symbols-outlined text-blue-600">info</span>
         </div>
         <div>
@@ -185,7 +185,7 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
         draggable
         theme="light"
         toastClassName="rounded-xl shadow-lg"
-        progressClassName="bg-gradient-to-r from-blue-500 to-indigo-500"
+        progressClassName="bg-linear-to-r from-blue-500 to-indigo-500"
       />
 
       <div className="space-y-4">
@@ -284,8 +284,8 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
           disabled={isSubmitting}
           className={`w-full text-white py-4 rounded-xl shadow-lg flex items-center justify-center gap-3 text-base font-medium transition-all duration-200 ${
             isSubmitting
-              ? "bg-gradient-to-r from-blue-400 to-indigo-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              ? "bg-linear-to-r from-blue-400 to-indigo-400 cursor-not-allowed"
+              : "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
           }`}
         >
           {isSubmitting ? (
@@ -315,27 +315,27 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
               transition={{ duration: 3, ease: "linear" }}
-              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500"
+              className="h-full bg-linear-to-r from-blue-500 to-indigo-500"
             ></motion.div>
           </motion.div>
         )}
 
         {/* Divider */}
         <div className="relative flex items-center py-4">
-          <div className="flex-grow border-t border-gray-200"></div>
-          <span className="flex-shrink mx-4 text-gray-400 text-sm font-medium">
+          <div className="grow border-t border-gray-200"></div>
+          <span className="shrink mx-4 text-gray-400 text-sm font-medium">
             หรือ
           </span>
-          <div className="flex-grow border-t border-gray-200"></div>
+          <div className="grow border-t border-gray-200"></div>
         </div>
 
         {/* CMU Vet Section */}
         <motion.div className="space-y-3">
           <motion.div
             whileHover={{ scale: 1.005 }}
-            className="flex items-center p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 text-indigo-800 gap-3 text-sm shadow-sm"
+            className="flex items-center p-4 rounded-xl bg-linear-to-r from-indigo-50 to-purple-50 border border-indigo-200 text-indigo-800 gap-3 text-sm shadow-sm"
           >
-            <div className="flex-shrink-0 p-2 bg-indigo-100 rounded-lg">
+            <div className="shrink-0 p-2 bg-indigo-100 rounded-lg">
               <span className="material-symbols-outlined text-indigo-600">
                 school
               </span>

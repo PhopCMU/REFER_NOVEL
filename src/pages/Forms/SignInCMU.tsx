@@ -58,7 +58,7 @@ export const SignInCMUItAccount = () => {
       whileTap={{ scale: 0.98 }}
       onClick={handleClick}
       disabled={isLoading} // ✅ ป้องกันการคลิกซ้ำขณะโหลด
-      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-base font-medium transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+      className="w-full bg-linear-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-base font-medium transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
     >
       <span className="material-symbols-outlined">badge</span>
       เข้าสู่ระบบด้วย CMU Account

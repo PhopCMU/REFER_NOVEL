@@ -217,7 +217,7 @@ export default function AuthPage() {
                 {authMode === "signin" && (
                   <motion.span
                     layoutId="authToggle"
-                    className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full z-0"
+                    className="absolute inset-0 bg-linear-to-r from-blue-600 to-indigo-600 rounded-full z-0"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -235,7 +235,7 @@ export default function AuthPage() {
                 {authMode === "signup" && (
                   <motion.span
                     layoutId="authToggle"
-                    className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full z-0"
+                    className="absolute inset-0 bg-linear-to-r from-indigo-600 to-purple-600 rounded-full z-0"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -292,7 +292,7 @@ export default function AuthPage() {
             className="w-full h-full object-cover object-center"
           />
           {/* Overlay Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-indigo-900/70" />
+          <div className="absolute inset-0 bg-linear-to-br from-black/80 via-black/60 to-indigo-900/70" />
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center p-8">
@@ -415,10 +415,7 @@ export default function AuthPage() {
                   <li>
                     <button
                       onClick={() =>
-                        window.open(
-                          window.location.origin + file.sop,
-                          "_blank",
-                        )
+                        window.open(window.location.origin + file.sop, "_blank")
                       }
                       className="flex items-center gap-2 text-lg text-white/70 hover:text-white w-full text-left group"
                     >
@@ -528,7 +525,7 @@ export default function AuthPage() {
                     disabled={!rating}
                     className={`flex-1 py-2 px-4 rounded-lg font-medium text-white transition ${
                       rating
-                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow"
+                        ? "bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow"
                         : "bg-gray-400 cursor-not-allowed"
                     }`}
                   >

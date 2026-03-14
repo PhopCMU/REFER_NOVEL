@@ -13,7 +13,7 @@ const Footer = ({ user }: { user: any }) => {
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Copyright Section */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
             <span className="material-symbols-outlined text-white text-sm">
               local_hospital
             </span>
@@ -52,7 +52,7 @@ const Footer = ({ user }: { user: any }) => {
                   นโยบายความเป็นส่วนตัว
                 </span>
                 <motion.div
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-linear-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
                   layoutId="footerUnderline"
                 />
               </button>
@@ -68,7 +68,7 @@ const Footer = ({ user }: { user: any }) => {
                   เงื่อนไขการใช้งาน
                 </span>
                 <motion.div
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-linear-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
                   layoutId="footerUnderline"
                 />
               </button>
@@ -84,7 +84,7 @@ const Footer = ({ user }: { user: any }) => {
                   การช่วยเหลือ
                 </span>
                 <motion.div
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-linear-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
                   layoutId="footerUnderline"
                 />
               </button>
@@ -113,7 +113,7 @@ const Footer = ({ user }: { user: any }) => {
         <div className="space-y-4">
           {/* Header Icon */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
               <span className="material-symbols-outlined text-white text-2xl">
                 privacy_tip
               </span>
@@ -173,7 +173,7 @@ const Footer = ({ user }: { user: any }) => {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="p-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl border border-blue-500/20"
+              className="p-4 bg-linear-to-br from-blue-500/10 to-indigo-500/10 rounded-xl border border-blue-500/20"
             >
               <h4 className="font-semibold text-white flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-blue-400">
@@ -213,7 +213,7 @@ const Footer = ({ user }: { user: any }) => {
         <div className="space-y-4">
           {/* Header Icon */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-linear-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
               <span className="material-symbols-outlined text-white text-2xl">
                 policy
               </span>
@@ -272,7 +272,7 @@ const Footer = ({ user }: { user: any }) => {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20"
+              className="p-4 bg-linear-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20"
             >
               <h4 className="font-semibold text-white flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-purple-400">
@@ -300,7 +300,7 @@ const Footer = ({ user }: { user: any }) => {
         <div className="space-y-4">
           {/* Header Icon */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-linear-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
               <span className="material-symbols-outlined text-white text-2xl">
                 support_agent
               </span>
@@ -338,7 +338,7 @@ const Footer = ({ user }: { user: any }) => {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20"
+              className="p-4 bg-linear-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20"
             >
               <div className="space-y-4">
                 {[

@@ -504,9 +504,9 @@ export default function SignUpForm() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
-        className="flex items-center p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-sm"
+        className="flex items-center p-4 rounded-xl bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-sm"
       >
-        <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg mr-3">
+        <div className="shrink-0 p-2 bg-blue-100 rounded-lg mr-3">
           <span className="material-symbols-outlined text-blue-600">info</span>
         </div>
         <div>
@@ -549,7 +549,7 @@ export default function SignUpForm() {
           onClick={() => setAddWorkloction(!addWorkloction)}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:from-blue-600 hover:to-blue-700  w-full group"
+          className="flex items-center justify-center gap-2 bg-linear-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:from-blue-600 hover:to-blue-700  w-full group"
         >
           <span className="material-symbols-outlined text-lg">
             {addWorkloction ? "close" : "add"}
@@ -570,7 +570,7 @@ export default function SignUpForm() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
-              className="mt-4 p-6 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 rounded-2xl border border-blue-200/50  space-y-4  relative overflow-hidden"
+              className="mt-4 p-6 bg-linear-to-br from-blue-50/50 to-indigo-50/50 rounded-2xl border border-blue-200/50  space-y-4  relative overflow-hidden"
             >
               {/* Background Decoration */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-200/20 rounded-full -translate-y-12 translate-x-12"></div>
@@ -692,10 +692,10 @@ export default function SignUpForm() {
                         initial={{ opacity: 0, y: -5, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -5, scale: 0.95 }}
-                        className="absolute z-[50] w-full mt-2" // ✅ เพิ่ม z-index สูงมาก
+                        className="absolute z-50 w-full mt-2" // ✅ เพิ่ม z-index สูงมาก
                       >
                         <div className="bg-white border-2 border-blue-300 rounded-xl shadow-2xl overflow-hidden">
-                          <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold text-sm flex items-center gap-2">
+                          <div className="p-2 bg-linear-to-r from-blue-500 to-blue-600 text-white font-semibold text-sm flex items-center gap-2">
                             <span className="material-symbols-outlined text-base">
                               lightbulb
                             </span>
@@ -818,7 +818,7 @@ export default function SignUpForm() {
                   className={`w-full py-3 px-6 rounded-xl font-semibold  flex items-center justify-center gap-2 ${
                     !formDataWorkplace.name.trim()
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:from-green-600 hover:to-emerald-700"
+                      : "bg-linear-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:from-green-600 hover:to-emerald-700"
                   }`}
                 >
                   <span className="material-symbols-outlined text-lg">
@@ -871,7 +871,7 @@ export default function SignUpForm() {
                 <button
                   type="button"
                   onClick={() => removeWorkplace(index)}
-                  className="absolute right-[-10px] top-7 transform -translate-y-1/2  text-red-300  hover:text-red-900 transition-all duration-200 opacity-70 group-hover:opacity-100 cursor-pointer"
+                  className="absolute -right-2.5 top-7 transform -translate-y-1/2  text-red-300  hover:text-red-900 transition-all duration-200 opacity-70 group-hover:opacity-100 cursor-pointer"
                 >
                   <span className="material-symbols-outlined">close</span>
                 </button>
@@ -1067,7 +1067,7 @@ export default function SignUpForm() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4 }}
-          className="col-span-2 space-y-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200"
+          className="col-span-2 space-y-3 p-4 bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200"
         >
           <div className="flex items-center gap-2 mb-3">
             <span className="material-symbols-outlined text-blue-600 text-xl">
@@ -1250,7 +1250,7 @@ export default function SignUpForm() {
           boxShadow: "0 8px 25px rgba(79, 70, 229, 0.35)",
         }}
         whileTap={{ scale: 0.98 }}
-        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700  text-white py-4 rounded-xl shadow-lg font-medium text-base flex items-center justify-center gap-3 mt-6 transition-all duration-200"
+        className="w-full bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700  text-white py-4 rounded-xl shadow-lg font-medium text-base flex items-center justify-center gap-3 mt-6 transition-all duration-200"
       >
         <span className="material-symbols-outlined">how_to_reg</span>
         ยืนยันการสมัครสมาชิก

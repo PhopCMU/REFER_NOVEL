@@ -132,7 +132,7 @@ const Header = ({
   return (
     <header className="bg-slate-900/95 backdrop-blur-xl border-b border-slate-800/50 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-2xl pl-10">
       {/* Decorative Gradient Line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-purple-500 via-indigo-500 to-blue-500" />
       {/* Left: Menu Button + Page Title + Icon */}
       <div className="flex items-center gap-4">
         <motion.button
@@ -144,7 +144,7 @@ const Header = ({
           aria-label="เปิด/ปิดเมนู"
         >
           {/* Glow Effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-300"></div>
+          <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-indigo-500 rounded-xl opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-300"></div>
 
           {/* Button Background */}
           <div className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800/50 group-hover:bg-slate-800 border border-slate-700 group-hover:border-blue-500/50 transition-all duration-300">
@@ -156,7 +156,7 @@ const Header = ({
 
         <div className="flex items-center gap-3">
           {/* Vertical Divider */}
-          <div className="w-0.5 h-8 bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500 rounded-full"></div>
+          <div className="w-0.5 h-8 bg-linear-to-b from-blue-500 via-indigo-500 to-purple-500 rounded-full"></div>
 
           {/* Page Icon */}
           <motion.div
@@ -164,7 +164,7 @@ const Header = ({
             initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ duration: 0.2 }}
-            className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center border border-blue-500/30"
+            className="w-10 h-10 bg-linear-to-br from-blue-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center border border-blue-500/30"
             aria-hidden="true"
           >
             <span className="material-symbols-outlined text-blue-400">
@@ -179,7 +179,7 @@ const Header = ({
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="text-2xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent"
+              className="text-2xl font-bold bg-linear-to-r from-white to-slate-300 bg-clip-text text-transparent"
             >
               {currentTitle}
             </motion.h1>
@@ -233,7 +233,7 @@ const Header = ({
                 {user?.firstName || ""} {user?.lastName || ""}
               </p>
               {user?.ceLicense && (
-                <span className="px-1.5 py-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 rounded text-[10px] font-medium border border-amber-500/30">
+                <span className="px-1.5 py-0.5 bg-linear-to-r from-amber-500/20 to-orange-500/20 text-amber-400 rounded text-[10px] font-medium border border-amber-500/30">
                   {user.ceLicense}
                 </span>
               )}
@@ -259,14 +259,14 @@ const Header = ({
           >
             {/* Rotating Ring Animation */}
             <motion.div
-              className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 blur-md"
+              className="absolute -inset-1 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 blur-md"
               animate={showProfileMenu ? { rotate: 360 } : {}}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             />
 
             {/* Avatar Container */}
             <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-slate-800 shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600"></div>
+              <div className="absolute inset-0 bg-linear-to-br from-blue-500 via-indigo-500 to-purple-600"></div>
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
                 <span className="text-white font-bold text-lg drop-shadow-lg">
                   {user?.firstName?.charAt(1).toUpperCase() || "U"}
@@ -295,7 +295,7 @@ const Header = ({
                 role="menu"
               >
                 {/* Header with Gradient */}
-                <div className="h-12 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden">
+                <div className="h-12 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/10"></div>
                   <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/5 rounded-full"></div>
                   <div className="absolute -left-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full"></div>
@@ -304,7 +304,7 @@ const Header = ({
                 {/* Profile Info */}
                 <div className="relative px-4 pb-2 -mt-6">
                   <div className="absolute -top-10 left-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl flex items-center justify-center border-2 border-slate-800">
+                    <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-500 to-purple-600 shadow-xl flex items-center justify-center border-2 border-slate-800">
                       <span className="text-white font-bold text-lg">
                         {user?.firstName?.charAt(1).toUpperCase() || "U"}
                       </span>
@@ -343,7 +343,7 @@ const Header = ({
                       navigate("/novel/profile");
                       setShowProfileMenu(false);
                     }}
-                    className="w-full px-4 py-3 text-sm text-slate-300 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-indigo-500/10 rounded-xl transition-all duration-200 flex items-center gap-3 group text-left"
+                    className="w-full px-4 py-3 text-sm text-slate-300 hover:bg-linear-to-r hover:from-blue-500/10 hover:to-indigo-500/10 rounded-xl transition-all duration-200 flex items-center gap-3 group text-left"
                     role="menuitem"
                   >
                     <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-all duration-200">
@@ -362,12 +362,12 @@ const Header = ({
                     </span>
                   </motion.button> */}
 
-                  <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent my-2"></div>
+                  <div className="h-px bg-linear-to-r from-transparent via-slate-700 to-transparent my-2"></div>
 
                   <motion.button
                     whileHover={{ x: 4 }}
                     onClick={handleLogout}
-                    className="w-full px-4 py-3 text-sm text-red-400 hover:bg-gradient-to-r hover:from-red-500/10 hover:to-rose-500/10 rounded-xl transition-all duration-200 flex items-center gap-3 group text-left"
+                    className="w-full px-4 py-3 text-sm text-red-400 hover:bg-linear-to-r hover:from-red-500/10 hover:to-rose-500/10 rounded-xl transition-all duration-200 flex items-center gap-3 group text-left"
                     role="menuitem"
                   >
                     <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all duration-200">

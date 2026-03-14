@@ -96,12 +96,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
 
   return (
     <motion.aside
-      className="fixed top-0 left-0 z-40 h-full bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden flex flex-col"
+      className="fixed top-0 left-0 z-40 h-full bg-linear-to-b from-slate-900 to-slate-800 shadow-2xl overflow-hidden flex flex-col"
       animate={{ width: isOpen ? "260px" : "80px" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       {/* Decorative Gradient Line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500" />
 
       {/* Header */}
       <div className="relative p-5 border-b border-slate-700/50">
@@ -118,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
             <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
 
             {/* Logo */}
-            <div className="relative w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <div className="relative w-10 h-10 bg-linear-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
               <span className="material-symbols-outlined text-white text-xl">
                 local_hospital
               </span>
@@ -150,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
               className="mt-4 pt-4 border-t border-slate-700/50"
             >
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-linear-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm font-bold">
                     {user.email?.charAt(0).toUpperCase()}
                   </span>
@@ -189,7 +189,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
               {active && (
                 <motion.div
                   layoutId="activeIndicator"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-400 to-indigo-400 rounded-r-full"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-linear-to-b from-blue-400 to-indigo-400 rounded-r-full"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
@@ -200,7 +200,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
                   relative flex items-center w-full px-3 py-2.5 rounded-xl transition-all duration-200
                   ${
                     active
-                      ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-white"
+                      ? "bg-linear-to-r from-blue-600/20 to-indigo-600/20 text-white"
                       : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
                   }
                 `}
@@ -279,7 +279,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
       <div className="p-3 border-t border-slate-700/50">
         {/* Version Widget */}
         <motion.div
-          className="relative overflow-hidden bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-sm cursor-pointer hover:border-blue-500/30 transition-colors group"
+          className="relative overflow-hidden bg-linear-to-br from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-sm cursor-pointer hover:border-blue-500/30 transition-colors group"
           animate={{
             padding: isOpen ? "0.75rem" : "0.5rem",
           }}
@@ -289,7 +289,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
         >
           {/* Animated Background */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/5 to-indigo-600/0"
+            className="absolute inset-0 bg-linear-to-r from-blue-600/0 via-blue-600/5 to-indigo-600/0"
             animate={{
               x: ["-100%", "200%"],
             }}
@@ -311,7 +311,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
               transition={{ duration: 0.2 }}
             >
               <p className="text-xs text-slate-400">เวอร์ชั่นระบบ</p>
-              <p className="text-xs font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+              <p className="text-xs font-bold bg-linear-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                 {import.meta.env.VITE_VERSION_APP}
               </p>
             </motion.div>
@@ -320,7 +320,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
             <motion.div
               className={`
                 p-2 rounded-lg flex items-center justify-center
-                ${isOpen ? "bg-gradient-to-br from-blue-500/20 to-indigo-500/20" : "bg-gradient-to-br from-blue-500 to-indigo-500"}
+                ${isOpen ? "bg-linear-to-br from-blue-500/20 to-indigo-500/20" : "bg-linear-to-br from-blue-500 to-indigo-500"}
               `}
               animate={{
                 scale: isOpen ? 1 : 1.1,

@@ -123,7 +123,7 @@ export default function ForgotPasswordForm({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="flex items-center p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 text-blue-800"
+        className="flex items-center p-3 rounded-lg bg-linear-to-r from-blue-50 to-cyan-50 border border-blue-100 text-blue-800"
       >
         <span className="material-symbols-outlined mr-2">info</span>
         <p className="text-sm">
@@ -194,7 +194,7 @@ export default function ForgotPasswordForm({
             disabled={!canResend}
             className={`w-full py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 font-semibold transition-all ${
               canResend
-                ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
+                ? "bg-linear-to-r from-blue-600 to-cyan-600 text-white"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
             }`}
           >

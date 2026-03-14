@@ -45,9 +45,9 @@ const InfoModal: React.FC<InfoModalProps> = ({
               <div
                 className={`
                   flex items-center justify-between p-6 rounded-t-2xl
-                  ${icon === "privacy_tip" ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border-b border-blue-500/30" : ""}
-                  ${icon === "policy" ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-purple-500/30" : ""}
-                  ${icon === "support_agent" ? "bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-b border-green-500/30" : ""}
+                  ${icon === "privacy_tip" ? "bg-linear-to-r from-blue-600/20 to-indigo-600/20 border-b border-blue-500/30" : ""}
+                  ${icon === "policy" ? "bg-linear-to-r from-purple-600/20 to-pink-600/20 border-b border-purple-500/30" : ""}
+                  ${icon === "support_agent" ? "bg-linear-to-r from-green-600/20 to-emerald-600/20 border-b border-green-500/30" : ""}
                 `}
               >
                 <div className="flex items-center">
@@ -55,9 +55,9 @@ const InfoModal: React.FC<InfoModalProps> = ({
                     <div
                       className={`
                         w-10 h-10 rounded-xl flex items-center justify-center mr-3
-                        ${icon === "privacy_tip" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : ""}
-                        ${icon === "policy" ? "bg-gradient-to-br from-purple-500 to-pink-600" : ""}
-                        ${icon === "support_agent" ? "bg-gradient-to-br from-green-500 to-emerald-600" : ""}
+                        ${icon === "privacy_tip" ? "bg-linear-to-br from-blue-500 to-indigo-600" : ""}
+                        ${icon === "policy" ? "bg-linear-to-br from-purple-500 to-pink-600" : ""}
+                        ${icon === "support_agent" ? "bg-linear-to-br from-green-500 to-emerald-600" : ""}
                       `}
                     >
                       <span className="material-symbols-outlined text-white text-xl">
@@ -98,9 +98,9 @@ const InfoModal: React.FC<InfoModalProps> = ({
                   onClick={onClose}
                   className={`
                     px-6 py-2.5 rounded-xl font-medium flex items-center shadow-lg transition-all
-                    ${icon === "privacy_tip" ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" : ""}
-                    ${icon === "policy" ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" : ""}
-                    ${icon === "support_agent" ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700" : ""}
+                    ${icon === "privacy_tip" ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" : ""}
+                    ${icon === "policy" ? "bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" : ""}
+                    ${icon === "support_agent" ? "bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700" : ""}
                   `}
                 >
                   <span className="material-symbols-outlined text-lg mr-2">

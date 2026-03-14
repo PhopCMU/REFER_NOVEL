@@ -11,7 +11,7 @@ export default function Layout() {
   const userLogin = getUserFromToken()!;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50">
+    <div className="flex min-h-screen bg-linear-to-br from-cyan-50 via-blue-50 to-indigo-50">
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}

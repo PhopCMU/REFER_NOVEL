@@ -740,10 +740,10 @@ export default function VetsPage() {
           </div>
 
           {/* Medical Certificate Note Section */}
-          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+          <div className="mt-4 p-4 bg-linear-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
             <div className="flex items-start gap-3">
               {/* Icon */}
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <span className="material-symbols-outlined text-blue-600 text-2xl">
                   description
                 </span>
@@ -799,7 +799,7 @@ export default function VetsPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={addOwner}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-lg transition-all shadow-sm hover:shadow-blue-200"
+              className="bg-linear-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-lg transition-all shadow-sm hover:shadow-blue-200"
             >
               <span className="material-symbols-outlined">save</span>
               {isEditingOwner ? "อัปเดตเจ้าของ" : "เพิ่มเจ้าของ"}
@@ -910,8 +910,8 @@ export default function VetsPage() {
                     {/* Owner Info - Flex Wrap */}
                     <div className="flex flex-wrap items-center gap-3">
                       {/* Avatar + Name */}
-                      <div className="flex items-center gap-3 min-w-[200px]">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
+                      <div className="flex items-center gap-3 min-w-50">
+                        <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
                           <span className="text-white font-bold">
                             {owner.firstName?.charAt(0) || "A"}
                           </span>
@@ -941,7 +941,7 @@ export default function VetsPage() {
                           <span className="material-symbols-outlined text-gray-500 text-sm">
                             email
                           </span>
-                          <span className="max-w-[150px] truncate">
+                          <span className="max-w-150 truncate">
                             {owner.email || "ไม่มีอีเมล"}
                           </span>
                         </div>
@@ -951,7 +951,7 @@ export default function VetsPage() {
                           <span className="material-symbols-outlined text-gray-500 text-sm">
                             location_on
                           </span>
-                          <span className="max-w-[150px] truncate">
+                          <span className="max-w-150 truncate">
                             {owner.address || "ไม่มีที่อยู่"}
                           </span>
                         </div>
@@ -1244,7 +1244,7 @@ export default function VetsPage() {
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                   onClick={() => addPet(owner.id || "")}
-                                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 shadow-sm transition-all"
+                                  className="bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 shadow-sm transition-all"
                                 >
                                   <span className="material-symbols-outlined text-sm">
                                     {editingPetId ? "save" : "add"}
@@ -1632,7 +1632,7 @@ export default function VetsPage() {
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="text-center py-12 text-gray-500 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200"
+                            className="text-center py-12 text-gray-500 bg-linear-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200"
                           >
                             <div className="flex flex-col items-center max-w-sm mx-auto">
                               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -1720,7 +1720,7 @@ export default function VetsPage() {
                               onClick={() => setCurrentOwnerPage(pageNum)}
                               className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
                                 currentOwnerPage === pageNum
-                                  ? "bg-gradient-to-tr from-cyan-500 to-blue-500 text-white shadow-sm shadow-blue-500/20"
+                                  ? "bg-linear-to-tr from-cyan-500 to-blue-500 text-white shadow-sm shadow-blue-500/20"
                                   : "text-gray-600 hover:bg-gray-100 border border-transparent hover:border-gray-200"
                               }`}
                               aria-label={`ไปหน้า ${pageNum}`}

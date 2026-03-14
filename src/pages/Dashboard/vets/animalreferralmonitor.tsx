@@ -627,7 +627,7 @@ const DetailPanel = ({
 
   if (!data)
     return (
-      <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4 bg-gradient-to-b from-slate-50 to-white">
+      <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4 bg-linear-to-b from-slate-50 to-white">
         <motion.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -717,7 +717,7 @@ const DetailPanel = ({
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-[2px] ${
+              className={`px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-2 ${
                 tab === t.id
                   ? "border-sky-500 text-sky-600"
                   : "border-transparent text-slate-400 hover:text-slate-600"
@@ -822,7 +822,7 @@ const DetailPanel = ({
               exit={{ opacity: 0 }}
               className="relative pl-6"
             >
-              <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-slate-200" />
+              <div className="absolute left-15 top-2 bottom-2 w-0.5 bg-slate-200" />
               {data.caseStatusLogs && data.caseStatusLogs.length > 0 ? (
                 [...data.caseStatusLogs].reverse().map((log, i) => {
                   const nc = STATUS_CONFIG[log.newStatus as TStatus];
@@ -898,7 +898,7 @@ const DetailPanel = ({
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold">
+                            <div className="w-10 h-10 rounded-xl bg-linear-to-r from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold">
                               #{i + 1}
                             </div>
                             <div>
@@ -986,7 +986,7 @@ const DetailPanel = ({
                       whileTap={{ scale: 0.98 }}
                       onClick={handleAddFileClick}
                       className="relative overflow-hidden px-5 py-3.5 rounded-lg font-medium text-sm
-      transition-all duration-200 shadow-sm bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-green-500/25 hover:shadow-md"
+      transition-all duration-200 shadow-sm bg-linear-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-green-500/25 hover:shadow-md"
                     >
                       + เพิ่มไฟล์
                     </motion.button>
@@ -1199,9 +1199,9 @@ export default function AnimalReferralCase() {
   return (
     <div className="flex h-screen bg-slate-100 font-sans text-slate-800">
       {/* Left Sidebar */}
-      <div className="w-[400px] flex-shrink-0 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10">
+      <div className="w-100 shrink-0 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10">
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-sky-600 to-indigo-600 text-white">
+        <div className="p-4 border-b border-slate-100 bg-linear-to-r from-sky-600 to-indigo-600 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center text-2xl shadow-lg">
               🐾
@@ -1252,7 +1252,7 @@ export default function AnimalReferralCase() {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full p-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-xs focus:outline-none [color-scheme:dark]"
+                  className="w-full p-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-xs focus:outline-none "
                 />
               </div>
               <div className="flex-1">
@@ -1263,7 +1263,7 @@ export default function AnimalReferralCase() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full p-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-xs focus:outline-none [color-scheme:dark]"
+                  className="w-full p-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-xs focus:outline-none "
                 />
               </div>
             </div>

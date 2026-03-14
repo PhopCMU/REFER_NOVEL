@@ -141,7 +141,7 @@ function StatusBadge({ status }: StatusBadgeProps) {
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${m.twBg} ${m.twColor}`}
     >
       <motion.span
-        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+        className="w-1.5 h-1.5 rounded-full shrink-0"
         style={{ background: m.dot }}
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
@@ -200,10 +200,10 @@ export default function DashboardAdmin() {
       ? getStartOfDay(new Date(startDate))
       : getStartOfDay(new Date());
     let e = endDate ? getEndOfDay(new Date(endDate)) : getEndOfDay(new Date());
-    
+
     if (startDate && !endDate) e = getEndOfDay(new Date(startDate));
     else if (!startDate && endDate) s = getStartOfDay(new Date(endDate));
-    
+
     await fetchDataCases(s, e);
   };
 
@@ -298,15 +298,15 @@ export default function DashboardAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 text-slate-800 font-sans">
-      <div className="px-8 py-7 mx-auto max-w-[1600px]">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50/30 text-slate-800 font-sans">
+      <div className="px-8 py-7 mx-auto max-w-1600">
         {/* Title Section */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
             Dashboard ภาพรวมเคสทั้งหมด
           </h1>
           <p className="text-slate-500 text-sm mt-1 flex items-center gap-2">
@@ -331,7 +331,7 @@ export default function DashboardAdmin() {
               onClick={() => setFilter(s.key)}
               className={`relative overflow-hidden rounded-2xl p-5 cursor-pointer transition-all ${
                 filterStatus === s.key
-                  ? `bg-gradient-to-br ${s.gradient} shadow-lg shadow-${s.accent}-500/30`
+                  ? `bg-linear-to-br ${s.gradient} shadow-lg shadow-${s.accent}-500/30`
                   : "bg-white/80 backdrop-blur-sm border border-slate-200/60 hover:border-slate-300/80 shadow-sm hover:shadow-md"
               }`}
             >
@@ -406,7 +406,7 @@ export default function DashboardAdmin() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-slate-800 to-blue-800 rounded-2xl p-5 mb-5 shadow-xl"
+          className="bg-linear-to-r from-slate-800 to-blue-800 rounded-2xl p-5 mb-5 shadow-xl"
         >
           <div className="grid grid-cols-4 gap-3 items-end">
             <div>
@@ -417,7 +417,7 @@ export default function DashboardAdmin() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full p-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 [color-scheme:dark] placeholder-white/50"
+                className="w-full p-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 scheme:dark placeholder-white/50"
               />
             </div>
             <div>
@@ -428,7 +428,7 @@ export default function DashboardAdmin() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full p-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 [color-scheme:dark] placeholder-white/50"
+                className="w-full p-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 scheme:dark placeholder-white/50"
               />
             </div>
             <motion.button
@@ -436,7 +436,7 @@ export default function DashboardAdmin() {
               whileTap={{ scale: 0.98 }}
               onClick={handleSearch}
               disabled={isLoading}
-              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-[42px]"
+              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-10.5"
             >
               {isLoading ? (
                 <>
@@ -455,7 +455,7 @@ export default function DashboardAdmin() {
               whileTap={{ scale: 0.98 }}
               onClick={handleExportExcel}
               disabled={isLoading}
-              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-[42px]"
+              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-10.5"
             >
               {isLoading ? (
                 <>
@@ -474,7 +474,7 @@ export default function DashboardAdmin() {
               whileTap={{ scale: 0.98 }}
               onClick={handleExportPDF}
               disabled={isLoading}
-              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-[42px]"
+              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-10.5"
             >
               {isLoading ? (
                 <>
@@ -497,7 +497,7 @@ export default function DashboardAdmin() {
           animate={{ opacity: 1 }}
           className="bg-white/80 backdrop-blur-sm rounded-2xl px-5 py-4 mb-4 flex gap-3 items-center flex-wrap shadow-lg border border-white/50"
         >
-          <div className="flex-1 min-w-[260px] relative">
+          <div className="flex-1 min-w-65 relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-400">
               🔍
             </span>
@@ -544,7 +544,7 @@ export default function DashboardAdmin() {
             animate="visible"
             className="flex-1 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-white/50"
           >
-            <div className="grid grid-cols-[1fr_140px_160px_110px_80px] px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="grid grid-cols-[1fr_140px_160px_110px_80px] px-5 py-3 bg-linear-to-r from-slate-50 to-white border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               <div>เคส / สัตว์ป่วย</div>
               <div>บริการ</div>
               <div>โรงพยาบาล</div>
@@ -589,7 +589,7 @@ export default function DashboardAdmin() {
                     <div className="flex items-center gap-3">
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className={`w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
+                        className={`w-11 h-11 rounded-xl flex items-center justify-center text-2xl shrink-0 ${
                           c.petSpecies === "Dog"
                             ? "bg-blue-100"
                             : c.petSpecies === "Cat"
@@ -696,7 +696,7 @@ export default function DashboardAdmin() {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                           currentPage === pageNum
-                            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md shadow-blue-500/30"
+                            ? "bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-md shadow-blue-500/30"
                             : "border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 shadow-sm"
                         }`}
                       >
@@ -729,9 +729,9 @@ export default function DashboardAdmin() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="w-[340px] bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden flex-shrink-0 border border-white/50"
+                className="w-85 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden shrink-0 border border-white/50"
               >
-                <div className="bg-gradient-to-br from-slate-800 via-slate-800 to-blue-700 px-5 py-4">
+                <div className="bg-linear-to-br from-slate-800 via-slate-800 to-blue-700 px-5 py-4">
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="text-white/60 text-[11px] mb-1 font-mono">
@@ -812,12 +812,12 @@ export default function DashboardAdmin() {
                   </div>
 
                   {/* Service */}
-                  <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl p-4">
+                  <div className="bg-linear-to-r from-violet-50 to-indigo-50 rounded-xl p-4">
                     <div className="text-[11px] font-semibold text-violet-700 mb-2 uppercase tracking-wide">
                       บริการที่ส่งต่อ
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-sm">
+                      <span className="bg-linear-to-r from-violet-600 to-indigo-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-sm">
                         {selectedCase.serviceCode}
                       </span>
                       <span className="text-sm text-violet-900 font-medium">
@@ -855,7 +855,7 @@ export default function DashboardAdmin() {
                   <div className="grid grid-cols-2 gap-2">
                     <motion.div
                       whileHover={{ scale: 1.02 }}
-                      className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-3 text-center"
+                      className="bg-linear-to-br from-emerald-50 to-green-50 rounded-xl p-3 text-center"
                     >
                       <div className="text-2xl mb-1">📎</div>
                       <div className="text-2xl font-bold text-emerald-600">
@@ -867,7 +867,7 @@ export default function DashboardAdmin() {
                     </motion.div>
                     <motion.div
                       whileHover={{ scale: 1.02 }}
-                      className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-xl p-3 text-center"
+                      className="bg-linear-to-br from-sky-50 to-blue-50 rounded-xl p-3 text-center"
                     >
                       <div className="text-2xl mb-1">📅</div>
                       <div className="text-2xl font-bold text-sky-600">

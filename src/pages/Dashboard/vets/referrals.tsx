@@ -71,7 +71,7 @@ export default function ReferralsPage() {
         showToast.error("Error fetching owners");
         return;
       }
-      
+
       const data = resp._data || [];
       if (data.length === 0) {
         showToast.error("No owners found");
@@ -254,8 +254,8 @@ export default function ReferralsPage() {
                     {/* Owner Info - Flex Wrap */}
                     <div className="flex flex-wrap items-center gap-3">
                       {/* Avatar + Name */}
-                      <div className="flex items-center gap-3 min-w-[200px]">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
+                      <div className="flex items-center gap-3 min-w-50">
+                        <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
                           <span className="text-white font-bold">
                             {owner.firstName?.charAt(0) || "อ"}
                           </span>
@@ -296,7 +296,7 @@ export default function ReferralsPage() {
                           <span className="material-symbols-outlined text-blue-500 text-sm">
                             pets
                           </span>
-                          <span>{((owner.animals || []) || []).length} ตัว</span>
+                          <span>{(owner.animals || [] || []).length} ตัว</span>
                         </div>
                       </div>
                     </div>
@@ -309,7 +309,7 @@ export default function ReferralsPage() {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setExpandedOwner(
-                            expandedOwner === owner?.id ? "" : owner.id ?? "",
+                            expandedOwner === owner?.id ? "" : (owner.id ?? ""),
                           );
                         }}
                         className="p-2 text-gray-600 items-center flex text-xs gap-x-2 hover:bg-blue-50 rounded-lg transition-colors"
@@ -581,7 +581,7 @@ export default function ReferralsPage() {
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="text-center py-12 text-gray-500 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200"
+                            className="text-center py-12 text-gray-500 bg-linear-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200"
                           ></motion.div>
                         )}
                       </motion.div>
@@ -642,7 +642,7 @@ export default function ReferralsPage() {
                               onClick={() => setCurrentOwnerPage(pageNum)}
                               className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
                                 currentOwnerPage === pageNum
-                                  ? "bg-gradient-to-tr from-cyan-500 to-blue-500 text-white shadow-sm shadow-blue-500/20"
+                                  ? "bg-linear-to-tr from-cyan-500 to-blue-500 text-white shadow-sm shadow-blue-500/20"
                                   : "text-gray-600 hover:bg-gray-100 border border-transparent hover:border-gray-200"
                               }`}
                               aria-label={`ไปหน้า ${pageNum}`}

@@ -88,6 +88,31 @@ export const PostAddWorksplace = async (payload: WorkplacePayload) => {
   }
 };
 
+export const PostAddUpdateWorksplaceVet = async (a: string[]) => {
+  try {
+    const encyptedDataBody = encryptDataNew(a);
+
+    const resp = await apiWithAuth.post("/hospitals/worksplace/update", {
+      encodedData: encyptedDataBody,
+    });
+
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in PostAddWorksplace: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in PostAddWorksplace: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
+
 export const PostFeedback = async (payload: FeedbackProps) => {
   try {
     const encyptedDataBody = encryptDataNew(payload);

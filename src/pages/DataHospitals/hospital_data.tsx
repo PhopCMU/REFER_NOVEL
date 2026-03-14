@@ -192,7 +192,7 @@ function StatCard({
         </div>
       </div>
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+        className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent"
         initial={{ x: "-100%" }}
         whileHover={{ x: "100%" }}
         transition={{ duration: 0.8 }}
@@ -284,7 +284,7 @@ function HospitalRow({
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
+            className="h-full rounded-full bg-linear-to-r from-blue-500 to-indigo-500"
           />
         </div>
 
@@ -523,7 +523,7 @@ function CaseTable({ referrals }: { referrals: CaseReferral[] }) {
                           transition-all duration-200
                           ${
                             currentPage === page
-                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
+                              ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
                               : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
                           }
                         `}
@@ -672,7 +672,7 @@ export default function HospitalData() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 font-sans text-slate-800"
+      className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50/30 font-sans text-slate-800"
     >
       {/* Soft Background Pattern */}
       <div className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(ellipse_80%_50%_at_20%_0%,rgba(14,165,233,0.03),transparent_60%),radial-gradient(ellipse_60%_40%_at_80%_100%,rgba(99,102,241,0.02),transparent_60%)]" />
@@ -687,11 +687,11 @@ export default function HospitalData() {
             <div className="flex items-center gap-3 mb-2">
               <motion.div
                 whileHover={{ rotate: 5, scale: 1.05 }}
-                className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-lg shadow-lg shadow-blue-500/20"
+                className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-lg shadow-lg shadow-blue-500/20"
               >
                 🏥
               </motion.div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-linear-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
                 ภาพรวมการส่งต่อผู้ป่วย
               </h1>
             </div>
@@ -716,7 +716,7 @@ export default function HospitalData() {
                   px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200
                   ${
                     selectedYear === y
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
+                      ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
                       : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                   }
                 `}
@@ -732,26 +732,26 @@ export default function HospitalData() {
           <StatCard
             label="เคสทั้งหมด"
             value={totalCases}
-            accent="bg-gradient-to-br from-blue-600 to-indigo-600"
+            accent="bg-linear-to-br from-blue-600 to-indigo-600"
             sub={`ปี พ.ศ. ${selectedYear + 543}`}
             icon="📋"
           />
           <StatCard
             label="กำลังดำเนินการ"
             value={activeCases}
-            accent="bg-gradient-to-br from-amber-500 to-orange-500"
+            accent="bg-linear-to-br from-amber-500 to-orange-500"
             icon="⏳"
           />
           <StatCard
             label="เสร็จสิ้น"
             value={completedCases}
-            accent="bg-gradient-to-br from-emerald-500 to-green-500"
+            accent="bg-linear-to-br from-emerald-500 to-green-500"
             icon="✅"
           />
           <StatCard
             label="สถานที่ส่งเคส"
             value={activeHospitals}
-            accent="bg-gradient-to-br from-violet-500 to-purple-500"
+            accent="bg-linear-to-br from-violet-500 to-purple-500"
             sub={`จาก ${hospitals.length} แห่ง`}
             icon="🏥"
           />
@@ -814,7 +814,7 @@ export default function HospitalData() {
           {/* Right: Detail panel */}
           <motion.div
             variants={itemVariants}
-            className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-lg p-5 min-h-[500px]"
+            className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-lg p-5 min-h-125"
           >
             <AnimatePresence mode="wait">
               {!selectedHospital ? (
@@ -823,7 +823,7 @@ export default function HospitalData() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="flex flex-col items-center justify-center h-[400px] text-slate-400 gap-3"
+                  className="flex flex-col items-center justify-center h-100 text-slate-400 gap-3"
                 >
                   <motion.div
                     animate={{
@@ -857,8 +857,8 @@ export default function HospitalData() {
                         w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-md
                         ${
                           selectedHospital.type === "hospital"
-                            ? "bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700 border border-indigo-300"
-                            : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 border border-emerald-300"
+                            ? "bg-linear-to-br from-indigo-100 to-indigo-200 text-indigo-700 border border-indigo-300"
+                            : "bg-linear-to-br from-emerald-100 to-emerald-200 text-emerald-700 border border-emerald-300"
                         }
                       `}
                     >
@@ -893,7 +893,7 @@ export default function HospitalData() {
                           <motion.div
                             key={k}
                             whileHover={{ scale: 1.05 }}
-                            className="text-center min-w-[40px]"
+                            className="text-center min-w-10"
                           >
                             <div className={`text-base font-bold ${v.color}`}>
                               {cnt}

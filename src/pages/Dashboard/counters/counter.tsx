@@ -247,7 +247,7 @@ const StepTracker = ({ status }: { status: TStatus }) => {
           width: `${(currentIdx / (STATUS_ORDER.length - 1)) * 100}%`,
         }}
         transition={{ duration: 0.5, ease: "easeInOut" }}
-        className="absolute top-4 left-0 h-1 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-full"
+        className="absolute top-4 left-0 h-1 bg-linear-to-r from-indigo-400 to-indigo-600 rounded-full"
       />
 
       <div className="relative flex justify-between">
@@ -268,7 +268,7 @@ const StepTracker = ({ status }: { status: TStatus }) => {
                 transition={{ duration: 0.2 }}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold relative z-10 transition-all ${
                   isCompleted
-                    ? `bg-gradient-to-r ${cfg.gradient} text-white shadow-md`
+                    ? `bg-linear-to-r ${cfg.gradient} text-white shadow-md`
                     : "bg-white border-2 border-gray-300 text-gray-400"
                 }`}
               >
@@ -336,14 +336,14 @@ const CaseCard = ({
     >
       {/* Background Gradient */}
       <div
-        className={`absolute inset-0 bg-gradient-to-br ${
+        className={`absolute inset-0 bg-linear-to-br ${
           selected ? "from-indigo-50 to-white" : "from-white to-gray-50/50"
         }`}
       />
 
       {/* Species Color Accent */}
       <div
-        className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b ${speciesGradient}`}
+        className={`absolute top-0 left-0 w-1 h-full bg-linear-to-b ${speciesGradient}`}
       />
 
       <div className="relative p-4">
@@ -351,7 +351,7 @@ const CaseCard = ({
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3 min-w-0">
             <div
-              className={`w-10 h-10 rounded-xl bg-gradient-to-br ${speciesGradient} flex items-center justify-center text-white text-lg shadow-md flex-shrink-0`}
+              className={`w-10 h-10 rounded-xl bg-linear-to-br ${speciesGradient} flex items-center justify-center text-white text-lg shadow-md shrink-0`}
             >
               {SPECIES_EMOJI[species] || "🐾"}
             </div>
@@ -386,7 +386,7 @@ const CaseCard = ({
           <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-dashed border-gray-200">
             <div className="flex items-center gap-1">
               <span className="text-gray-400">🏥</span>
-              <span className="truncate max-w-[120px]">
+              <span className="truncate max-w-30">
                 {data.hospital?.name || "-"}
               </span>
             </div>
@@ -494,7 +494,7 @@ const UploadAppointmentModal = ({
           className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
         >
           {/* Header with gradient */}
-          <div className="bg-gradient-to-r from-cyan-500 to-teal-500 p-5">
+          <div className="bg-linear-to-r from-cyan-500 to-teal-500 p-5">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-xl backdrop-blur-sm flex items-center justify-center text-2xl">
                 📤
@@ -627,7 +627,7 @@ const UploadAppointmentModal = ({
                 disabled={
                   !file || !appointmentDate || !appointmentTime || uploading
                 }
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-sm font-bold hover:from-cyan-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/25"
+                className="flex-1 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-teal-500 text-white text-sm font-bold hover:from-cyan-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/25"
               >
                 {uploading ? (
                   <div className="flex items-center justify-center gap-2">
@@ -707,7 +707,7 @@ const ConfirmStatusModal = ({
           className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
         >
           {/* Header with gradient */}
-          <div className={`bg-gradient-to-r ${nc.gradient} p-6 text-center`}>
+          <div className={`bg-linear-to-r ${nc.gradient} p-6 text-center`}>
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
@@ -787,7 +787,7 @@ const ConfirmStatusModal = ({
             <button
               onClick={handleConfirm}
               disabled={loading}
-              className={`flex-1 py-3 text-sm font-bold text-white rounded-xl transition-all bg-gradient-to-r ${nc.gradient} hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`flex-1 py-3 text-sm font-bold text-white rounded-xl transition-all bg-linear-to-r ${nc.gradient} hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -864,7 +864,7 @@ const DetailPanel = ({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="h-full flex flex-col items-center justify-center text-gray-400 gap-6 bg-gradient-to-br from-gray-50 to-white"
+        className="h-full flex flex-col items-center justify-center text-gray-400 gap-6 bg-linear-to-br from-gray-50 to-white"
       >
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
@@ -926,7 +926,7 @@ const DetailPanel = ({
       initial={{ opacity: 0, x: 30 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, type: "spring" }}
-      className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-white"
+      className="h-full flex flex-col bg-linear-to-br from-gray-50 to-white"
     >
       <ConfirmModal />
       {/* Header */}
@@ -935,7 +935,7 @@ const DetailPanel = ({
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div
-              className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${
+              className={`w-14 h-14 rounded-2xl bg-linear-to-br ${
                 SPECIES_COLOR[data.pet?.species || "default"] ||
                 "from-gray-200 to-gray-200"
               } flex items-center justify-center text-white text-2xl shadow-lg`}
@@ -991,7 +991,7 @@ const DetailPanel = ({
           {data.status === "APPOINTED" ? (
             <button
               onClick={() => setShowUpload(true)}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-sm font-bold shadow-lg shadow-cyan-500/25 hover:from-cyan-600 hover:to-teal-600 transition-all"
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-teal-500 text-white text-sm font-bold shadow-lg shadow-cyan-500/25 hover:from-cyan-600 hover:to-teal-600 transition-all"
             >
               <span className="text-lg">📤</span>
               อัปโหลดใบนัด
@@ -1014,7 +1014,7 @@ const DetailPanel = ({
           {canAdvance && nextStatus && STATUS_CONFIG[nextStatus] && (
             <button
               onClick={() => setShowConfirm(true)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-bold shadow-lg transition-all bg-gradient-to-r ${STATUS_CONFIG[nextStatus].gradient} hover:shadow-xl`}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-bold shadow-lg transition-all bg-linear-to-r ${STATUS_CONFIG[nextStatus].gradient} hover:shadow-xl`}
             >
               <span className="text-lg">{STATUS_CONFIG[nextStatus].icon}</span>
               เปลี่ยนเป็น "{STATUS_CONFIG[nextStatus].label}"
@@ -1024,7 +1024,7 @@ const DetailPanel = ({
           {canCancel && (
             <button
               onClick={() => setShowCancelConfirm(true)}
-              className="px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold shadow-lg shadow-red-500/25 hover:from-red-600 hover:to-red-700 transition-all"
+              className="px-4 py-3 rounded-xl bg-linear-to-r from-red-500 to-red-600 text-white text-sm font-bold shadow-lg shadow-red-500/25 hover:from-red-600 hover:to-red-700 transition-all"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1321,7 +1321,7 @@ const DetailPanel = ({
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold">
+                          <div className="w-10 h-10 rounded-xl bg-linear-to-r from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold">
                             #{i + 1}
                           </div>
                           <div>
@@ -1436,7 +1436,7 @@ const DetailPanel = ({
                     >
                       <div className="flex items-center gap-4">
                         <div
-                          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
+                          className={`w-12 h-12 rounded-xl bg-linear-to-br ${
                             f.category === "HISTORY"
                               ? "from-blue-400 to-blue-600"
                               : f.category === "LAB"
@@ -1702,7 +1702,7 @@ export default function CounterPage() {
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
       {/* Sidebar */}
-      <div className="w-96 flex flex-col bg-gradient-to-b from-indigo-900 to-indigo-950 text-white shadow-2xl">
+      <div className="w-96 flex flex-col bg-linear-to-b from-indigo-900 to-indigo-950 text-white shadow-2xl">
         {/* Header */}
         <div className="p-6 border-b border-indigo-800/50">
           <div className="flex items-center gap-3">
@@ -1759,7 +1759,7 @@ export default function CounterPage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full p-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 [color-scheme:dark]"
+                className="w-full p-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 scheme:dark"
               />
             </div>
             <div>
@@ -1770,7 +1770,7 @@ export default function CounterPage() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full p-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 [color-scheme:dark]"
+                className="w-full p-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 scheme:dark"
               />
             </div>
           </div>
@@ -1778,7 +1778,7 @@ export default function CounterPage() {
           <button
             onClick={handleSearch}
             disabled={isLoading}
-            className="w-full py-3 bg-gradient-to-r from-indigo-400 to-indigo-500 text-white text-sm font-bold rounded-xl hover:from-indigo-500 hover:to-indigo-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+            className="w-full py-3 bg-linear-to-r from-indigo-400 to-indigo-500 text-white text-sm font-bold rounded-xl hover:from-indigo-500 hover:to-indigo-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
           >
             {isLoading ? (
               <>
@@ -1818,7 +1818,7 @@ export default function CounterPage() {
         </div>
 
         {/* Case List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-100">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
               <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />

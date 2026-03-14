@@ -16,7 +16,7 @@ interface SearchableSelectProps {
   required?: boolean;
   disabled?: boolean;
   error?: string;
-  icon?: string;
+  icon?: string | React.ElementType;
   className?: string;
 }
 
@@ -31,7 +31,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   required = false,
   disabled = false,
   error,
-  icon,
+  icon: Icon,
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -85,10 +85,14 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       </label>
 
       <div className="relative">
-        {icon && (
-          <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-500 pointer-events-none text-xl">
-            {icon}
-          </span>
+        {Icon && (
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-500 pointer-events-none flex items-center justify-center">
+            {typeof Icon === "string" ? (
+              <span className="material-symbols-outlined text-xl">{Icon}</span>
+            ) : (
+              <Icon size={20} className="w-5 h-5" />
+            )}
+          </div>
         )}
 
         <input
@@ -99,7 +103,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           className={`w-full px-3 py-2.5 border rounded-xl focus:outline-none transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md
-        ${icon ? "pl-10" : "pl-3"}
+        ${Icon ? "pl-10" : "pl-3"}
         ${
           disabled
             ? "bg-gray-50 text-gray-500 border-gray-200 cursor-not-allowed"
@@ -130,7 +134,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
                   onClick={() => handleSelect(option)}
                   className={`px-4 py-2.5 cursor-pointer transition-all duration-150
                 ${index !== filteredOptions.length - 1 ? "border-b border-gray-50" : ""}
-                hover:bg-gradient-to-r hover:from-indigo-50 hover:to-white hover:pl-5
+                hover:bg-linear-to-r hover:from-indigo-50 hover:to-white hover:pl-5
                 text-gray-700 hover:text-indigo-700 font-medium
                 active:bg-indigo-100
               `}

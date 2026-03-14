@@ -282,6 +282,7 @@ const CoverPDF: React.FC<CoverPDFProps> = ({
       if (err.message !== "PDF generation cancelled") {
         console.error(err);
         setError("Failed to generate PDF");
+        setTimeout(() => setError(""), 3000);
       }
     } finally {
       setLoading(false);
@@ -311,7 +312,7 @@ const CoverPDF: React.FC<CoverPDFProps> = ({
       ${
         loading
           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-          : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/25 hover:shadow-md"
+          : "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/25 hover:shadow-md"
       }
     `}
       >
@@ -320,7 +321,7 @@ const CoverPDF: React.FC<CoverPDFProps> = ({
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500/30 to-indigo-500/30"
+            className="absolute left-0 top-0 h-full bg-linear-to-r from-blue-500/30 to-indigo-500/30"
             style={{ backdropFilter: "blur(1px)" }}
           />
         )}
