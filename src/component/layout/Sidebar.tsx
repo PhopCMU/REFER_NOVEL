@@ -53,6 +53,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
     },
 
     {
+      name: "เพิ่มสถานที่ทำงาน",
+      icon: Home,
+      path: "/novel/workplaces",
+      showIf: (user: any) => user.aud === "vet",
+      badge: null,
+    },
+
+    {
       name: "Case Referral",
       icon: ArrowUpFromLine,
       path: "/novel/case-referral",
@@ -61,6 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
         (user.role === "ADMIN" || user.role === "COUNTER"),
       badge: null,
     },
+
     {
       name: "กำหนดสิทธิ์",
       icon: BoxSelect,

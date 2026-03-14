@@ -70,9 +70,6 @@ export default function AuthPage() {
               break;
 
             case 4000: // ❌ User registration failed
-              // showToast.error(result.message || "การลงทะเบียนผู้ใช้ล้มเหลว");
-              // Optional: redirect ไปหน้า signup
-              // setAuthMode("signup");
               setLoading(true);
               setMessages(result.message || "การลงทะเบียนผู้ใช้ล้มเหลว");
               setTimeout(() => {
@@ -94,6 +91,7 @@ export default function AuthPage() {
               break;
 
             case 4002: // ❌ ระบบยืนยันตัวตนล้มเหลว
+              setLoading(true);
               setMessages(result.message || "ระบบยืนยันตัวตนล้มเหลว");
               setTimeout(() => {
                 setLoading(false);
@@ -102,6 +100,7 @@ export default function AuthPage() {
               break;
 
             case 5000: // ❌ Server error
+              setLoading(true);
               setMessages(
                 result.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์",
               );
@@ -168,7 +167,7 @@ export default function AuthPage() {
         return;
       }
 
-      setMessages("ส่งสำเร็จ! ขอบขอบคุณสำหรับความคิดเห็นของคุณ!");
+      setMessages("ส่งสำเร็จ! ขอบคุณสำหรับความคิดเห็นของคุณ!");
       setTimeout(() => {
         setIsModalOpen(false);
         setLoading(false);
@@ -335,7 +334,7 @@ export default function AuthPage() {
                       stethoscope
                     </span>
                   </div>
-                  <h3 className="text-สเfont-medium text-white">
+                  <h3 className="text-lg font-medium text-white">
                     สำหรับสัตวแพทย์
                   </h3>
                 </div>

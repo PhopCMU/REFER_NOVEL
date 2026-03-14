@@ -17,6 +17,7 @@ import AnimalReferralMonitor from "./pages/Dashboard/vets/animalreferralmonitor"
 import CounterPage from "./pages/Dashboard/counters/counter";
 import HospitalData from "./pages/DataHospitals/hospital_data";
 import PermissionData from "./pages/Permissions/permission_data";
+import Workplaces from "./pages/Dashboard/vets/workplaces";
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="animals" element={<VetsPage />} />
             <Route path="referral" element={<ReferralsPage />} />
+            <Route path="workplaces" element={<Workplaces />} />
             <Route path="status" element={<AnimalReferralMonitor />} />
             <Route path="case-referral" element={<CounterPage />} />
             <Route path="hospitals" element={<HospitalData />} />
