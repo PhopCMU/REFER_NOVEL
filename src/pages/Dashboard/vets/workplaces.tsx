@@ -55,6 +55,7 @@ export default function Workplaces() {
   });
 
   const inputRef = useRef<HTMLDivElement>(null);
+  const fetchDataRef = useRef(false);
 
   const [myWorkplaces, setMyWorkplaces] = useState<string[]>([]);
 
@@ -117,6 +118,8 @@ export default function Workplaces() {
 
   // === Fetch Data ===
   useEffect(() => {
+    if (fetchDataRef.current) return;
+    fetchDataRef.current = true;
     fetchDataHospitalWorkplace();
   }, []);
 

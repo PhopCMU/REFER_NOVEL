@@ -133,7 +133,6 @@ export default function PermissionData() {
       const resp = await GetCmuItAccount(); // expects PermissionDataProps[]
       if (resp) {
         setAccounts(resp.data);
-        console.log("Fetched accounts:", resp.data);
         setSelectedId(resp.data[0].id);
       } else {
         setIsLoading(true);
