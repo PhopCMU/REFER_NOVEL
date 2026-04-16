@@ -2,6 +2,13 @@ import type { ServiceReferral } from "../types/type";
 
 export const REFERRAL_SERVICES: any[] = [
   {
+    id: "c3cee1a4-fad2-4cf9-8a40-ca8667fffab3",
+    code: "DERM",
+    nameTH: "คลินิกโรคผิวหนัง",
+    nameEN: "Dermatology Clinic",
+    isActive: true,
+  },
+  {
     id: "299bc437-8866-42cd-b907-339d0b30d80e",
     code: "OPH",
     nameTH: "คลินิกโรคตา",
@@ -99,6 +106,27 @@ export const REFERRAL_SERVICES: any[] = [
     nameEN: "Aquatic Animal Clinic",
     isActive: true,
   },
+  {
+    id: "2c0198e7-3338-4dc8-a956-66437e8a6a34",
+    code: "CTU",
+    nameTH: "คลินิกทัศนวินิจฉัย",
+    nameEN: "Diagnostic Imaging Clinic",
+    isActive: true,
+  },
+  {
+    id: "84e445c6-4f03-4287-a9f6-b9994a793a99",
+    code: "GIM",
+    nameTH: "หน่วยอายุรกรรมทั่วไป",
+    nameEN: "General Internal Medicine Unit",
+    isActive: true,
+  },
+  {
+    id: "668dc6f3-f28a-4dcd-9e5b-8cd28ac6f1ac",
+    code: "ASU",
+    nameTH: "หน่วยศัลยกรรมนอก",
+    nameEN: "Surgery Unit",
+    isActive: true,
+  },
 ];
 
 // ✅ Helper: หา service จาก id
@@ -115,5 +143,3 @@ export function getServiceByCode(code: string): ServiceReferral | undefined {
 export function getActiveServices(): ServiceReferral[] {
   return REFERRAL_SERVICES.filter((s) => s.isActive);
 }
-
-

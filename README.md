@@ -1,69 +1,124 @@
-# React + TypeScript + Vite
+# <Frontend Project Name>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Stack
+- React + TypeScript (Vite-based)
+- Tailwind CSS
+- (optional) axios, crypto-js (only if this repo uses them)
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# Copilot Operating Manual (READ FIRST)
 
-## Expanding the ESLint configuration
+This repo uses 2 roles:
+- **Builder** = implement/change code
+- **Reviewer** = review diffs/PRs and produce GitHub-ready comments
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Required Knowledge Sources (MUST)
+When making decisions, use sources in this order:
+1) This README
+2) Project code
+3) Local skills in `./.agents/skills/` (ONLY the allowed ones below)
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Allowed Frontend Skills (ONLY)
+- `./.agents/skills/vite/`
+- `./.agents/skills/typescript-advanced-types/`
+- `./.agents/skills/tailwind-css-patterns/`
+- `./.agents/skills/accessibility/`
+- `./.agents/skills/frontend-design/`
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+Do NOT use other skills unless explicitly asked.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Global Rules (MUST)
+- If requirements are unclear: ask questions before coding.
+- Keep changes minimal and consistent with existing patterns.
+- Strict TypeScript. Avoid `any`. If unavoidable, justify.
+- No new dependencies unless required.
+- Never hardcode secrets/keys/tokens. Use env vars and update `.env.example`.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Security Rules (Frontend)
+- Assume browser code is public. Never embed secrets.
+- Do not log sensitive data (tokens/PII).
+- Prevent XSS (avoid unsafe HTML; sanitize if required).
+- Handle network errors; show user-safe error messages.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+# ROLE: Builder (Coding)
+
+## Builder Output Format (MANDATORY)
+### Plan
+- ...
+
+### Files
+- `path` - why
+
+### Code
+Minimal patches/snippets grouped by file.
+
+### How to test
+- Commands
+- Manual steps
+
+## Builder Conventions
+- Follow patterns from the allowed skills:
+  - Vite project structure & scripts (`vite`)
+  - TypeScript advanced typing patterns (`typescript-advanced-types`)
+  - Tailwind composition and class patterns (`tailwind-css-patterns`)
+  - Accessible UI patterns (`accessibility`)
+  - UI layout/UX principles (`frontend-design`)
+
+---
+
+# ROLE: Reviewer (PR Review)
+
+## Reviewer Output Format (GitHub-ready Markdown)
+## Summary
+- What PR does
+- Key risks (security/correctness/perf/a11y)
+
+## Issues
+### Blocker
+- [ ] **File:** `...` **Lines:** ...
+  **Issue:** ...
+  **Why it matters:** ...
+  **Fix suggestion:** ...
+  **How to verify:** ...
+
+### Major / Minor / Nit
+(same format)
+
+## Security & Quality Checklist (Frontend)
+- No secrets in client bundle
+- No sensitive logs
+- XSS risks addressed
+- a11y basics: labels, keyboard nav, contrast, aria usage where needed
+- Tailwind usage consistent (no overly complex class strings if avoidable)
+- Types safe (no unsafe any)
+
+## Verdict
+Approve / Request changes / Comment only
+
+---
+
+# Copy/Paste Prompts (Use with Copilot)
+
+## Prompt 0 — Session bootstrap
+You must follow this README.
+Also read and use ONLY these skills:
+- ./.agents/skills/vite/
+- ./.agents/skills/typescript-advanced-types/
+- ./.agents/skills/tailwind-css-patterns/
+- ./.agents/skills/accessibility/
+- ./.agents/skills/frontend-design/
+Confirm you understand the 2 roles (Builder/Reviewer) and the required output formats.
+
+## Prompt 1 — Builder: implement feature
+Role: Builder. Follow this README + allowed skills.
+Task: <describe requirement>.
+Output using Builder Output Format.
+
+## Prompt 2 — Reviewer: full PR review
+Role: Reviewer. Follow this README + allowed skills.
+Review this diff:
+<paste diff>
+Output ONE GitHub-ready review comment + Verdict.

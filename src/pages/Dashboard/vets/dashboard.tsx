@@ -617,8 +617,15 @@ export default function DashboardVet() {
   const [selected, setSelected] = useState<string | null>(null);
   const [search, setSearch] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<CaseStatus | "ALL">("ALL");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+
+  const defaultDateInput = (() => {
+    const d = new Date();
+    const tzoffset = d.getTimezoneOffset() * 60000; // offset in ms
+    return new Date(d.getTime() - tzoffset).toISOString().slice(0, 10);
+  })();
+
+  const [startDate, setStartDate] = useState<string>(defaultDateInput);
+  const [endDate, setEndDate] = useState<string>(defaultDateInput);
   const [isLoading, setIsLoading] = useState(false);
 
   const useReferralCase = useRef(false);

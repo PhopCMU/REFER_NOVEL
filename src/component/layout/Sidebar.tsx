@@ -135,7 +135,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
             }}
             transition={{ duration: 0.2 }}
           >
-            <h1 className="text-xl font-bold text-white">VMVRCMU</h1>
+            <h1 className="text-xl font-bold text-white">Referral</h1>
             <p className="text-xs text-blue-300/70 mt-0.5">Veterinary System</p>
           </motion.div>
         </div>
@@ -312,7 +312,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
             >
               <p className="text-xs text-slate-400">เวอร์ชั่นระบบ</p>
               <p className="text-xs font-bold bg-linear-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                {import.meta.env.VITE_VERSION_APP}
+                v{__APP_VERSION__}
               </p>
             </motion.div>
 
@@ -340,7 +340,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
               className="absolute left-1/2 -translate-x-1/2"
             >
               <p className="text-xs font-bold text-blue-400">
-                v{import.meta.env.VITE_VERSION_APP}
+                v{__APP_VERSION__}
               </p>
             </motion.div>
           </div>

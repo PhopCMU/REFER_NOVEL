@@ -1,7 +1,14 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GetCaseReferral } from "../../../api/GetApi";
 import { showToast } from "../../../utils/showToast";
+import { useWebSocket } from "../../../hook/useWebsocket";
 
 import { getEndOfDay, getStartOfDay } from "../../../utils/helpers";
 import CoverPDF from "../../../component/CoverPDF";
@@ -247,6 +254,7 @@ const CaseCard = ({
   //     data.pet.species === "Exotic"
   //       ? data.pet.exoticdescription || data.pet.breed
   //       : data.pet.breed;
+
   return (
     <motion.div
       layout
@@ -266,18 +274,18 @@ const CaseCard = ({
             <span className="font-bold text-sm text-slate-800 truncate">
               {data.pet.name}
             </span>
-            <Badge
+            {/* <Badge
               label={TYPE_CONFIG[data.referralType]?.label}
               color={TYPE_CONFIG[data.referralType]?.color}
               small
-            />
+            /> */}
           </div>
           <div className="text-xs text-slate-500 mb-1 truncate">
             {data.title}
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
-              {data.serviceCode}
+              {data?.serviceReferral?.name}
             </span>
             <span className="text-[11px] text-slate-400 font-mono">
               {data.referenceNo}
@@ -696,7 +704,7 @@ const DetailPanel = ({
 
         <div className="flex gap-2 flex-wrap mb-3">
           <StatusBadge status={data.status} />
-          <Badge
+          {/* <Badge
             label={
               TYPE_CONFIG[data.referralType as keyof typeof TYPE_CONFIG]
                 ?.label || data.referralType
@@ -704,9 +712,9 @@ const DetailPanel = ({
             color={
               TYPE_CONFIG[data.referralType as keyof typeof TYPE_CONFIG]?.color
             }
-          />
+          /> */}
           <span className="text-xs font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-            {data.serviceCode} · {data.serviceReferral?.name}
+            {data.serviceReferral?.name}
           </span>
         </div>
 
@@ -751,7 +759,7 @@ const DetailPanel = ({
                 />
                 <InfoRow
                   label="บริการ"
-                  value={`${data.serviceCode} · ${data.serviceReferral?.name} `}
+                  value={`${data.serviceReferral?.name}`}
                 />
                 <InfoRow label="วันที่ส่งตัว" value={fmtDate(data.createdAt)} />
                 <InfoRow label="อัปเดตล่าสุด" value={fmtDate(data.updatedAt)} />
@@ -802,7 +810,7 @@ const DetailPanel = ({
                 <InfoRow
                   label="เพศ / อายุ"
                   value={`${
-                    data.pet.sex === "M" ? "ชาย" : "หญิง"
+                    data.pet.sex === "M" ? "ผู้" : "เมีย"
                   } / ${data.pet.age}`}
                 />
                 <InfoRow label="สี" value={data.pet.color} />
@@ -1110,10 +1118,52 @@ export default function AnimalReferralCase() {
   const [filterStatus, setFilterStatus] = useState<TStatus | "ALL">("ALL");
   const [isLoading, setIsLoading] = useState(false);
 
-  // New state for date range
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  // New state for date range - default to today's date (local YYYY-MM-DD)
+  const defaultDateInput = (() => {
+    const d = new Date();
+    const tzoffset = d.getTimezoneOffset() * 60000; // offset in ms
+    return new Date(d.getTime() - tzoffset).toISOString().slice(0, 10);
+  })();
+
+  const [startDate, setStartDate] = useState<string>(defaultDateInput);
+  const [endDate, setEndDate] = useState<string>(defaultDateInput);
   const useReferralCase = useRef(false);
+
+  // ─── WebSocket ───────────────────────────────────────────────────────────────
+  const wsUrl = (() => {
+    const base = (import.meta.env.VITE_API_BASE_URL as string) ?? "";
+    return (
+      base
+        .replace(/^https?/, (m) => (m === "https" ? "wss" : "ws"))
+        .replace(/\/$/, "") + "/ws"
+    );
+  })();
+
+  const { isConnected } = useWebSocket(wsUrl, {
+    onUpdateStatus: useCallback(({ caseId, newStatus, note }) => {
+      setCases((prev) =>
+        prev.map((c) => (c.id === caseId ? { ...c, status: newStatus } : c)),
+      );
+      showToast.info(`อัปเดตสถานะเคส: ${newStatus}${note ? ` — ${note}` : ""}`);
+    }, []),
+
+    onCreateNewCase: useCallback((newCase) => {
+      setCases((prev) => [newCase, ...prev]);
+      showToast.success(`เคสใหม่: ${newCase.referenceNo}`);
+    }, []),
+
+    onDeleteCase: useCallback(({ caseId }) => {
+      setCases((prev) => prev.filter((c) => c.id !== caseId));
+      setSelected((prev) => (prev === caseId ? null : prev));
+      showToast.info("เคสถูกลบออกจากระบบ");
+    }, []),
+
+    onUpdateFile: useCallback(({ caseId, files }) => {
+      setCases((prev) =>
+        prev.map((c) => (c.id === caseId ? { ...c, medicalFiles: files } : c)),
+      );
+    }, []),
+  });
 
   // --- Data Fetching Logic ---
   const fetchDataCases = async (start: string, end: string) => {
@@ -1208,7 +1258,13 @@ export default function AnimalReferralCase() {
             </div>
             <div>
               <h1 className="font-bold text-lg tracking-tight">VetReferral</h1>
-              <p className="text-xs text-sky-100">ระบบตรวจสอบการส่งตัว</p>
+              <p className="text-xs text-sky-100 flex items-center gap-1">
+                ระบบตรวจสอบการส่งตัว
+                <span
+                  className={`inline-block w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400" : "bg-red-400"}`}
+                  title={isConnected ? "เชื่อมต่อแล้ว" : "ไม่ได้เชื่อมต่อ"}
+                />
+              </p>
             </div>
           </div>
 
