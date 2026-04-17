@@ -108,9 +108,16 @@ export const REFERRAL_SERVICES: any[] = [
   },
   {
     id: "2c0198e7-3338-4dc8-a956-66437e8a6a34",
-    code: "CTU",
-    nameTH: "คลินิกทัศนวินิจฉัย",
+    code: "CT",
+    nameTH: "คลินิกทัศนวินิจฉัย/CT SCAN",
     nameEN: "Diagnostic Imaging Clinic",
+    isActive: true,
+  },
+  {
+    id: "9407c7a4-634f-4597-8ea1-b31888fcde8b",
+    code: "US",
+    nameTH: "คลินิกทัศนวินิจฉัย/Ultrasound",
+    nameEN: "Ultrasound Clinic",
     isActive: true,
   },
   {

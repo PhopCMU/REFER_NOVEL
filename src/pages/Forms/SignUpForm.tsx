@@ -49,6 +49,10 @@ export default function SignUpForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string>(""); // สำหรับ workplace
+  // Detect if any workplace field has a duplicate-entry error
+  const hasWorkplaceDuplicateError = Object.keys(errors).some(
+    (k) => k.startsWith("workplaces[") && errors[k]?.includes("ซ้ำ"),
+  );
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [addWorkloction, setAddWorkloction] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState({
@@ -117,8 +121,26 @@ export default function SignUpForm() {
     setShowSuggestions(false);
   }, [formDataWorkplace.type]);
 
+  const isDuplicateWorkplace = (
+    value: string,
+    currentIndex: number,
+  ): boolean => {
+    if (!value.trim()) return false;
+    return formData.workplaces.some(
+      (wp, i) => i !== currentIndex && wp === value,
+    );
+  };
+
   const handleChange = (field: string, value: string, index?: number) => {
     if (field === "workplaces" && typeof index === "number") {
+      if (isDuplicateWorkplace(value, index)) {
+        showToast.wran("สถานที่นี้ถูกเลือกไปแล้ว กรุณาเลือกสถานที่อื่น");
+        setErrors((prev) => ({
+          ...prev,
+          [`workplaces[${index}]`]: "สถานที่นี้ถูกเลือกซ้ำ",
+        }));
+        return;
+      }
       const updated = [...formData.workplaces];
       updated[index] = value;
       setFormData((prev) => ({ ...prev, workplaces: updated }));
@@ -274,10 +296,16 @@ export default function SignUpForm() {
     }
 
     // ตรวจสอบสถานที่ทำงาน
+    const seenWorkplaces = new Set<string>();
     formData.workplaces.forEach((wp, index) => {
       if (!wp.trim()) {
         newErrors[`workplaces[${index}]`] = "กรุณากรอกสถานที่ทำงาน";
         if (index === 0) showToast.error("กรุณากรอกสถานที่ทำงาน");
+      } else if (seenWorkplaces.has(wp)) {
+        newErrors[`workplaces[${index}]`] = "สถานที่นี้ถูกเลือกซ้ำ";
+        showToast.error("มีสถานที่ทำงานที่ถูกเลือกซ้ำกัน กรุณาตรวจสอบ");
+      } else {
+        seenWorkplaces.add(wp);
       }
     });
 
@@ -578,12 +606,14 @@ export default function SignUpForm() {
           <span className="material-symbols-outlined text-lg">
             {addWorkloction ? "close" : "add"}
           </span>
-          {addWorkloction ? "ยกเลิกการเพิ่มข้อมูล" : "เพิ่มข้อมูลสถานที่ทำงาน"}
+          {addWorkloction
+            ? "ยกเลิกการเพิ่มข้อมูล"
+            : "เพิ่มข้อมูลโรงพยาบาลสัตว์/คลินิกที่ไม่มีในระบบ"}
         </motion.button>
 
         <p className="text-sm text-gray-600 mt-2 flex items-center gap-1 justify-center">
           <span className="material-symbols-outlined text-base">info</span>
-          กรณีที่ไม่เจอข้อมูลสถานที่ทำงานที่ต้องการ
+          กรณีที่ไม่เจอข้อมูลโรงพยาบาลสัตว์/คลินิกที่ต้องการ
           กรุณาคลิกปุ่มนี้เพื่อเพิ่มข้อมูล
         </p>
 
@@ -1010,6 +1040,13 @@ export default function SignUpForm() {
           </span>
         </div>
 
+        {hasWorkplaceDuplicateError && (
+          <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+            <span className="material-symbols-outlined text-base">error</span>
+            มีสถานที่ทำงานที่ถูกเลือกซ้ำกัน กรุณาตรวจสอบ
+          </p>
+        )}
+
         {formData.workplaces.map((workplace, index) => (
           <motion.div
             key={index}
@@ -1035,7 +1072,7 @@ export default function SignUpForm() {
                 placeholder="พิมพ์เพื่อค้นหาโรงพยาบาล..."
                 required
                 icon="local_hospital"
-                error={errors.referralHospital}
+                error={errors[`workplaces[${index}]`]}
               />
               {formData.workplaces.length > 1 && (
                 <button

@@ -5,10 +5,10 @@ import type { CaseItem, MedicalFile, TStatus } from "../types/type";
 
 export interface WSUpdateStatusPayload {
   caseId: string;
-  referenceNo: string;
-  oldStatus: TStatus;
-  newStatus: TStatus;
-  note: string;
+  referenceNo?: string;
+  oldStatus?: TStatus;
+  newStatus?: TStatus;
+  note?: string;
 }
 
 export type WSCreateNewCasePayload = CaseItem;
@@ -28,7 +28,8 @@ type WSMessage =
   | { event: "update-status"; data: WSUpdateStatusPayload }
   | { event: "create-newcase"; data: WSCreateNewCasePayload }
   | { event: "delete-usecase"; data: WSDeleteCasePayload }
-  | { event: "update-file"; data: WSUpdateFilePayload };
+  | { event: "update-file"; data: WSUpdateFilePayload }
+  | { event: "update-followup"; data: WSUpdateFilePayload };
 
 // ─── Hook Options ─────────────────────────────────────────────────────────────
 
@@ -41,6 +42,8 @@ export interface UseWebSocketOptions {
   onDeleteCase?: (data: WSDeleteCasePayload) => void;
   /** Called when a case's files are updated */
   onUpdateFile?: (data: WSUpdateFilePayload) => void;
+  /** Called when a case's follow-up files are updated */
+  onUpdateFileFollowUp?: (data: WSUpdateFilePayload) => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -90,8 +93,13 @@ export function useWebSocket(url: string, options: UseWebSocketOptions) {
         return;
       }
 
-      const { onUpdateStatus, onCreateNewCase, onDeleteCase, onUpdateFile } =
-        optionsRef.current;
+      const {
+        onUpdateStatus,
+        onCreateNewCase,
+        onDeleteCase,
+        onUpdateFile,
+        onUpdateFileFollowUp,
+      } = optionsRef.current;
 
       switch (parsed.event) {
         case "update-status":
@@ -105,6 +113,9 @@ export function useWebSocket(url: string, options: UseWebSocketOptions) {
           break;
         case "update-file":
           onUpdateFile?.(parsed.data);
+          break;
+        case "update-followup":
+          onUpdateFileFollowUp?.(parsed.data);
           break;
       }
     };

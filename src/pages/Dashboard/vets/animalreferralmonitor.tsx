@@ -1140,28 +1140,36 @@ export default function AnimalReferralCase() {
   })();
 
   const { isConnected } = useWebSocket(wsUrl, {
-    onUpdateStatus: useCallback(({ caseId, newStatus, note }) => {
-      setCases((prev) =>
-        prev.map((c) => (c.id === caseId ? { ...c, status: newStatus } : c)),
-      );
+    onUpdateStatus: useCallback(async ({ newStatus, note }) => {
       showToast.info(`อัปเดตสถานะเคส: ${newStatus}${note ? ` — ${note}` : ""}`);
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
     }, []),
 
-    onCreateNewCase: useCallback((newCase) => {
+    onCreateNewCase: useCallback(async (newCase) => {
       setCases((prev) => [newCase, ...prev]);
       showToast.success(`เคสใหม่: ${newCase.referenceNo}`);
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
     }, []),
 
-    onDeleteCase: useCallback(({ caseId }) => {
+    onDeleteCase: useCallback(async ({ caseId }) => {
       setCases((prev) => prev.filter((c) => c.id !== caseId));
       setSelected((prev) => (prev === caseId ? null : prev));
       showToast.info("เคสถูกลบออกจากระบบ");
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
     }, []),
 
-    onUpdateFile: useCallback(({ caseId, files }) => {
+    onUpdateFile: useCallback(async ({ caseId, files }) => {
       setCases((prev) =>
         prev.map((c) => (c.id === caseId ? { ...c, medicalFiles: files } : c)),
       );
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
+    }, []),
+
+    onUpdateFileFollowUp: useCallback(async ({ caseId, files }) => {
+      setCases((prev) =>
+        prev.map((c) => (c.id === caseId ? { ...c, followUpFiles: files } : c)),
+      );
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
     }, []),
   });
 
