@@ -3,6 +3,7 @@ import type {
   FormPetProp,
   PayloadCheckOtpProps,
   PayloadUpdateOwner,
+  PayloadUpdateVetProfile,
 } from "../types/type";
 import { encryptDataNew } from "../utils/helpers";
 import { api, apiWithAuth } from "./Axios";
@@ -68,8 +69,6 @@ export const PutMedicalFile = async (
   fileId: string,
   data: { category: string },
 ) => {
-  // console.log(`Updating file ${fileId} with`, data);
-
   const payload = {
     fileId,
     category: data.category,
@@ -90,6 +89,61 @@ export const PutMedicalFile = async (
         return error.response.data.message;
       } else {
         console.error("Error in PutMedicalFile: ", error);
+        return error;
+      }
+    }
+  }
+};
+
+export const PutUpdateVetProfile = async (payload: PayloadUpdateVetProfile) => {
+  try {
+    const encryptedDataQuery = encryptDataNew(payload);
+    const encodedURL = encodeURIComponent(encryptedDataQuery);
+    const resp = await apiWithAuth.put(
+      `/auth/update-profile?data=${encodedURL}`,
+    );
+    const body = resp.data;
+    if (body && typeof body === "object" && "data" in body) {
+      return (body as { data: unknown }).data;
+    }
+    return body;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in PutUpdateVetProfile: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in PutUpdateVetProfile: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
+
+export const PutUpdatePremission = async (payload: {
+  adminId: string;
+  permissions: string[];
+}) => {
+  try {
+    const encryptedDataQuery = encryptDataNew(payload);
+    const encodedURL = encodeURIComponent(encryptedDataQuery);
+    const resp = await apiWithAuth.put(
+      `/auth/update-permissions?data=${encodedURL}`,
+    );
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in PutUpdatePremission: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in PutUpdatePremission: ", error);
         return error;
       }
     }

@@ -128,3 +128,25 @@ export const GetCmuItAccount = async () => {
     }
   }
 };
+
+export const GetVetProfile = async () => {
+  try {
+    const resp = await apiWithAuth.get(`/auth/profile`);
+    const body = resp.data;
+    // Some endpoints return a wrapper { success, message, data }
+    if (body && typeof body === "object" && "data" in body) {
+      return (body as any).data;
+    }
+    return body;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in GetVetProfile: ", error.response.data.message);
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetVetProfile: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};

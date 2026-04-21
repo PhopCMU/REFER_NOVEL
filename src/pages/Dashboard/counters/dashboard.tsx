@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -11,6 +11,11 @@ import { GetCaseReferralAdmin } from "../../../api/GetApi";
 import { getEndOfDay, getStartOfDay } from "../../../utils/helpers";
 import { exportToXLSX } from "../../../utils/exportUtils";
 import { FileBox } from "lucide-react";
+import {
+  useWebSocket,
+  type WSCreateNewCasePayload,
+} from "../../../hook/useWebsocket";
+import { showToast } from "../../../utils/showToast";
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface StatusMeta {
@@ -134,6 +139,7 @@ interface StatusBadgeProps {
 }
 function StatusBadge({ status }: StatusBadgeProps) {
   const m = STATUS_META[status] || STATUS_META.PENDING;
+
   return (
     <motion.span
       initial={{ scale: 0.9, opacity: 0 }}
@@ -159,11 +165,35 @@ export default function DashboardAdmin() {
   const [selected, setSelected] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("newest");
   const [isLoading, setIsLoading] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const initRef = useRef(false);
 
+  const defaultDateInput = (() => {
+    const d = new Date();
+    const tzoffset = d.getTimezoneOffset() * 60000; // offset in ms
+    return new Date(d.getTime() - tzoffset).toISOString().slice(0, 10);
+  })();
+
+  const [startDate, setStartDate] = useState(defaultDateInput);
+  const [endDate, setEndDate] = useState(defaultDateInput);
+
   const [cases, setCases] = useState<ApiCaseData[]>([]);
+
+  // ─── WebSocket ───────────────────────────────────────────────────────────────
+  const wsUrl = (() => {
+    const base = (import.meta.env.VITE_API_BASE_URL as string) ?? "";
+    return (
+      base
+        .replace(/^https?/, (m) => (m === "https" ? "wss" : "ws"))
+        .replace(/\/$/, "") + "/ws"
+    );
+  })();
+
+  const { isConnected } = useWebSocket(wsUrl, {
+    onCreateNewCase: useCallback(async (newCase: WSCreateNewCasePayload) => {
+      showToast.success(`เคสใหม่: ${newCase.referenceNo}`);
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
+    }, []),
+  });
 
   const RAW_CASES: DashboardCase[] = useMemo(() => {
     return cases.map(transformCaseData);
@@ -307,7 +337,11 @@ export default function DashboardAdmin() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold bg-linear-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
-            Dashboard ภาพรวมเคสทั้งหมด
+            Dashboard ภาพรวมเคสทั้งหมด{" "}
+            <span
+              className={`inline-block w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400" : "bg-red-400"}`}
+              title={isConnected ? "เชื่อมต่อแล้ว" : "ไม่ได้เชื่อมต่อ"}
+            />
           </h1>
           <p className="text-slate-500 text-sm mt-1 flex items-center gap-2">
             <span className="w-1 h-1 rounded-full bg-blue-400" />
@@ -615,11 +649,8 @@ export default function DashboardAdmin() {
                     <div className="flex items-center">
                       <div>
                         <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md inline-block mb-0.5">
-                          {c.serviceCode}
-                        </span>
-                        <div className="text-xs text-slate-600 leading-relaxed line-clamp-1">
                           {c.serviceName}
-                        </div>
+                        </span>
                       </div>
                     </div>
 
@@ -729,7 +760,7 @@ export default function DashboardAdmin() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="w-85 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden shrink-0 border border-white/50"
+                className="w-110 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden shrink-0 border border-white/50"
               >
                 <div className="bg-linear-to-br from-slate-800 via-slate-800 to-blue-700 px-5 py-4">
                   <div className="flex justify-between items-start">
@@ -818,9 +849,6 @@ export default function DashboardAdmin() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="bg-linear-to-r from-violet-600 to-indigo-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-sm">
-                        {selectedCase.serviceCode}
-                      </span>
-                      <span className="text-sm text-violet-900 font-medium">
                         {selectedCase.serviceName}
                       </span>
                     </div>

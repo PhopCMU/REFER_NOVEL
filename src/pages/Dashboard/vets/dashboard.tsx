@@ -45,6 +45,9 @@ export interface Appointment {
 }
 
 export interface CaseStatusLog {
+  caseId: string;
+  changedBy: string;
+  id: string;
   oldStatus: CaseStatus;
   newStatus: CaseStatus;
   note: string;
@@ -203,6 +206,17 @@ const STATUS_ORDER: CaseStatus[] = [
   "COMPLETED",
 ];
 
+const getLatestStatus = (
+  logs: CaseStatusLog[],
+  fallback: CaseStatus,
+): CaseStatus => {
+  if (!logs || logs.length === 0) return fallback;
+  const latest = logs.reduce((a, b) =>
+    new Date(a.createdAt) >= new Date(b.createdAt) ? a : b,
+  );
+  return latest.newStatus;
+};
+
 const fmtDate = (iso: string | null | undefined): string => {
   if (!iso) return "-";
   try {
@@ -271,50 +285,51 @@ function FileChip({ category }: FileChipProps) {
   );
 }
 
-function StatusTimeline({ logs }: StatusTimelineProps) {
-  const sorted = [...(logs || [])].sort((a, b) => {
-    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return timeA - timeB;
-  });
-  return (
-    <div className="flex flex-col gap-2">
-      {sorted.map((log, i) => (
-        <div
-          key={`${log.oldStatus}-${log.newStatus}-${i}`}
-          className="flex gap-3 items-start"
-        >
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-2.5 h-2.5 rounded-full mt-0.5 ${STATUS_CONFIG[log.newStatus]?.dot || "bg-slate-300"}`}
-            />
-            {i < sorted.length - 1 && (
-              <div
-                className="w-px flex-1 bg-slate-200 mt-1"
-                style={{ minHeight: 16 }}
-              />
-            )}
-          </div>
-          <div className="flex-1 pb-2">
-            <div className="text-xs font-semibold text-slate-700">
-              {STATUS_CONFIG[log.newStatus]?.label || log.newStatus}
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">{log.note}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">
-              {fmtDate(log.createdAt)}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
+// function StatusTimeline({ logs }: StatusTimelineProps) {
+//   const sorted = [...(logs || [])].sort((a, b) => {
+//     const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+//     const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+//     return timeA - timeB;
+//   });
+//   return (
+//     <div className="flex flex-col gap-2">
+//       {sorted.map((log, i) => (
+//         <div
+//           key={`${log.oldStatus}-${log.newStatus}-${i}`}
+//           className="flex gap-3 items-start"
+//         >
+//           <div className="flex flex-col items-center">
+//             <div
+//               className={`w-2.5 h-2.5 rounded-full mt-0.5 ${STATUS_CONFIG[log.newStatus]?.dot || "bg-slate-300"}`}
+//             />
+//             {i < sorted.length - 1 && (
+//               <div
+//                 className="w-px flex-1 bg-slate-200 mt-1"
+//                 style={{ minHeight: 16 }}
+//               />
+//             )}
+//           </div>
+//           <div className="flex-1 pb-2">
+//             <div className="text-xs font-semibold text-slate-700">
+//               {STATUS_CONFIG[log.newStatus]?.label || log.newStatus}
+//             </div>
+//             <div className="text-[11px] text-slate-500 mt-0.5">{log.note}</div>
+//             <div className="text-[10px] text-slate-400 mt-0.5">
+//               {fmtDate(log.createdAt)}
+//             </div>
+//           </div>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// }
 
 function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
   if (!c) return null;
-  const sCfg = STATUS_CONFIG[c.status] || STATUS_CONFIG.PENDING;
+  const effectiveStatus = getLatestStatus(c.caseStatusLogs, c.status);
+  const sCfg = STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.PENDING;
   const tCfg = TYPE_CONFIG[c.referralType] || TYPE_CONFIG.ONE_TIME;
-  const stepIdx = STATUS_ORDER.indexOf(c.status);
+  const stepIdx = STATUS_ORDER.indexOf(effectiveStatus);
 
   return (
     <div className="flex flex-col h-screen overflow-y-auto pb-20">
@@ -531,12 +546,12 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
         )}
 
         {/* Timeline */}
-        <div>
+        {/* <div>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
             ประวัติสถานะ
           </div>
           <StatusTimeline logs={c.caseStatusLogs || []} />
-        </div>
+        </div> */}
 
         {/* Meta */}
         <div className="text-[10px] text-slate-400 text-center pb-2">
@@ -548,7 +563,8 @@ function CaseDetailPanel({ c, onClose }: CaseDetailPanelProps) {
 }
 
 function CaseCard({ c, isSelected, onClick }: CaseCardProps) {
-  const sCfg = STATUS_CONFIG[c.status] || STATUS_CONFIG.PENDING;
+  const effectiveStatus = getLatestStatus(c.caseStatusLogs, c.status);
+  const sCfg = STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.PENDING;
   return (
     <div
       onClick={onClick}

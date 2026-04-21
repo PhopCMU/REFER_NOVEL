@@ -3,6 +3,7 @@ import { getUserFromToken } from "../../utils/authUtils";
 import { useNavigate } from "react-router-dom";
 import { LoadingForm } from "../../component/LoadingForm";
 import { GetCmuItAccount } from "../../api/GetApi";
+import { PutUpdatePremission } from "../../api/PutApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -242,6 +243,24 @@ export default function PermissionData() {
     const id = selectedId;
     setSavingId(id);
     // TODO: call UpdatePermission API → Array.from(getActivePerms(id))
+
+    const payload = {
+      adminId: id,
+      permissions: Array.from(getActivePerms(id)),
+    };
+
+    const resp = await PutUpdatePremission(payload);
+
+    if (!resp.success) {
+      setIsLoading(true);
+      setMessages("Failed to update permissions. Please try again later.");
+      setTimeout(() => {
+        setIsLoading(false);
+        setMessages("");
+      }, 2000);
+      return;
+    }
+
     await new Promise((r) => setTimeout(r, 800));
     // Update local baseline so reset works from saved state
     setAccounts((prev) =>

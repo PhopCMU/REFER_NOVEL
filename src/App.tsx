@@ -19,6 +19,7 @@ import HospitalData from "./pages/DataHospitals/hospital_data";
 import PermissionData from "./pages/Permissions/permission_data";
 import Workplaces from "./pages/Dashboard/vets/workplaces";
 import { useUpdateVersion } from "./hook/useUpdateVersion";
+import DataUser from "./pages/Dashboard/vets/datauser";
 
 export default function App() {
   const { needsUpdate, currentVersion, doUpdate } = useUpdateVersion();
@@ -84,6 +85,7 @@ export default function App() {
             <Route path="case-referral" element={<CounterPage />} />
             <Route path="hospitals" element={<HospitalData />} />
             <Route path="permission" element={<PermissionData />} />
+            <Route path="profile" element={<DataUser />} />
           </Route>
         </Route>
 

@@ -1,6 +1,11 @@
-export interface FeedbackProps {
-  rating: number;
+export type FeedbackRating = 1 | 2 | 3 | 4 | 5;
+
+export interface FeedbackFormValues {
+  rating: FeedbackRating;
   comment: string;
+}
+
+export interface FeedbackProps extends FeedbackFormValues {
   recaptchaToken: string;
 }
 
@@ -82,6 +87,29 @@ export interface FormVetProp {
   exp: number;
   iat: number;
   iss: string;
+}
+
+export interface VetProfile {
+  id: string;
+  email: string;
+  vet_codeId: string;
+  firstName: string;
+  lastName: string;
+  ceLicense: string;
+  phone: string;
+  lineID: string;
+  hospitals: Array<{
+    id: string;
+    name: string;
+  }>;
+}
+
+export interface PayloadUpdateVetProfile {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  lineID: string;
+  ceLicense: string;
 }
 
 export interface PayloadCreatedOwner {
@@ -185,6 +213,7 @@ export type AllowedFileType =
 export interface MedicalFile {
   id: string;
   caseId: string;
+  appointmentId?: string;
   category: MedicalFileCategory;
   name: string;
   originalName: string;
@@ -305,6 +334,10 @@ export interface PostReferralPayloadEncrypted {
   appointmentDateTime: string;
 }
 
+export interface UpdateAppointmentPayloadEncrypted extends PostReferralPayloadEncrypted {
+  appointmentId: string;
+}
+
 // ─── Case Referral Payload List data ───────────────────────────────────────────────────
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
@@ -371,6 +404,12 @@ export interface StatusLog {
   createdAt: string;
 }
 
+export interface CaseAppointment {
+  id: string;
+  date: string;
+  note: string | null;
+}
+
 export interface CaseItem {
   id: string;
   referenceNo: string;
@@ -385,7 +424,7 @@ export interface CaseItem {
   serviceReferral: ServiceReferral;
   medicalFiles: MedicalFile[]; // มีในข้อมูลจริง
   caseStatusLogs: StatusLog[]; // มีในข้อมูลจริง
-  appointments: any[]; // มีในข้อมูลจริง (เป็น array ว่าง)
+  appointments: CaseAppointment[]; // มีในข้อมูลจริง (เป็น array ว่าง)
   resultSummary: string | null;
   createdAt: string;
   updatedAt: string;
@@ -540,13 +579,54 @@ export interface DashboardCase {
 }
 
 // 🔁 ฟังก์ชันแปลงข้อมูลจาก API เป็นรูปแบบที่ Dashboard ใช้
+export function resolveCaseStatusFromLogs(
+  apiStatus: string | undefined,
+  logs?: Array<{ oldStatus?: string; newStatus?: string; createdAt?: string }>,
+): TStatus {
+  const VALID_STATUSES = [
+    "PENDING",
+    "RECEIVED",
+    "CONFIRMED",
+    "APPOINTED",
+    "COMPLETED",
+    "CANCELLED",
+  ] as const;
+
+  const normalize = (s: any): TStatus => {
+    if (!s) return "PENDING";
+    const u = String(s).toUpperCase();
+    return (VALID_STATUSES as readonly string[]).includes(u)
+      ? (u as TStatus)
+      : "PENDING";
+  };
+
+  if (Array.isArray(logs) && logs.length > 0) {
+    let latest = logs[0];
+    let latestTime = Number(Date.parse(latest.createdAt || "")) || 0;
+    for (const l of logs) {
+      const t = Number(Date.parse(l.createdAt || "")) || 0;
+      if (t >= latestTime) {
+        latest = l;
+        latestTime = t;
+      }
+    }
+    return normalize(latest.newStatus ?? latest.oldStatus ?? apiStatus);
+  }
+
+  return normalize(apiStatus);
+}
+
 export function transformCaseData(apiCase: ApiCaseData): DashboardCase {
+  const status = resolveCaseStatusFromLogs(
+    apiCase.status,
+    apiCase.caseStatusLogs,
+  );
   return {
     id: apiCase.id,
     referenceNo: apiCase.referenceNo,
     title: apiCase.title,
     referralType: apiCase.referralType,
-    status: apiCase.status,
+    status,
     serviceCode: apiCase.serviceCode,
     serviceName: apiCase.serviceReferral?.name || "",
     petName: apiCase.pet?.name || "-",

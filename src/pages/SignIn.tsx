@@ -6,15 +6,15 @@ import SignUpForm from "./Forms/SignUpForm";
 import ForgotPassword from "./Forms/ForgotPassword";
 import { showToast } from "../utils/showToast";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
-import type { FeedbackProps } from "../types/type";
-import { PostFeedback } from "../api/PostApi";
 import { LoadingForm } from "../component/LoadingForm";
+import SatisfactionModal from "../component/SatisfactionModal";
 import { useNavigate } from "react-router-dom";
 import {
   exchangeCodeForSession,
   isAuthenticatedLocally,
 } from "../utils/authUtils";
 import file from "../constants/file";
+import { useFeedbackSubmission } from "../hook/useFeedbackSubmission";
 
 export default function AuthPage() {
   const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">(
@@ -22,8 +22,6 @@ export default function AuthPage() {
   );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rating, setRating] = useState<number | null>(null);
-  const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExchangingCode, setIsExchangingCode] = useState(false);
   const [messages, setMessages] = useState<string>("");
@@ -35,6 +33,8 @@ export default function AuthPage() {
   const hasExchangedCode = useRef(false);
 
   const { executeRecaptcha } = useGoogleReCaptcha();
+  const { isSubmitting, submitFeedback } = useFeedbackSubmission();
+
   useEffect(() => {
     if (executeRecaptcha) {
       setRecaptchaReady(true);
@@ -127,62 +127,6 @@ export default function AuthPage() {
       handleCodeExchange();
     }
   }, [code, navigate]);
-
-  const handleSubmitFeedback = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!rating) {
-      showToast.error("กรุณาใส่คะแนน");
-      return;
-    }
-
-    if (!executeRecaptcha) {
-      showToast.error("ไม่สามารถโหลด reCAPTCHA ได้ ลองใหม่อีกครั้ง");
-      return;
-    }
-
-    setLoading(true);
-    setMessages("กําลังส่งความคิดเห็น...");
-    try {
-      const token = await executeRecaptcha("feedback");
-      if (!token) {
-        showToast.error("ยืนยัน reCAPTCHA ไม่สำเร็จ");
-        return;
-      }
-
-      const payload: FeedbackProps = {
-        rating,
-        comment,
-        recaptchaToken: token,
-      };
-
-      const resp = await PostFeedback(payload);
-
-      if (!resp) {
-        setMessages("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
-        setTimeout(() => {
-          setLoading(false);
-          setMessages("");
-        }, 1200);
-        return;
-      }
-
-      setMessages("ส่งสำเร็จ! ขอบคุณสำหรับความคิดเห็นของคุณ!");
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setLoading(false);
-        setMessages("");
-        setRating(null);
-        setComment("");
-      }, 2000);
-    } catch (error) {
-      setMessages("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
-      setTimeout(() => {
-        setLoading(false);
-        setMessages("");
-      }, 1500);
-    }
-  };
 
   if (!recaptchaReady || isExchangingCode) {
     return (
@@ -501,94 +445,12 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
-      {/* Modal: Satisfaction Feedback */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setIsModalOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-                ประเมินความพึงพอใจ
-              </h3>
-              <p className="text-gray-600 mb-6 text-center">
-                กรุณาให้คะแนนการใช้งานระบบของคุณ
-              </p>
-
-              <form onSubmit={handleSubmitFeedback}>
-                {/* Rating Stars */}
-                <div className="flex justify-center gap-2 mb-6">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      type="button"
-                      key={star}
-                      className={`text-4xl transition-all duration-200 ${
-                        rating && star <= rating
-                          ? "text-yellow-400 scale-110"
-                          : "text-gray-300 hover:text-yellow-300"
-                      }`}
-                      onClick={() => setRating(star)}
-                    >
-                      ★
-                    </button>
-                  ))}
-                </div>
-
-                {/* Comment Field */}
-                <div className="mb-6">
-                  <label
-                    htmlFor="comment"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    ความคิดเห็น (ถ้ามี)
-                  </label>
-                  <textarea
-                    id="comment"
-                    rows={4}
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                    placeholder="เช่น ระบบใช้งานง่าย แต่ต้องการปรับปรุงหน้าจอ..."
-                  />
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition"
-                  >
-                    ยกเลิก
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!rating}
-                    className={`flex-1 py-2 px-4 rounded-lg font-medium text-white transition ${
-                      rating
-                        ? "bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow"
-                        : "bg-gray-400 cursor-not-allowed"
-                    }`}
-                  >
-                    ส่งข้อมูล
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SatisfactionModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={submitFeedback}
+        submitting={isSubmitting}
+      />
     </div>
   );
 }

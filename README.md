@@ -17,7 +17,7 @@ This repo uses 2 roles:
 When making decisions, use sources in this order:
 1) This README
 2) Project code
-3) Local skills in `./.agents/skills/` (ONLY the allowed ones below)
+3) Local skills in `./.agents/skills/` (**ONLY** the allowed ones below)
 
 ### Allowed Frontend Skills (ONLY)
 - `./.agents/skills/vite/`
@@ -93,7 +93,7 @@ Minimal patches/snippets grouped by file.
 - XSS risks addressed
 - a11y basics: labels, keyboard nav, contrast, aria usage where needed
 - Tailwind usage consistent (no overly complex class strings if avoidable)
-- Types safe (no unsafe any)
+- Types safe (no unsafe `any`)
 
 ## Verdict
 Approve / Request changes / Comment only
@@ -110,6 +110,7 @@ Also read and use ONLY these skills:
 - ./.agents/skills/tailwind-css-patterns/
 - ./.agents/skills/accessibility/
 - ./.agents/skills/frontend-design/
+
 Confirm you understand the 2 roles (Builder/Reviewer) and the required output formats.
 
 ## Prompt 1 — Builder: implement feature
