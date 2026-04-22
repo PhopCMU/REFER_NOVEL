@@ -3,7 +3,8 @@
 ## Stack
 - React + TypeScript (Vite-based)
 - Tailwind CSS
-- (optional) axios, crypto-js (only if this repo uses them)
+- react-router-dom
+- axios
 
 ---
 

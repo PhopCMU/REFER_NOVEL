@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -11,6 +11,7 @@ import {
   Send,
   Star,
   UserCheck,
+  WholeWord,
   type LucideIcon,
 } from "lucide-react";
 import SatisfactionModal from "../SatisfactionModal";
@@ -31,7 +32,6 @@ interface SidebarMenuItem {
 
 interface SidebarProps {
   isOpen: boolean;
-  toggleSidebar: () => void;
   user: SidebarUser;
 }
 
@@ -42,87 +42,108 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
   const [isSatisfactionModalOpen, setIsSatisfactionModalOpen] = useState(false);
   const { isSubmitting, submitFeedback } = useFeedbackSubmission();
 
-  const menuItems: SidebarMenuItem[] = [
-    {
-      name: "แดชบอร์ด",
-      icon: Home,
-      path: "/novel/dashboard",
-      showIf: (currentUser) =>
-        currentUser.aud === "vet" || currentUser.aud === "admin",
-      badge: null,
-    },
-    {
-      name: "เพิ่มข้อมูลสัตว์ป่วย",
-      icon: Dog,
-      path: "/novel/animals",
-      showIf: (currentUser) => currentUser.aud === "vet",
-      badge: null,
-    },
-    {
-      name: "ส่งตัวสัตว์ป่วย",
-      icon: Send,
-      path: "/novel/referral",
-      showIf: (currentUser) => currentUser.aud === "vet",
-      badge: null,
-    },
-    {
-      name: "ตรวจสอบสถานะ",
-      icon: Search,
-      path: "/novel/status",
-      showIf: (currentUser) => currentUser.aud === "vet",
-      badge: null,
-    },
+  const menuItems: SidebarMenuItem[] = useMemo(
+    () => [
+      {
+        name: "แดชบอร์ด",
+        icon: Home,
+        path: "/novel/dashboard",
+        showIf: (currentUser) =>
+          currentUser.aud === "vet" || currentUser.aud === "admin",
+        badge: null,
+      },
+      {
+        name: "เพิ่มข้อมูลสัตว์ป่วย",
+        icon: Dog,
+        path: "/novel/animals",
+        showIf: (currentUser) => currentUser.aud === "vet",
+        badge: null,
+      },
+      {
+        name: "ส่งตัวสัตว์ป่วย",
+        icon: Send,
+        path: "/novel/referral",
+        showIf: (currentUser) => currentUser.aud === "vet",
+        badge: null,
+      },
+      {
+        name: "ตรวจสอบสถานะ",
+        icon: Search,
+        path: "/novel/status",
+        showIf: (currentUser) => currentUser.aud === "vet",
+        badge: null,
+      },
 
-    {
-      name: "เพิ่มสถานที่ทำงาน",
-      icon: Home,
-      path: "/novel/workplaces",
-      showIf: (currentUser) => currentUser.aud === "vet",
-      badge: null,
-    },
+      {
+        name: "เพิ่มสถานที่ทำงาน",
+        icon: Home,
+        path: "/novel/workplaces",
+        showIf: (currentUser) => currentUser.aud === "vet",
+        badge: null,
+      },
 
-    {
-      name: "ข้อมูลผู้ใช้งาน",
-      icon: UserCheck,
-      path: "/novel/profile",
-      showIf: (currentUser) => currentUser.aud === "vet",
-      badge: null,
-    },
+      {
+        name: "ข้อมูลผู้ใช้งาน",
+        icon: UserCheck,
+        path: "/novel/profile",
+        showIf: (currentUser) => currentUser.aud === "vet",
+        badge: null,
+      },
 
-    {
-      name: "Case Referral",
-      icon: ArrowUpFromLine,
-      path: "/novel/case-referral",
-      showIf: (currentUser) =>
-        currentUser.aud === "admin" &&
-        (currentUser.role === "ADMIN" || currentUser.role === "COUNTER"),
-      badge: null,
-    },
+      {
+        name: "Case Referral",
+        icon: ArrowUpFromLine,
+        path: "/novel/case-referral",
+        showIf: (currentUser) =>
+          currentUser.aud === "admin" &&
+          (currentUser.role === "ADMIN" || currentUser.role === "COUNTER"),
+        badge: null,
+      },
+      {
+        name: "ภาพรวมการส่งต่อ",
+        icon: Hospital,
+        path: "/novel/hospitals",
+        showIf: (currentUser) =>
+          currentUser.aud === "admin" && currentUser.role === "ADMIN",
+        badge: null,
+      },
+      {
+        name: "ผลการประเมินความพึงพอใจ",
+        icon: WholeWord,
+        path: "/novel/feedback-report",
+        showIf: (currentUser) =>
+          currentUser.aud === "admin" && currentUser.role === "ADMIN",
+        badge: null,
+      },
 
-    {
-      name: "กำหนดสิทธิ์",
-      icon: BoxSelect,
-      path: "/novel/permission",
-      showIf: (currentUser) =>
-        currentUser.aud === "admin" && currentUser.role === "ADMIN",
-      badge: null,
-    },
-    {
-      name: "โรงพยาบาล/คลินิก",
-      icon: Hospital,
-      path: "/novel/hospitals",
-      showIf: (currentUser) =>
-        currentUser.aud === "admin" && currentUser.role === "ADMIN",
-      badge: null,
-    },
-  ];
+      // {
+      //   name: "ข้อมูลโรงพยาบาล/คลินิก",
+      //   icon: Hospital,
+      //   path: "/novel/hospitals-info",
+      //   showIf: (currentUser) =>
+      //     currentUser.aud === "admin" && currentUser.role === "ADMIN",
+      //   badge: null,
+      // },
+      {
+        name: "กำหนดสิทธิ์",
+        icon: BoxSelect,
+        path: "/novel/permission",
+        showIf: (currentUser) =>
+          currentUser.aud === "admin" && currentUser.role === "ADMIN",
+        badge: null,
+      },
+    ],
+    [],
+  );
 
-  const visibleMenuItems = menuItems.filter(
-    (item) => !item.showIf || item.showIf(user),
+  const visibleMenuItems = useMemo(
+    () => menuItems.filter((item) => !item.showIf || item.showIf(user)),
+    [menuItems, user?.aud, user?.role],
   );
 
   const isActive = (path: string) => {
-    return location.pathname.startsWith(path);
+    const pathname = location.pathname;
+    return pathname === path || pathname.startsWith(path + "/");
   };
 
   return (
@@ -173,34 +194,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
               </p>
             </motion.div>
           </div>
-
-          {/* User Info - แสดงเมื่อ Sidebar เปิด */}
-          {/* <AnimatePresence>
-          {isOpen && user && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-4 pt-4 border-t border-slate-700/50"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-linear-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">
-                    {user.email?.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {user.email}
-                  </p>
-                  <p className="text-xs text-blue-300/70">
-                    {user.aud === "vet" ? "สัตวแพทย์" : "หมอ NOVEL"}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence> */}
         </div>
 
         {/* Navigation */}
@@ -231,6 +224,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
                 <button
                   type="button"
                   onClick={() => navigate(item.path)}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={!isOpen ? item.name : undefined}
                   className={`
                   relative flex items-center w-full px-3 py-2.5 rounded-xl transition-all duration-200
                   ${
@@ -261,31 +256,37 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user }) => {
                   </motion.div>
 
                   {/* Menu Text */}
-                  <motion.span
-                    className="ml-3 text-sm font-medium whitespace-nowrap flex-1 text-left"
-                    initial={{ opacity: 1 }}
-                    animate={{
-                      opacity: isOpen ? 1 : 0,
-                      display: isOpen ? "block" : "none",
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {item.name}
-                  </motion.span>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.span
+                        key={`label-${item.path}`}
+                        className="ml-3 text-sm font-medium whitespace-nowrap flex-1 text-left"
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
 
                   {/* Badge */}
                   {item.badge && (
-                    <motion.span
-                      className="ml-3 text-xs font-semibold whitespace-nowrap flex-1 text-right"
-                      initial={{ opacity: 1 }}
-                      animate={{
-                        opacity: isOpen ? 1 : 0,
-                        display: isOpen ? "block" : "none",
-                      }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {item.badge}
-                    </motion.span>
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.span
+                          key={`badge-${item.path}`}
+                          className="ml-3 text-xs font-semibold whitespace-nowrap flex-1 text-right"
+                          initial={{ opacity: 0, x: 6 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 6 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          {item.badge}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   )}
                 </button>
 

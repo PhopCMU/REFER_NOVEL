@@ -150,3 +150,27 @@ export const GetVetProfile = async () => {
     }
   }
 };
+
+export const GetDataFeedback = async (start: string, end: string) => {
+  try {
+    const payload = { start, end };
+    const encyptedDataQuery = encryptDataNew(payload);
+    const encodedURL = encodeURIComponent(encyptedDataQuery);
+
+    const resp = await apiWithAuth.get(`/feedback/list?data=${encodedURL}`);
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in GetDataFeedback: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetDataFeedback: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
