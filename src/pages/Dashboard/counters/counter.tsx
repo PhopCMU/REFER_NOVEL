@@ -4,15 +4,24 @@ import { GetCaseReferralAdmin } from "../../../api/GetApi";
 import { getEndOfDay, getStartOfDay } from "../../../utils/helpers";
 import CoverPDF from "../../../component/CoverPDF";
 import type {
+  CaseAppointment,
   CaseItem,
   GetReferralCasesProps,
+  MedicalFile,
   PostReferralPayloadEncrypted,
   TReferralType,
   TStatus,
+  UpdateAppointmentPayloadEncrypted,
   UpdateCaseStatusProps,
 } from "../../../types/type";
+import { resolveCaseStatusFromLogs } from "../../../types/type";
 import { getUserFromToken } from "../../../utils/authUtils";
-import { PostAppointment, PostUpdateCaseStatus } from "../../../api/PostApi";
+import {
+  PostAppointment,
+  PostUpdateAppointment,
+  PostUpdateCaseStatus,
+} from "../../../api/PostApi";
+
 import { showToast } from "../../../utils/showToast";
 import { X } from "lucide-react";
 import { useConfirmTailwind } from "../../../hook/useConfirmTailwind";
@@ -192,6 +201,54 @@ const fmtDateTime = (d: string | null | undefined): string => {
 const fmtBytes = (b: number) =>
   b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`;
 
+const PDF_MIME_TYPE = "application/pdf";
+
+const toDateInputValue = (d: string | null | undefined): string => {
+  if (!d) return "";
+
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return "";
+
+  const tzoffset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - tzoffset).toISOString().slice(0, 10);
+};
+
+const toTimeInputValue = (d: string | null | undefined): string => {
+  if (!d) return "";
+
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return "";
+
+  return date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
+
+const getApiErrorMessage = (response: unknown, fallback: string): string => {
+  if (typeof response === "string" && response.trim()) {
+    return response;
+  }
+
+  if (
+    response &&
+    typeof response === "object" &&
+    "message" in response &&
+    typeof (response as { message?: unknown }).message === "string"
+  ) {
+    const message = (response as { message: string }).message.trim();
+    if (message) return message;
+  }
+
+  return fallback;
+};
+
+type AppointmentEditTarget = {
+  appointment: CaseAppointment;
+  file: MedicalFile | null;
+};
+
 // ─── Sub Components ────────────────────────────────────────────────────────────
 const StatusPill = ({
   status,
@@ -218,18 +275,18 @@ const StatusPill = ({
   );
 };
 
-const TypeBadge = ({ type }: { type: TReferralType }) => {
-  const c = TYPE_CONFIG[type] || TYPE_CONFIG.ONE_TIME;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${c.tailwindBg} border`}
-      style={{ borderColor: `${c.color}30`, color: c.color }}
-    >
-      <span>{c.icon}</span>
-      {c.label}
-    </span>
-  );
-};
+// const TypeBadge = ({ type }: { type: TReferralType }) => {
+//   const c = TYPE_CONFIG[type] || TYPE_CONFIG.ONE_TIME;
+//   return (
+//     <span
+//       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${c.tailwindBg} border`}
+//       style={{ borderColor: `${c.color}30`, color: c.color }}
+//     >
+//       <span>{c.icon}</span>
+//       {c.label}
+//     </span>
+//   );
+// };
 
 // ─── Step Tracker ─────────────────────────────────────────────────────────────
 const StepTracker = ({ status }: { status: TStatus }) => {
@@ -378,9 +435,9 @@ const CaseCard = ({
 
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-600 border border-rose-200">
-              🏷️ {data.serviceCode || "-"}
+              🏷️ {data?.serviceReferral?.name || "-"}
             </span>
-            <TypeBadge type={data.referralType} />
+            {/* <TypeBadge type={data.referralType} /> */}
           </div>
 
           <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-dashed border-gray-200">
@@ -420,62 +477,177 @@ const UploadAppointmentModal = ({
   lastName,
   onClose,
   onSuccess,
+  mode = "create",
+  appointment = null,
+  appointmentFile = null,
 }: {
   caseId: string;
   firstName: string;
   lastName: string;
   onClose: () => void;
   onSuccess: () => Promise<void>;
+  mode?: "create" | "edit";
+  appointment?: CaseAppointment | null;
+  appointmentFile?: MedicalFile | null;
 }) => {
+  const isEditMode = mode === "edit";
   const [file, setFile] = useState<File | null>(null);
-  const [appointmentDate, setAppointmentDate] = useState("");
-  const [appointmentTime, setAppointmentTime] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState(() =>
+    isEditMode ? toDateInputValue(appointment?.date) : "",
+  );
+  const [appointmentTime, setAppointmentTime] = useState(() =>
+    isEditMode ? toTimeInputValue(appointment?.date) : "",
+  );
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [formError, setFormError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDrop = (e: React.DragEvent) => {
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    setAppointmentDate(toDateInputValue(appointment?.date));
+    setAppointmentTime(toTimeInputValue(appointment?.date));
+    setFile(null);
+    setFormError("");
+  }, [appointment?.date, appointment?.id, isEditMode]);
+
+  const handleFileSelect = (nextFile?: File | null) => {
+    if (!nextFile) return;
+
+    if (nextFile.type !== PDF_MIME_TYPE) {
+      const errorMessage = "รองรับไฟล์ PDF เท่านั้น";
+      setFormError(errorMessage);
+      showToast.error(errorMessage);
+      return;
+    }
+
+    setFormError("");
+    setFile(nextFile);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped && dropped.type === "application/pdf") {
-      setFile(dropped);
+    handleFileSelect(e.dataTransfer.files[0]);
+  };
+
+  const validateForm = (): string | null => {
+    if (!appointmentDate || !appointmentTime) {
+      return "กรุณาเลือกวันและเวลาให้ครบถ้วน";
     }
+
+    const parsedDateTime = new Date(`${appointmentDate}T${appointmentTime}`);
+    if (isNaN(parsedDateTime.getTime())) {
+      return "รูปแบบวันเวลานัดหมายไม่ถูกต้อง";
+    }
+
+    if (!isEditMode && !file) {
+      return "กรุณาเลือกไฟล์ PDF";
+    }
+
+    if (file && file.type !== PDF_MIME_TYPE) {
+      return "รองรับไฟล์ PDF เท่านั้น";
+    }
+
+    return null;
   };
 
   const handleUpload = async () => {
-    if (!file || !appointmentDate || !appointmentTime) {
-      showToast.error("กรุณาเลือกวันและเวลาให้ครบถ้วน");
+    const validationError = validateForm();
+    if (validationError) {
+      setFormError(validationError);
+      showToast.error(validationError);
       return;
     }
+
+    const editAppointmentId = appointment?.id ?? "";
+
+    if (isEditMode && !editAppointmentId) {
+      const errorMessage = "ไม่พบข้อมูลนัดหมายสำหรับแก้ไข";
+      setFormError(errorMessage);
+      showToast.error(errorMessage);
+      return;
+    }
+
     setUploading(true);
+    setFormError("");
 
     try {
       const appointmentDateTimeString = `${appointmentDate} ${appointmentTime}`;
 
-      const payload: PostReferralPayloadEncrypted = {
-        caseId: caseId,
-        files: [file],
-        appointmentDateTime: appointmentDateTimeString,
-      };
+      if (isEditMode) {
+        const payload: UpdateAppointmentPayloadEncrypted = {
+          caseId,
+          appointmentId: editAppointmentId,
+          files: file ? [file] : [],
+          appointmentDateTime: appointmentDateTimeString,
+        };
 
-      const resp = await PostAppointment(payload);
+        const resp = await PostUpdateAppointment(payload);
+        if (!resp?.success) {
+          const errorMessage = getApiErrorMessage(
+            resp,
+            "ไม่สามารถแก้ไขนัดหมายได้",
+          );
+          setFormError(errorMessage);
+          showToast.error(errorMessage);
+          return;
+        }
 
-      if (!resp.success) {
-        showToast.error("Error uploading file");
-        return;
+        showToast.success("แก้ไขนัดหมายสำเร็จ");
+      } else {
+        if (!file) {
+          const errorMessage = "กรุณาเลือกไฟล์ PDF";
+          setFormError(errorMessage);
+          showToast.error(errorMessage);
+          return;
+        }
+
+        const payload: PostReferralPayloadEncrypted = {
+          caseId,
+          files: [file],
+          appointmentDateTime: appointmentDateTimeString,
+        };
+
+        const resp = await PostAppointment(payload);
+
+        if (!resp?.success) {
+          const errorMessage = getApiErrorMessage(
+            resp,
+            "ไม่สามารถอัปโหลดใบนัดได้",
+          );
+          setFormError(errorMessage);
+          showToast.error(errorMessage);
+          return;
+        }
+
+        showToast.success("อัปโหลดสำเร็จ");
       }
 
-      showToast.success("อัปโหลดสำเร็จ");
       await onSuccess();
       onClose();
     } catch (err) {
-      console.error("Upload failed", err);
-      showToast.error("เกิดข้อผิดพลาด");
+      console.error(
+        isEditMode ? "Appointment update failed" : "Appointment upload failed",
+        err,
+      );
+      const errorMessage = isEditMode
+        ? "เกิดข้อผิดพลาดในการแก้ไขนัดหมาย"
+        : "เกิดข้อผิดพลาดในการอัปโหลดใบนัด";
+      setFormError(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setUploading(false);
     }
   };
+
+  const submitDisabled =
+    uploading ||
+    !appointmentDate ||
+    !appointmentTime ||
+    (!isEditMode && !file) ||
+    (isEditMode && !appointment?.id);
 
   return (
     <AnimatePresence>
@@ -484,7 +656,7 @@ const UploadAppointmentModal = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-        onClick={(e) => e.target === e.currentTarget && onClose()}
+        // onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <motion.div
           initial={{ scale: 0.9, y: 20, opacity: 0 }}
@@ -497,10 +669,12 @@ const UploadAppointmentModal = ({
           <div className="bg-linear-to-r from-cyan-500 to-teal-500 p-5">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-xl backdrop-blur-sm flex items-center justify-center text-2xl">
-                📤
+                {isEditMode ? "✏️" : "📤"}
               </div>
               <div>
-                <h3 className="font-bold text-lg text-white">อัปโหลดใบนัด</h3>
+                <h3 className="font-bold text-lg text-white">
+                  {isEditMode ? "แก้ไขนัดหมาย" : "อัปโหลดใบนัด"}
+                </h3>
                 <p className="text-sm text-white/80">
                   {firstName} {lastName}
                 </p>
@@ -509,6 +683,15 @@ const UploadAppointmentModal = ({
           </div>
 
           <div className="p-5 space-y-4">
+            {formError && (
+              <div
+                role="alert"
+                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+              >
+                {formError}
+              </div>
+            )}
+
             {/* Date Time Selection */}
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -548,7 +731,7 @@ const UploadAppointmentModal = ({
             {/* Drop Zone */}
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">
-                ไฟล์ PDF
+                {isEditMode ? "ไฟล์ PDF ใหม่ (ถ้ามี)" : "ไฟล์ PDF"}
               </label>
               <div
                 onDragOver={(e) => {
@@ -557,14 +740,14 @@ const UploadAppointmentModal = ({
                 }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => !uploading && fileInputRef.current?.click()}
                 className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
                   dragOver
                     ? "border-cyan-400 bg-cyan-50 scale-[1.02]"
                     : file
                       ? "border-teal-400 bg-teal-50"
                       : "border-gray-200 hover:border-cyan-300 hover:bg-cyan-50/50"
-                }`}
+                } ${uploading ? "pointer-events-none opacity-60" : ""}`}
               >
                 <input
                   ref={fileInputRef}
@@ -572,8 +755,7 @@ const UploadAppointmentModal = ({
                   accept="application/pdf"
                   className="hidden"
                   onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f && f.type === "application/pdf") setFile(f);
+                    handleFileSelect(e.target.files?.[0] ?? null);
                   }}
                 />
 
@@ -602,6 +784,44 @@ const UploadAppointmentModal = ({
                   </div>
                 ) : (
                   <>
+                    {isEditMode && appointmentFile ? (
+                      <div className="mb-4 rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-left">
+                        <p className="text-xs font-medium text-cyan-700">
+                          ไฟล์ปัจจุบัน
+                        </p>
+                        <p className="mt-1 truncate text-sm font-medium text-cyan-800">
+                          {appointmentFile.originalName ||
+                            appointmentFile.name ||
+                            "-"}
+                        </p>
+                        <div className="mt-2 flex items-center justify-between gap-2">
+                          <p className="text-xs text-cyan-600">
+                            หากไม่เลือกไฟล์ใหม่ ระบบจะใช้ไฟล์เดิมต่อไป
+                          </p>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(
+                                `${import.meta.env.VITE_API_BASE_URL_FILE}${appointmentFile.fileUrl}`,
+                                "_blank",
+                              );
+                            }}
+                            className="shrink-0 rounded-lg border border-cyan-200 bg-white px-3 py-1.5 text-xs font-medium text-cyan-700 hover:bg-cyan-100"
+                          >
+                            ดูไฟล์
+                          </button>
+                        </div>
+                      </div>
+                    ) : isEditMode ? (
+                      <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-left">
+                        <p className="text-xs text-amber-700">
+                          ยังไม่มีไฟล์แนบสำหรับนัดหมายนี้ สามารถเพิ่ม PDF
+                          ใหม่ได้
+                        </p>
+                      </div>
+                    ) : null}
+
                     <div className="text-4xl mb-2">📎</div>
                     <p className="text-sm text-gray-600">
                       คลิกหรือลากไฟล์ PDF มาวาง
@@ -624,18 +844,18 @@ const UploadAppointmentModal = ({
               </button>
               <button
                 onClick={handleUpload}
-                disabled={
-                  !file || !appointmentDate || !appointmentTime || uploading
-                }
+                disabled={submitDisabled}
                 className="flex-1 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-teal-500 text-white text-sm font-bold hover:from-cyan-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/25"
               >
                 {uploading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>กำลังอัปโหลด...</span>
+                    <span>
+                      {isEditMode ? "กำลังบันทึก..." : "กำลังอัปโหลด..."}
+                    </span>
                   </div>
                 ) : (
-                  "📤 อัปโหลด"
+                  `${isEditMode ? "✏️ บันทึกการแก้ไข" : "📤 อัปโหลด"}`
                 )}
               </button>
             </div>
@@ -827,19 +1047,28 @@ const DetailPanel = ({
   const [showUpload, setShowUpload] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [editingAppointment, setEditingAppointment] =
+    useState<AppointmentEditTarget | null>(null);
 
   const { confirm, ConfirmModal } = useConfirmTailwind();
 
   useEffect(() => {
     setTab("overview");
+    setShowUpload(false);
+    setShowConfirm(false);
+    setShowCancelConfirm(false);
+    setEditingAppointment(null);
   }, [data?.id]);
 
   const handleDeleteAppointmentClick = async (
     aptId: string,
-    appointment: string,
+    appointmentFileId: string,
   ) => {
     if (!aptId) return;
-    if (!appointment) return;
+    if (!appointmentFileId) {
+      showToast.error("ไม่พบไฟล์ใบนัดหมายสำหรับลบ");
+      return;
+    }
 
     const isConfirm = await confirm({
       title: "ยืนยันการลบใบนัดหมาย",
@@ -851,13 +1080,44 @@ const DetailPanel = ({
 
     if (!isConfirm) return;
 
-    const resp = await DeleteMedicalAppointmentFile(aptId, appointment);
+    const resp = await DeleteMedicalAppointmentFile(aptId, appointmentFileId);
     if (resp.success) {
-      onRefresh();
+      await onRefresh();
     } else {
       showToast.error("เกิดข้อผิดพลาดในการลบใบนัดหมาย");
     }
   };
+
+  // const handleEditAppointmentClick = (
+  //   appointment: CaseAppointment | null | undefined,
+  //   appointmentFile: MedicalFile | null,
+  // ) => {
+  //   if (!data?.appointments?.length || !appointment?.id) {
+  //     showToast.error("ไม่พบข้อมูลนัดหมายสำหรับแก้ไข");
+  //     return;
+  //   }
+
+  //   setEditingAppointment({
+  //     appointment,
+  //     file: appointmentFile,
+  //   });
+  // };
+
+  const deduplicatedLogs = useMemo(() => {
+    const logs: any[] = data?.caseStatusLogs ?? [];
+    const completedLogs = logs.filter((l: any) => l?.newStatus === "COMPLETED");
+    const latestCompleted =
+      completedLogs.length > 0
+        ? completedLogs.reduce((a: any, b: any) =>
+            new Date(a.createdAt) >= new Date(b.createdAt) ? a : b,
+          )
+        : null;
+    return logs.filter(
+      (l: any) =>
+        l?.newStatus !== "COMPLETED" ||
+        (latestCompleted && l?.id === latestCompleted.id),
+    );
+  }, [data?.caseStatusLogs]);
 
   if (!data) {
     return (
@@ -897,6 +1157,8 @@ const DetailPanel = ({
   }
 
   const nextStatus = NEXT_STATUS[data.status];
+  const hasAppointments =
+    Array.isArray(data.appointments) && data.appointments.length > 0;
   const canAdvance =
     !!nextStatus && data.status !== "COMPLETED" && data.status !== "CANCELLED";
   const canCancel = data.status !== "COMPLETED" && data.status !== "CANCELLED";
@@ -915,8 +1177,9 @@ const DetailPanel = ({
       label: "เอกสาร",
       icon: "📂",
       count:
-        data.medicalFiles?.filter((f: any) => f.category !== "APPOINTMENT")
-          .length || 0,
+        data.medicalFiles?.filter(
+          (f: MedicalFile) => f.category !== "APPOINTMENT",
+        ).length || 0,
     },
   ];
 
@@ -928,7 +1191,7 @@ const DetailPanel = ({
       transition={{ duration: 0.3, type: "spring" }}
       className="h-full flex flex-col bg-linear-to-br from-gray-50 to-white"
     >
-      <ConfirmModal />
+      {ConfirmModal}
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         {/* Top Bar */}
@@ -988,7 +1251,8 @@ const DetailPanel = ({
 
         {/* Action Buttons */}
         <div className="px-6 pb-4 flex gap-3">
-          {data.status === "APPOINTED" ? (
+          {data.status === "APPOINTED" ||
+          (data.status === "COMPLETED" && data.appointments?.length === 0) ? (
             <button
               onClick={() => setShowUpload(true)}
               className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-teal-500 text-white text-sm font-bold shadow-lg shadow-cyan-500/25 hover:from-cyan-600 hover:to-teal-600 transition-all"
@@ -1093,7 +1357,7 @@ const DetailPanel = ({
                   />
                   <InfoItem
                     label="บริการ"
-                    value={`${data.serviceCode || "-"} · ${data.serviceReferral?.name || "-"}`}
+                    value={` ${data.serviceReferral?.name || "-"}`}
                   />
                   <InfoItem
                     label="วันที่ส่งตัว"
@@ -1220,7 +1484,7 @@ const DetailPanel = ({
                   />
                   <InfoItem
                     label="เพศ / อายุ"
-                    value={`${data.pet?.sex === "M" ? "ชาย" : data.pet?.sex === "F" ? "หญิง" : "-"} / ${data.pet?.age || "-"}`}
+                    value={`${data.pet?.sex === "M" ? "ผู้" : data.pet?.sex === "F" ? "เมีย" : "-"} / ${data.pet?.age || "-"}`}
                   />
                   <InfoItem label="สี" value={data.pet?.color || "-"} />
                   <InfoItem
@@ -1244,51 +1508,49 @@ const DetailPanel = ({
               exit={{ opacity: 0, y: -10 }}
               className="space-y-3"
             >
-              {data.caseStatusLogs && data.caseStatusLogs.length > 0 ? (
-                [...data.caseStatusLogs]
-                  .reverse()
-                  .map((log: any, i: number) => {
-                    const nc = STATUS_CONFIG[log.newStatus as TStatus];
-                    return (
-                      <motion.div
-                        key={log.id || i}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="relative pl-8 pb-6 last:pb-0"
+              {deduplicatedLogs.length > 0 ? (
+                [...deduplicatedLogs].reverse().map((log: any, i: number) => {
+                  const nc = STATUS_CONFIG[log.newStatus as TStatus];
+                  return (
+                    <motion.div
+                      key={log.id || i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="relative pl-8 pb-6 last:pb-0"
+                    >
+                      {/* Timeline Line */}
+                      {i < deduplicatedLogs.length - 1 && (
+                        <div className="absolute left-3 top-6 bottom-0 w-0.5 bg-gray-200" />
+                      )}
+
+                      {/* Timeline Dot */}
+                      <div
+                        className={`absolute left-0 w-6 h-6 rounded-full border-2 bg-white flex items-center justify-center`}
+                        style={{ borderColor: nc?.color || "#e2e8f0" }}
                       >
-                        {/* Timeline Line */}
-                        {i < data.caseStatusLogs.length - 1 && (
-                          <div className="absolute left-3 top-6 bottom-0 w-0.5 bg-gray-200" />
+                        <span className="text-xs">{nc?.icon || "•"}</span>
+                      </div>
+
+                      {/* Content */}
+                      <div className="bg-white rounded-lg border border-gray-200 p-4 ml-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs text-gray-500">
+                            {fmtDateTime(log.createdAt)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <StatusPill status={log.newStatus} size="sm" />
+                        </div>
+                        {log.note && (
+                          <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                            {log.note}
+                          </p>
                         )}
-
-                        {/* Timeline Dot */}
-                        <div
-                          className={`absolute left-0 w-6 h-6 rounded-full border-2 bg-white flex items-center justify-center`}
-                          style={{ borderColor: nc?.color || "#e2e8f0" }}
-                        >
-                          <span className="text-xs">{nc?.icon || "•"}</span>
-                        </div>
-
-                        {/* Content */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-4 ml-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs text-gray-500">
-                              {fmtDateTime(log.createdAt)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mb-3">
-                            <StatusPill status={log.newStatus} size="sm" />
-                          </div>
-                          {log.note && (
-                            <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                              {log.note}
-                            </p>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })
+                      </div>
+                    </motion.div>
+                  );
+                })
               ) : (
                 <EmptyState icon="📭" title="ไม่มีประวัติสถานะ" />
               )}
@@ -1303,13 +1565,15 @@ const DetailPanel = ({
               exit={{ opacity: 0, y: -10 }}
               className="space-y-3"
             >
-              {data.appointments && data.appointments.length > 0 ? (
-                data.appointments.map((apt: any, i: number) => {
-                  const appointmentFile = data.medicalFiles?.find(
-                    (f: any) =>
-                      f.category === "APPOINTMENT" &&
-                      f.appointmentId === apt.id,
-                  );
+              {hasAppointments ? (
+                data.appointments.map((apt: CaseAppointment, i: number) => {
+                  const appointmentFile =
+                    data.medicalFiles?.find(
+                      (f: MedicalFile) =>
+                        f.category === "APPOINTMENT" &&
+                        f.appointmentId === apt.id,
+                    ) ?? null;
+                  // const canEditAppointment = hasAppointments && Boolean(apt.id);
 
                   return (
                     <motion.div
@@ -1333,9 +1597,10 @@ const DetailPanel = ({
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap justify-end">
                           {appointmentFile && (
                             <button
+                              type="button"
                               onClick={() =>
                                 window.open(
                                   `${
@@ -1350,7 +1615,29 @@ const DetailPanel = ({
                               ดาวน์โหลด
                             </button>
                           )}
+                          {/* <button
+                            type="button"
+                            onClick={() =>
+                              handleEditAppointmentClick(apt, appointmentFile)
+                            }
+                            disabled={!canEditAppointment}
+                            aria-disabled={!canEditAppointment}
+                            title={
+                              canEditAppointment
+                                ? "แก้ไขนัดหมาย"
+                                : "ไม่พบข้อมูลนัดหมายสำหรับแก้ไข"
+                            }
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                              canEditAppointment
+                                ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"
+                                : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                            }`}
+                          >
+                            <span>✏️</span>
+                            แก้ไข
+                          </button> */}
                           <button
+                            type="button"
                             onClick={() =>
                               handleDeleteAppointmentClick(
                                 apt.id,
@@ -1510,6 +1797,19 @@ const DetailPanel = ({
         />
       )}
 
+      {editingAppointment && (
+        <UploadAppointmentModal
+          caseId={data.id}
+          firstName={data.pet?.owner?.firstName ?? " "}
+          lastName={data.pet?.owner?.lastName ?? " "}
+          mode="edit"
+          appointment={editingAppointment.appointment}
+          appointmentFile={editingAppointment.file}
+          onClose={() => setEditingAppointment(null)}
+          onSuccess={onRefresh}
+        />
+      )}
+
       {showConfirm && nextStatus && (
         <ConfirmStatusModal
           currentStatus={data.status}
@@ -1582,10 +1882,18 @@ export default function CounterPage() {
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [filterStatus, setFilterStatus] = useState<TStatus | "ALL">("ALL");
   const [isLoading, setIsLoading] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+
   const initRef = useRef(false);
   const userLogin = getUserFromToken();
+
+  const defaultDateInput = (() => {
+    const d = new Date();
+    const tzoffset = d.getTimezoneOffset() * 60000; // offset in ms
+    return new Date(d.getTime() - tzoffset).toISOString().slice(0, 10);
+  })();
+
+  const [startDate, setStartDate] = useState(defaultDateInput);
+  const [endDate, setEndDate] = useState(defaultDateInput);
 
   const fetchDataCases = async (start: string, end: string) => {
     setIsLoading(true);
@@ -1593,9 +1901,17 @@ export default function CounterPage() {
       const payload: GetReferralCasesProps = { timeStart: start, timeEnd: end };
       const result = await GetCaseReferralAdmin(payload);
       if (result && Array.isArray(result.data)) {
-        setCases(result.data);
+        const normalized = result.data.map((c: any) => ({
+          ...c,
+          status: resolveCaseStatusFromLogs(c.status, c.caseStatusLogs),
+        }));
+        setCases(normalized);
       } else if (Array.isArray(result)) {
-        setCases(result);
+        const normalized = result.map((c: any) => ({
+          ...c,
+          status: resolveCaseStatusFromLogs(c.status, c.caseStatusLogs),
+        }));
+        setCases(normalized);
       } else {
         setCases([]);
       }

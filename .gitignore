@@ -11,8 +11,14 @@ node_modules
 dist
 dist-ssr
 *.local
-.env*
-.env.prod
+
+# Dotenv files — ignore actual secrets but keep example files tracked
+.env
+.env.*
+!.env.example
+
+*.env.prod
+/Reports
 
 # Editor directories and files
 .vscode/*

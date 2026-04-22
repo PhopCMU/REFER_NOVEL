@@ -323,12 +323,12 @@ function ServiceSelector({
               <Stethoscope
                 className={`w-4 h-4 ${selectedServiceId === service.id ? "text-cyan-600" : "text-slate-400"}`}
               />
-              <span className="text-xs font-bold text-slate-700">
-                {service.code}
+              <span className="text-md font-bold text-slate-700">
+                {service.nameTH}
               </span>
             </div>
             <p className="text-xs text-slate-600 line-clamp-2">
-              {service.nameTH}
+              {/* {service.nameEN} */}
             </p>
           </button>
         ))}
@@ -618,6 +618,38 @@ export default function CaseReferralModal({
           {/* ── Body ── */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Important info for vets */}
+              <div
+                role="note"
+                aria-live="polite"
+                className="mb-4 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 flex items-start gap-3"
+              >
+                <AlertCircle className="w-5 h-5 text-amber-600 mt-1 shrink-0" />
+                <div className="text-sm leading-tight">
+                  <p className="font-semibold">การพิจารณา</p>
+                  <p className="mt-1">
+                    การพิจารณาเข้าคลินิกอยู่ภายใต้ความเห็นของสัตวแพทย์
+                  </p>
+                  <p className="mt-1 text-xs">
+                    ช่องทางการติดต่อเพิ่มเติม:{" "}
+                    <a
+                      href="tel:053948031"
+                      className="font-medium underline text-amber-800"
+                    >
+                      053-948-031
+                    </a>
+                    ,{" "}
+                    <a
+                      href="tel:053948112"
+                      className="font-medium underline text-amber-800"
+                    >
+                      053-948-112
+                    </a>{" "}
+                    (ในช่วงเวลาทำการ)
+                  </p>
+                </div>
+              </div>
+
               {/* Step 1: เลือกคลินิก */}
               <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200">
                 <div className="flex items-center gap-3 mb-4">
@@ -629,7 +661,7 @@ export default function CaseReferralModal({
                   </h2>
                   {selectedService && (
                     <span className="ml-auto text-xs px-2 py-1 rounded-full bg-cyan-100 text-blue-700 font-medium">
-                      {selectedService.code} - {selectedService.nameTH}
+                      {selectedService.nameTH}
                     </span>
                   )}
                 </div>

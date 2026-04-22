@@ -1,13 +1,27 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GetCaseReferral } from "../../../api/GetApi";
 import { showToast } from "../../../utils/showToast";
+import {
+  useWebSocket,
+  type WSUpdateStatusPayload,
+  type WSCreateNewCasePayload,
+  type WSDeleteCasePayload,
+  type WSUpdateFilePayload,
+} from "../../../hook/useWebsocket";
 
 import { getEndOfDay, getStartOfDay } from "../../../utils/helpers";
 import CoverPDF from "../../../component/CoverPDF";
 import type {
   CaseItem,
   GetReferralCasesProps,
+  StatusLog,
   TReferralType,
   TStatus,
 } from "../../../types/type";
@@ -160,8 +174,29 @@ const Badge = ({
   </span>
 );
 
-const StatusBadge = ({ status }: { status: TStatus }) => {
-  const c = STATUS_CONFIG[status];
+const getLatestStatus = (logs: StatusLog[], fallback: TStatus): TStatus => {
+  if (!logs || logs.length === 0) return fallback;
+  const latest = logs.reduce((a, b) =>
+    new Date(a.createdAt) >= new Date(b.createdAt) ? a : b,
+  );
+  return latest.newStatus;
+};
+
+// Normalize and validate a status key against STATUS_CONFIG.
+const getStatusKey = (s?: string | TStatus | null): TStatus => {
+  if (!s) return "PENDING";
+  const key = String(s).toUpperCase() as TStatus;
+  return (STATUS_CONFIG as Record<string, any>)[key]
+    ? (key as TStatus)
+    : "PENDING";
+};
+
+const getStatusConfig = (s?: string | TStatus | null) => {
+  return STATUS_CONFIG[getStatusKey(s)];
+};
+
+const StatusBadge = ({ status }: { status?: string | TStatus | null }) => {
+  const c = getStatusConfig(status);
   if (!c) return null;
   return (
     <Badge
@@ -242,11 +277,13 @@ const CaseCard = ({
   onClick: () => void;
   selected: boolean;
 }) => {
-  const sc = STATUS_CONFIG[data.status];
+  const effectiveStatus = getLatestStatus(data.caseStatusLogs, data.status);
+  const sc = getStatusConfig(effectiveStatus);
   //   const speciesDisplay =
   //     data.pet.species === "Exotic"
   //       ? data.pet.exoticdescription || data.pet.breed
   //       : data.pet.breed;
+
   return (
     <motion.div
       layout
@@ -266,18 +303,18 @@ const CaseCard = ({
             <span className="font-bold text-sm text-slate-800 truncate">
               {data.pet.name}
             </span>
-            <Badge
+            {/* <Badge
               label={TYPE_CONFIG[data.referralType]?.label}
               color={TYPE_CONFIG[data.referralType]?.color}
               small
-            />
+            /> */}
           </div>
           <div className="text-xs text-slate-500 mb-1 truncate">
             {data.title}
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
-              {data.serviceCode}
+              {data?.serviceReferral?.name}
             </span>
             <span className="text-[11px] text-slate-400 font-mono">
               {data.referenceNo}
@@ -285,7 +322,11 @@ const CaseCard = ({
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          {sc && <StatusBadge status={data.status} />}
+          {sc && (
+            <StatusBadge
+              status={getLatestStatus(data.caseStatusLogs, data.status)}
+            />
+          )}
           <span className="text-[10px] text-slate-400">
             {fmtDate(data.createdAt)}
           </span>
@@ -625,6 +666,25 @@ const DetailPanel = ({
     onDataChange();
   };
 
+  // Ensure hooks are called in the same order on every render.
+  // Compute deduplicatedLogs here (uses optional chaining) so the
+  // hook is invoked even when `data` is null/undefined.
+  const deduplicatedLogs = useMemo(() => {
+    const logs: any[] = data?.caseStatusLogs ?? [];
+    const completedLogs = logs.filter((l: any) => l?.newStatus === "COMPLETED");
+    const latestCompleted =
+      completedLogs.length > 0
+        ? completedLogs.reduce((a: any, b: any) =>
+            new Date(a.createdAt) >= new Date(b.createdAt) ? a : b,
+          )
+        : null;
+    return logs.filter(
+      (l: any) =>
+        l?.newStatus !== "COMPLETED" ||
+        (latestCompleted && l?.id === latestCompleted.id),
+    );
+  }, [data?.caseStatusLogs]);
+
   if (!data)
     return (
       <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4 bg-linear-to-b from-slate-50 to-white">
@@ -663,7 +723,7 @@ const DetailPanel = ({
       className="h-full flex flex-col bg-white"
     >
       {/* Confirm Modal */}
-      <ConfirmModal />
+      {ConfirmModal}
       <div className="p-5 border-b border-slate-100 bg-white sticky top-0 z-10">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -695,8 +755,10 @@ const DetailPanel = ({
         </div>
 
         <div className="flex gap-2 flex-wrap mb-3">
-          <StatusBadge status={data.status} />
-          <Badge
+          <StatusBadge
+            status={getLatestStatus(data.caseStatusLogs, data.status)}
+          />
+          {/* <Badge
             label={
               TYPE_CONFIG[data.referralType as keyof typeof TYPE_CONFIG]
                 ?.label || data.referralType
@@ -704,13 +766,15 @@ const DetailPanel = ({
             color={
               TYPE_CONFIG[data.referralType as keyof typeof TYPE_CONFIG]?.color
             }
-          />
+          /> */}
           <span className="text-xs font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-            {data.serviceCode} · {data.serviceReferral?.name}
+            {data.serviceReferral?.name}
           </span>
         </div>
 
-        <ProgressStepper status={data.status} />
+        <ProgressStepper
+          status={getLatestStatus(data.caseStatusLogs, data.status)}
+        />
 
         <div className="flex gap-1 border-b border-slate-100 -mb-5 pb-0 mt-4">
           {tabs.map((t) => (
@@ -751,7 +815,7 @@ const DetailPanel = ({
                 />
                 <InfoRow
                   label="บริการ"
-                  value={`${data.serviceCode} · ${data.serviceReferral?.name} `}
+                  value={`${data.serviceReferral?.name}`}
                 />
                 <InfoRow label="วันที่ส่งตัว" value={fmtDate(data.createdAt)} />
                 <InfoRow label="อัปเดตล่าสุด" value={fmtDate(data.updatedAt)} />
@@ -802,7 +866,7 @@ const DetailPanel = ({
                 <InfoRow
                   label="เพศ / อายุ"
                   value={`${
-                    data.pet.sex === "M" ? "ชาย" : "หญิง"
+                    data.pet.sex === "M" ? "ผู้" : "เมีย"
                   } / ${data.pet.age}`}
                 />
                 <InfoRow label="สี" value={data.pet.color} />
@@ -823,8 +887,8 @@ const DetailPanel = ({
               className="relative pl-6"
             >
               <div className="absolute left-15 top-2 bottom-2 w-0.5 bg-slate-200" />
-              {data.caseStatusLogs && data.caseStatusLogs.length > 0 ? (
-                [...data.caseStatusLogs].reverse().map((log, i) => {
+              {deduplicatedLogs.length > 0 ? (
+                [...deduplicatedLogs].reverse().map((log, i) => {
                   const nc = STATUS_CONFIG[log.newStatus as TStatus];
                   return (
                     <motion.div
@@ -1110,10 +1174,75 @@ export default function AnimalReferralCase() {
   const [filterStatus, setFilterStatus] = useState<TStatus | "ALL">("ALL");
   const [isLoading, setIsLoading] = useState(false);
 
-  // New state for date range
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  // New state for date range - default to today's date (local YYYY-MM-DD)
+  const defaultDateInput = (() => {
+    const d = new Date();
+    const tzoffset = d.getTimezoneOffset() * 60000; // offset in ms
+    return new Date(d.getTime() - tzoffset).toISOString().slice(0, 10);
+  })();
+
+  const [startDate, setStartDate] = useState<string>(defaultDateInput);
+  const [endDate, setEndDate] = useState<string>(defaultDateInput);
   const useReferralCase = useRef(false);
+
+  // ─── WebSocket ───────────────────────────────────────────────────────────────
+  const wsUrl = (() => {
+    const base = (import.meta.env.VITE_API_BASE_URL as string) ?? "";
+    return (
+      base
+        .replace(/^https?/, (m) => (m === "https" ? "wss" : "ws"))
+        .replace(/\/$/, "") + "/ws"
+    );
+  })();
+
+  const { isConnected } = useWebSocket(wsUrl, {
+    onUpdateStatus: useCallback(
+      async ({ newStatus, note }: WSUpdateStatusPayload) => {
+        showToast.info(
+          `อัปเดตสถานะเคส: ${newStatus}${note ? ` — ${note}` : ""}`,
+        );
+        await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
+      },
+      [],
+    ),
+
+    onCreateNewCase: useCallback(async (newCase: WSCreateNewCasePayload) => {
+      setCases((prev) => [newCase, ...prev]);
+      showToast.success(`เคสใหม่: ${newCase.referenceNo}`);
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
+    }, []),
+
+    onDeleteCase: useCallback(async ({ caseId }: WSDeleteCasePayload) => {
+      setCases((prev) => prev.filter((c) => c.id !== caseId));
+      setSelected((prev) => (prev === caseId ? null : prev));
+      showToast.info("เคสถูกลบออกจากระบบ");
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
+    }, []),
+
+    onUpdateFile: useCallback(
+      async ({ caseId, files }: WSUpdateFilePayload) => {
+        setCases((prev) =>
+          prev.map((c) =>
+            c.id === caseId ? { ...c, medicalFiles: files } : c,
+          ),
+        );
+        await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
+      },
+      [],
+    ),
+
+    onUpdateFileFollowUp: useCallback(
+      async ({ caseId, files }: WSUpdateFilePayload) => {
+        setCases((prev) =>
+          prev.map((c) =>
+            c.id === caseId ? { ...c, followUpFiles: files } : c,
+          ),
+        );
+        await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
+      },
+      [],
+    ),
+  });
 
   // --- Data Fetching Logic ---
   const fetchDataCases = async (start: string, end: string) => {
@@ -1208,7 +1337,13 @@ export default function AnimalReferralCase() {
             </div>
             <div>
               <h1 className="font-bold text-lg tracking-tight">VetReferral</h1>
-              <p className="text-xs text-sky-100">ระบบตรวจสอบการส่งตัว</p>
+              <p className="text-xs text-sky-100 flex items-center gap-1">
+                ระบบตรวจสอบการส่งตัว
+                <span
+                  className={`inline-block w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400" : "bg-red-400"}`}
+                  title={isConnected ? "เชื่อมต่อแล้ว" : "ไม่ได้เชื่อมต่อ"}
+                />
+              </p>
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -10,7 +10,12 @@ import {
 import { GetCaseReferralAdmin } from "../../../api/GetApi";
 import { getEndOfDay, getStartOfDay } from "../../../utils/helpers";
 import { exportToXLSX } from "../../../utils/exportUtils";
-import { FileBox } from "lucide-react";
+import { FileBox, Search, Calendar, X, SlidersHorizontal } from "lucide-react";
+import {
+  useWebSocket,
+  type WSCreateNewCasePayload,
+} from "../../../hook/useWebsocket";
+import { showToast } from "../../../utils/showToast";
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface StatusMeta {
@@ -86,8 +91,8 @@ const STAT_CARDS = [
     key: "all",
     label: "เคสทั้งหมด",
     icon: "📋",
-    accent: "indigo",
-    gradient: "from-indigo-500 to-indigo-600",
+    accent: "slate",
+    gradient: "from-slate-600 to-slate-700",
   },
   {
     key: "PENDING",
@@ -95,6 +100,20 @@ const STAT_CARDS = [
     icon: "⏳",
     accent: "amber",
     gradient: "from-amber-500 to-amber-600",
+  },
+  {
+    key: "RECEIVED",
+    label: "รับเรื่องแล้ว",
+    icon: "📬",
+    accent: "blue",
+    gradient: "from-blue-500 to-blue-600",
+  },
+  {
+    key: "CONFIRMED",
+    label: "ยืนยันแล้ว",
+    icon: "✔️",
+    accent: "violet",
+    gradient: "from-violet-500 to-violet-600",
   },
   {
     key: "APPOINTED",
@@ -134,6 +153,7 @@ interface StatusBadgeProps {
 }
 function StatusBadge({ status }: StatusBadgeProps) {
   const m = STATUS_META[status] || STATUS_META.PENDING;
+
   return (
     <motion.span
       initial={{ scale: 0.9, opacity: 0 }}
@@ -159,11 +179,35 @@ export default function DashboardAdmin() {
   const [selected, setSelected] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("newest");
   const [isLoading, setIsLoading] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const initRef = useRef(false);
 
+  const defaultDateInput = (() => {
+    const d = new Date();
+    const tzoffset = d.getTimezoneOffset() * 60000; // offset in ms
+    return new Date(d.getTime() - tzoffset).toISOString().slice(0, 10);
+  })();
+
+  const [startDate, setStartDate] = useState(defaultDateInput);
+  const [endDate, setEndDate] = useState(defaultDateInput);
+
   const [cases, setCases] = useState<ApiCaseData[]>([]);
+
+  // ─── WebSocket ───────────────────────────────────────────────────────────────
+  const wsUrl = (() => {
+    const base = (import.meta.env.VITE_API_BASE_URL as string) ?? "";
+    return (
+      base
+        .replace(/^https?/, (m) => (m === "https" ? "wss" : "ws"))
+        .replace(/\/$/, "") + "/ws"
+    );
+  })();
+
+  const { isConnected } = useWebSocket(wsUrl, {
+    onCreateNewCase: useCallback(async (newCase: WSCreateNewCasePayload) => {
+      showToast.success(`เคสใหม่: ${newCase.referenceNo}`);
+      await handleSearch(); // รีเฟรชข้อมูลเคสเมื่อมีการอัปเดตสถานะ
+    }, []),
+  });
 
   const RAW_CASES: DashboardCase[] = useMemo(() => {
     return cases.map(transformCaseData);
@@ -307,7 +351,11 @@ export default function DashboardAdmin() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold bg-linear-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
-            Dashboard ภาพรวมเคสทั้งหมด
+            Dashboard ภาพรวมเคสทั้งหมด{" "}
+            <span
+              className={`inline-block w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400" : "bg-red-400"}`}
+              title={isConnected ? "เชื่อมต่อแล้ว" : "ไม่ได้เชื่อมต่อ"}
+            />
           </h1>
           <p className="text-slate-500 text-sm mt-1 flex items-center gap-2">
             <span className="w-1 h-1 rounded-full bg-blue-400" />
@@ -320,34 +368,32 @@ export default function DashboardAdmin() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"
         >
           {STAT_CARDS.map((s) => (
             <motion.div
               key={s.key}
               variants={itemVariants}
-              whileHover={{ y: -4, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ y: -3, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setFilter(s.key)}
-              className={`relative overflow-hidden rounded-2xl p-5 cursor-pointer transition-all ${
+              className={`relative overflow-hidden rounded-2xl p-4 cursor-pointer transition-all ${
                 filterStatus === s.key
-                  ? `bg-linear-to-br ${s.gradient} shadow-lg shadow-${s.accent}-500/30`
-                  : "bg-white/80 backdrop-blur-sm border border-slate-200/60 hover:border-slate-300/80 shadow-sm hover:shadow-md"
+                  ? `bg-linear-to-br ${s.gradient} shadow-lg`
+                  : "bg-white/80 backdrop-blur-sm border border-slate-200/60 hover:border-slate-300 shadow-sm hover:shadow-md"
               }`}
             >
               <div className="relative z-10">
-                <span className="text-3xl mb-3 block">{s.icon}</span>
+                <span className="text-2xl mb-2 block">{s.icon}</span>
                 <div
-                  className={`text-3xl font-bold ${
-                    filterStatus === s.key
-                      ? "text-white"
-                      : `text-${s.accent}-600`
+                  className={`text-2xl font-bold leading-none ${
+                    filterStatus === s.key ? "text-white" : "text-slate-800"
                   }`}
                 >
                   {counts[s.key] ?? 0}
                 </div>
                 <div
-                  className={`text-xs font-medium mt-1 ${
+                  className={`text-[11px] font-medium mt-1.5 leading-tight ${
                     filterStatus === s.key ? "text-white/80" : "text-slate-500"
                   }`}
                 >
@@ -356,10 +402,12 @@ export default function DashboardAdmin() {
               </div>
               {filterStatus === s.key && (
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute inset-0 bg-white/10 backdrop-blur-sm"
-                />
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="absolute top-2 right-2 w-5 h-5 bg-white/30 rounded-full flex items-center justify-center"
+                >
+                  <X className="w-3 h-3 text-white" />
+                </motion.div>
               )}
             </motion.div>
           ))}
@@ -369,15 +417,18 @@ export default function DashboardAdmin() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex gap-2 flex-wrap mb-5"
+          className="flex gap-2 flex-wrap mb-4 items-center"
         >
+          <span className="text-xs font-semibold text-slate-400 mr-1">
+            กรองสถานะ:
+          </span>
           {Object.entries(STATUS_META).map(([k, m]) => (
             <motion.button
               key={k}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setFilter(filterStatus === k ? "all" : k)}
-              className={`px-4 py-1.5 rounded-full border-none cursor-pointer text-xs font-semibold transition-all shadow-sm ${
+              className={`px-3.5 py-1.5 rounded-full border-none cursor-pointer text-xs font-semibold transition-all shadow-sm ${
                 filterStatus === k ? "text-white shadow-md" : "hover:shadow"
               }`}
               style={{
@@ -395,9 +446,10 @@ export default function DashboardAdmin() {
               exit={{ opacity: 0, width: 0 }}
               whileHover={{ scale: 1.02 }}
               onClick={() => setFilter("all")}
-              className="px-4 py-1.5 rounded-full border border-slate-300 cursor-pointer text-xs bg-white/80 text-slate-500 hover:bg-slate-100 transition shadow-sm"
+              className="px-3.5 py-1.5 rounded-full border border-slate-300 cursor-pointer text-xs bg-white/80 text-slate-500 hover:bg-slate-100 transition shadow-sm flex items-center gap-1"
             >
-              ✕ ล้างตัวกรอง
+              <X className="w-3 h-3" />
+              ล้างตัวกรอง
             </motion.button>
           )}
         </motion.div>
@@ -406,29 +458,35 @@ export default function DashboardAdmin() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-linear-to-r from-slate-800 to-blue-800 rounded-2xl p-5 mb-5 shadow-xl"
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-4 shadow-sm border border-slate-200/60"
         >
-          <div className="grid grid-cols-4 gap-3 items-end">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
+            <span className="text-sm font-semibold text-slate-700">
+              กรองตามช่วงวันที่
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
             <div>
-              <label className="text-xs text-blue-200 block mb-2 ml-1 font-medium">
+              <label className="text-xs text-slate-500 block mb-1.5 ml-1 font-medium">
                 เริ่มวันที่
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full p-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 scheme:dark placeholder-white/50"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition"
               />
             </div>
             <div>
-              <label className="text-xs text-blue-200 block mb-2 ml-1 font-medium">
+              <label className="text-xs text-slate-500 block mb-1.5 ml-1 font-medium">
                 ถึงวันที่
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full p-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/40 scheme:dark placeholder-white/50"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition"
               />
             </div>
             <motion.button
@@ -436,16 +494,16 @@ export default function DashboardAdmin() {
               whileTap={{ scale: 0.98 }}
               onClick={handleSearch}
               disabled={isLoading}
-              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-10.5"
+              className="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
             >
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-slate-800 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   กำลังโหลด...
                 </>
               ) : (
                 <>
-                  <span>🔍</span>
+                  <Search className="w-4 h-4" />
                   ค้นหา
                 </>
               )}
@@ -454,12 +512,12 @@ export default function DashboardAdmin() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleExportExcel}
-              disabled={isLoading}
-              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-10.5"
+              disabled={isLoading || filtered.length === 0}
+              className="px-6 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
             >
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-slate-800 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   กำลังโหลด...
                 </>
               ) : (
@@ -469,25 +527,6 @@ export default function DashboardAdmin() {
                 </>
               )}
             </motion.button>
-            {/* <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleExportPDF}
-              disabled={isLoading}
-              className="px-6 py-2.5 bg-white text-slate-800 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg h-10.5"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-slate-800 border-t-transparent rounded-full animate-spin" />
-                  กำลังโหลด...
-                </>
-              ) : (
-                <>
-                  <FileBox className="w-4 h-4" />
-                  Export PDF
-                </>
-              )}
-            </motion.button> */}
           </div>
         </motion.div>
 
@@ -495,18 +534,30 @@ export default function DashboardAdmin() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-white/80 backdrop-blur-sm rounded-2xl px-5 py-4 mb-4 flex gap-3 items-center flex-wrap shadow-lg border border-white/50"
+          className="bg-white/80 backdrop-blur-sm rounded-2xl px-5 py-4 mb-4 flex gap-3 items-center flex-wrap shadow-sm border border-slate-200/60"
         >
-          <div className="flex-1 min-w-65 relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-400">
-              🔍
+          <div className="flex items-center gap-2 text-slate-400 shrink-0">
+            <SlidersHorizontal className="w-4 h-4" />
+            <span className="text-xs font-semibold text-slate-500">
+              ค้นหา & กรอง
             </span>
+          </div>
+          <div className="flex-1 min-w-60 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="ค้นหาเคส, ชื่อสัตว์, เจ้าของ, บริการ..."
-              className="w-full py-2.5 pl-10 pr-3 border border-slate-200 rounded-xl text-sm outline-none bg-white text-slate-800 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+              className="w-full py-2.5 pl-9 pr-9 border border-slate-200 rounded-xl text-sm outline-none bg-white text-slate-800 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           <select
@@ -530,7 +581,7 @@ export default function DashboardAdmin() {
             <option value="status">📊 เรียงตามสถานะ</option>
           </select>
 
-          <span className="ml-auto text-slate-500 text-sm bg-slate-100 px-3 py-1.5 rounded-full">
+          <span className="ml-auto text-slate-500 text-sm bg-slate-100 px-3 py-1.5 rounded-full font-medium">
             {filtered.length} / {RAW_CASES.length} เคส
           </span>
         </motion.div>
@@ -544,12 +595,12 @@ export default function DashboardAdmin() {
             animate="visible"
             className="flex-1 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-white/50"
           >
-            <div className="grid grid-cols-[1fr_140px_160px_110px_80px] px-5 py-3 bg-linear-to-r from-slate-50 to-white border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="grid grid-cols-[1fr_130px_150px_110px_90px] px-5 py-3 bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
               <div>เคส / สัตว์ป่วย</div>
               <div>บริการ</div>
               <div>โรงพยาบาล</div>
               <div>สถานะ</div>
-              <div className="text-center">ไฟล์</div>
+              <div className="text-center">ไฟล์ / นัด</div>
             </div>
 
             {paginatedData.length === 0 ? (
@@ -582,8 +633,10 @@ export default function DashboardAdmin() {
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ delay: i * 0.03 }}
                     onClick={() => setSelected(selected === c.id ? null : c.id)}
-                    className={`grid grid-cols-[1fr_140px_160px_110px_80px] px-5 py-3.5 border-b border-slate-100 cursor-pointer transition-all hover:bg-blue-50/50 ${
-                      selected === c.id ? "bg-blue-50/80 shadow-inner" : ""
+                    className={`grid grid-cols-[1fr_130px_150px_110px_90px] px-5 py-3.5 border-b border-slate-100 cursor-pointer transition-all hover:bg-blue-50/50 ${
+                      selected === c.id
+                        ? "bg-blue-50/80 ring-1 ring-blue-200 ring-inset"
+                        : ""
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -606,8 +659,14 @@ export default function DashboardAdmin() {
                         <div className="text-xs text-slate-500 mt-0.5">
                           {c.petName} ({c.petBreed}) • {c.ownerName}
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
-                          #{c.referenceNo}
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[11px] text-slate-400 font-mono">
+                            #{c.referenceNo}
+                          </span>
+                          <span className="text-[10px] text-slate-300">•</span>
+                          <span className="text-[11px] text-slate-400">
+                            {formatDate(c.createdAt)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -615,11 +674,8 @@ export default function DashboardAdmin() {
                     <div className="flex items-center">
                       <div>
                         <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md inline-block mb-0.5">
-                          {c.serviceCode}
-                        </span>
-                        <div className="text-xs text-slate-600 leading-relaxed line-clamp-1">
                           {c.serviceName}
-                        </div>
+                        </span>
                       </div>
                     </div>
 
@@ -639,14 +695,14 @@ export default function DashboardAdmin() {
                     </div>
 
                     <div className="flex items-center justify-center gap-1 flex-col">
-                      <span className="text-sm font-semibold text-slate-700">
+                      <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
                         📎 {c.medicalFiles}
                       </span>
                       {c.appointments > 0 && (
                         <motion.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="text-[11px] text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-full"
+                          className="text-[11px] text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md"
                         >
                           📅 {c.appointments}
                         </motion.span>
@@ -729,7 +785,7 @@ export default function DashboardAdmin() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="w-85 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden shrink-0 border border-white/50"
+                className="w-110 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden shrink-0 border border-white/50"
               >
                 <div className="bg-linear-to-br from-slate-800 via-slate-800 to-blue-700 px-5 py-4">
                   <div className="flex justify-between items-start">
@@ -818,9 +874,6 @@ export default function DashboardAdmin() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="bg-linear-to-r from-violet-600 to-indigo-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-sm">
-                        {selectedCase.serviceCode}
-                      </span>
-                      <span className="text-sm text-violet-900 font-medium">
                         {selectedCase.serviceName}
                       </span>
                     </div>
@@ -878,7 +931,7 @@ export default function DashboardAdmin() {
                   </div>
 
                   {/* Status Flow */}
-                  <div className="bg-slate-50 rounded-xl p-4">
+                  {/* <div className="bg-slate-50 rounded-xl p-4">
                     <div className="text-[11px] font-semibold text-slate-400 mb-3 uppercase tracking-wide">
                       ความคืบหน้า
                     </div>
@@ -949,7 +1002,7 @@ export default function DashboardAdmin() {
                         );
                       })}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </motion.div>
             )}

@@ -16,6 +16,7 @@ import { ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import CaseReferralModal from "../../../component/CaseReferralModal";
 import { PostReferralCases } from "../../../api/PostApi";
+import { useNavigate } from "react-router-dom";
 
 export default function ReferralsPage() {
   // === Get user login === //
@@ -32,6 +33,7 @@ export default function ReferralsPage() {
   // === Loiading === //
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   // === useEffect === //
   const useRefFetchDataOwners = useRef(false);
@@ -144,6 +146,9 @@ export default function ReferralsPage() {
 
     // ✅ แสดง success toast
     showToast.success("ส่งเคสสำเร็จ");
+    setTimeout(() => {
+      navigate("/novel/status");
+    }, 1000);
   };
 
   if (!userLogin && !loading) {

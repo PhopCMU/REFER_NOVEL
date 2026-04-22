@@ -146,13 +146,24 @@ export default function SignInForm({ onForgotPassword }: SignInFormProps) {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="text-center mb-2"
+        className="mb-2"
       >
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">ยินดีต้อนรับ</h2>
-        <p className="text-gray-600">เข้าสู่ระบบส่งตัวสัตว์ป่วย</p>
-        <p className="text-gray-600 text-xs">
-          ศูนย์การเรียนรู้และส่งเสริมสุขภาพทางสัตวแพทย์ภาคเหนือ
-        </p>
+        {/* Role Badge */}
+        <div className="flex justify-center mb-3">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-full text-sm font-semibold shadow-sm">
+            <span className="material-symbols-outlined text-base">pets</span>
+            <span>สัตวแพทย์ที่ต้องการส่งตัวสัตว์ป่วย</span>
+          </div>
+        </div>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-1">
+            ยินดีต้อนรับ
+          </h2>
+          <p className="text-gray-600">เข้าสู่ระบบส่งตัวสัตว์ป่วย</p>
+          <p className="text-gray-500 text-xs mt-0.5">
+            ศูนย์การเรียนรู้และส่งเสริมสุขภาพทางสัตวแพทย์ภาคเหนือ
+          </p>
+        </div>
       </motion.div>
 
       {/* Info Banner */}

@@ -49,6 +49,10 @@ export default function SignUpForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string>(""); // สำหรับ workplace
+  // Detect if any workplace field has a duplicate-entry error
+  const hasWorkplaceDuplicateError = Object.keys(errors).some(
+    (k) => k.startsWith("workplaces[") && errors[k]?.includes("ซ้ำ"),
+  );
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [addWorkloction, setAddWorkloction] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState({
@@ -61,6 +65,7 @@ export default function SignUpForm() {
 
   // === useRef ===
   const inputRef = useRef<HTMLInputElement>(null);
+  const workplace0Ref = useRef<HTMLDivElement>(null);
   const closeModal = () => setActiveModal(null);
 
   // === Function ===
@@ -116,8 +121,26 @@ export default function SignUpForm() {
     setShowSuggestions(false);
   }, [formDataWorkplace.type]);
 
+  const isDuplicateWorkplace = (
+    value: string,
+    currentIndex: number,
+  ): boolean => {
+    if (!value.trim()) return false;
+    return formData.workplaces.some(
+      (wp, i) => i !== currentIndex && wp === value,
+    );
+  };
+
   const handleChange = (field: string, value: string, index?: number) => {
     if (field === "workplaces" && typeof index === "number") {
+      if (isDuplicateWorkplace(value, index)) {
+        showToast.wran("สถานที่นี้ถูกเลือกไปแล้ว กรุณาเลือกสถานที่อื่น");
+        setErrors((prev) => ({
+          ...prev,
+          [`workplaces[${index}]`]: "สถานที่นี้ถูกเลือกซ้ำ",
+        }));
+        return;
+      }
       const updated = [...formData.workplaces];
       updated[index] = value;
       setFormData((prev) => ({ ...prev, workplaces: updated }));
@@ -254,8 +277,11 @@ export default function SignUpForm() {
       showToast.error("รูปแบบอีเมลไม่ถูกต้อง");
     }
     if (!formData.ceLicense.trim()) {
-      newErrors.ceLicense = "กรุณากรอกเลขใบอนุญาต CE";
-      showToast.error("กรุณากรอกเลขใบอนุญาต CE");
+      newErrors.ceLicense = "กรุณากรอกรหัสสัตวแพทย์";
+      showToast.error("กรุณากรอกรหัสสัตวแพทย์");
+    } else if (!/^\d{2}-\d{7}\/\d{4}$/.test(formData.ceLicense.trim())) {
+      newErrors.ceLicense = "รูปแบบรหัสไม่ถูกต้อง (ตัวอย่าง: 01-1234567/2564)";
+      showToast.error("รูปแบบรหัสไม่ถูกต้อง (ตัวอย่าง: 01-1234567/2564)");
     }
     if (!formData.phone.trim()) {
       newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
@@ -270,10 +296,16 @@ export default function SignUpForm() {
     }
 
     // ตรวจสอบสถานที่ทำงาน
+    const seenWorkplaces = new Set<string>();
     formData.workplaces.forEach((wp, index) => {
       if (!wp.trim()) {
         newErrors[`workplaces[${index}]`] = "กรุณากรอกสถานที่ทำงาน";
         if (index === 0) showToast.error("กรุณากรอกสถานที่ทำงาน");
+      } else if (seenWorkplaces.has(wp)) {
+        newErrors[`workplaces[${index}]`] = "สถานที่นี้ถูกเลือกซ้ำ";
+        showToast.error("มีสถานที่ทำงานที่ถูกเลือกซ้ำกัน กรุณาตรวจสอบ");
+      } else {
+        seenWorkplaces.add(wp);
       }
     });
 
@@ -375,6 +407,11 @@ export default function SignUpForm() {
 
       setFormDataWorkplace({ type: "hospital", name: "" });
       await fetchDataHospitalWorkplace();
+      setAddWorkloction(false);
+      // Focus Place 1 after successful add
+      setTimeout(() => {
+        workplace0Ref.current?.querySelector("input")?.focus();
+      }, 100);
     } catch (error) {
       showToast.error("เกิดข้อผิดพลาดในการเพิ่มสถานที่");
       setIsLoading(false); // Stop loading
@@ -499,6 +536,21 @@ export default function SignUpForm() {
 
   return (
     <div className="space-y-6">
+      {/* Role Badge */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="flex justify-center"
+      >
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-full text-sm font-semibold shadow-sm">
+          <span className="material-symbols-outlined text-base">
+            person_add
+          </span>
+          <span>สมัครสมาชิก — สำหรับสัตวแพทย์ที่ต้องการส่งตัวสัตว์ป่วย</span>
+        </div>
+      </motion.div>
+
       {/* Info Banner */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -554,12 +606,14 @@ export default function SignUpForm() {
           <span className="material-symbols-outlined text-lg">
             {addWorkloction ? "close" : "add"}
           </span>
-          {addWorkloction ? "ยกเลิกการเพิ่มข้อมูล" : "เพิ่มข้อมูลสถานที่ทำงาน"}
+          {addWorkloction
+            ? "ยกเลิกการเพิ่มข้อมูล"
+            : "เพิ่มข้อมูลโรงพยาบาลสัตว์/คลินิกที่ไม่มีในระบบ"}
         </motion.button>
 
         <p className="text-sm text-gray-600 mt-2 flex items-center gap-1 justify-center">
           <span className="material-symbols-outlined text-base">info</span>
-          กรณีที่ไม่เจอข้อมูลสถานที่ทำงานที่ต้องการ
+          กรณีที่ไม่เจอข้อมูลโรงพยาบาลสัตว์/คลินิกที่ต้องการ
           กรุณาคลิกปุ่มนี้เพื่อเพิ่มข้อมูล
         </p>
 
@@ -798,6 +852,57 @@ export default function SignUpForm() {
                 )}
               </motion.div>
 
+              {/* Duplicate Warning */}
+              {(() => {
+                const cleanedInputName = sanitizeInputName(
+                  formDataWorkplace.name,
+                );
+                const isDuplicate =
+                  cleanedInputName.trim() !== "" &&
+                  isHospitalExists(cleanedInputName);
+                return isDuplicate ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-4 bg-amber-50 border-2 border-amber-400 rounded-xl shadow-md flex flex-col gap-2"
+                  >
+                    <div className="flex items-center gap-2 text-amber-700 font-bold text-base">
+                      <span className="material-symbols-outlined text-2xl text-amber-500">
+                        warning
+                      </span>
+                      ข้อมูลนี้มีอยู่ในระบบแล้ว!
+                    </div>
+                    <p className="text-amber-800 text-sm font-medium">
+                      สถานที่{" "}
+                      <span className="font-bold">"{cleanedInputName}"</span>{" "}
+                      มีอยู่ในระบบแล้ว
+                      <br />
+                      กรุณาเลือกสถานที่นี้จาก{" "}
+                      <span className="font-bold text-blue-700">
+                        สถานที่ที่ 1
+                      </span>{" "}
+                      ด้านล่างแทน
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTimeout(() => {
+                          workplace0Ref.current
+                            ?.querySelector("input")
+                            ?.focus();
+                        }, 50);
+                      }}
+                      className="mt-1 self-start flex items-center gap-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        arrow_downward
+                      </span>
+                      ไปที่สถานที่ที่ 1
+                    </button>
+                  </motion.div>
+                ) : null;
+              })()}
+
               {/* ปุ่มเพิ่ม */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -805,32 +910,124 @@ export default function SignUpForm() {
                 transition={{ delay: 0.3 }}
                 className="pt-2"
               >
-                <motion.button
-                  type="button"
-                  onClick={handleAddWorkplace}
-                  disabled={!formDataWorkplace.name.trim()}
-                  whileHover={{
-                    scale: !formDataWorkplace.name.trim() ? 1 : 1.02,
-                  }}
-                  whileTap={{
-                    scale: !formDataWorkplace.name.trim() ? 1 : 0.98,
-                  }}
-                  className={`w-full py-3 px-6 rounded-xl font-semibold  flex items-center justify-center gap-2 ${
-                    !formDataWorkplace.name.trim()
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-linear-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:from-green-600 hover:to-emerald-700"
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-lg">
-                    add_circle
-                  </span>
-                  เพิ่มสถานที่ทำงานนี้
-                </motion.button>
+                {(() => {
+                  const cleanedInputName = sanitizeInputName(
+                    formDataWorkplace.name,
+                  );
+                  const isDuplicate =
+                    cleanedInputName.trim() !== "" &&
+                    isHospitalExists(cleanedInputName);
+                  const isDisabled =
+                    !formDataWorkplace.name.trim() || isDuplicate;
+                  return (
+                    <motion.button
+                      type="button"
+                      onClick={handleAddWorkplace}
+                      disabled={isDisabled}
+                      whileHover={{ scale: isDisabled ? 1 : 1.02 }}
+                      whileTap={{ scale: isDisabled ? 1 : 0.98 }}
+                      className={`w-full py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 ${
+                        isDisabled
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-linear-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:from-green-600 hover:to-emerald-700"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        add_circle
+                      </span>
+                      เพิ่มสถานที่ทำงานนี้
+                    </motion.button>
+                  );
+                })()}
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Hospital & Clinic List Box */}
+      {data_hospital.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+        >
+          {/* Header */}
+          <div className="flex items-center gap-2 px-4 py-3 bg-linear-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
+            <span className="material-symbols-outlined text-indigo-500 text-lg">
+              location_city
+            </span>
+            <p className="text-sm font-semibold text-indigo-700">
+              รายชื่อสถานที่ที่มีในระบบ
+            </p>
+            <span className="ml-auto text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200">
+              {data_hospital.length} แห่ง
+            </span>
+          </div>
+
+          {/* Two-column grid (scrollable when content is long) */}
+          <div className="grid grid-cols-2 divide-x divide-gray-100 max-h-72 md:max-h-96 overflow-y-auto pr-2">
+            {/* Left column */}
+            <div className="p-3 space-y-1">
+              <p className="text-xs font-semibold text-blue-600 mb-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">
+                  local_hospital
+                </span>
+                โรงพยาบาลสัตว์
+              </p>
+              {data_hospital
+                .filter((item) => item.type === "hospital")
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                    <span className="text-xs text-gray-700 truncate">
+                      {item.name}
+                    </span>
+                  </div>
+                ))}
+              {data_hospital.filter((item) => item.type === "hospital")
+                .length === 0 && (
+                <p className="text-xs text-gray-400 italic px-3">
+                  ยังไม่มีข้อมูล
+                </p>
+              )}
+            </div>
+
+            {/* Right column */}
+            <div className="p-3 space-y-1">
+              <p className="text-xs font-semibold text-emerald-600 mb-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">
+                  medical_services
+                </span>
+                คลินิก
+              </p>
+              {data_hospital
+                .filter((item) => item.type === "clinic")
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                    <span className="text-xs text-gray-700 truncate">
+                      {item.name}
+                    </span>
+                  </div>
+                ))}
+              {data_hospital.filter((item) => item.type === "clinic").length ===
+                0 && (
+                <p className="text-xs text-gray-400 italic px-3">
+                  ยังไม่มีข้อมูล
+                </p>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Workplace Section */}
       <div className="space-y-3">
@@ -843,6 +1040,13 @@ export default function SignUpForm() {
           </span>
         </div>
 
+        {hasWorkplaceDuplicateError && (
+          <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+            <span className="material-symbols-outlined text-base">error</span>
+            มีสถานที่ทำงานที่ถูกเลือกซ้ำกัน กรุณาตรวจสอบ
+          </p>
+        )}
+
         {formData.workplaces.map((workplace, index) => (
           <motion.div
             key={index}
@@ -851,7 +1055,10 @@ export default function SignUpForm() {
             transition={{ delay: index * 0.1 }}
             className="flex items-center gap-3 group"
           >
-            <div className="w-full relative">
+            <div
+              className="w-full relative"
+              ref={index === 0 ? workplace0Ref : undefined}
+            >
               {/* Searchable Select */}
               <SearchableSelect
                 label={`สถานที่ที่ ${index + 1}`}
@@ -865,7 +1072,7 @@ export default function SignUpForm() {
                 placeholder="พิมพ์เพื่อค้นหาโรงพยาบาล..."
                 required
                 icon="local_hospital"
-                error={errors.referralHospital}
+                error={errors[`workplaces[${index}]`]}
               />
               {formData.workplaces.length > 1 && (
                 <button
@@ -939,12 +1146,12 @@ export default function SignUpForm() {
         />
 
         <Input
-          label="เลขใบอนุญาต CE"
+          label="รหัสสัตวแพทย์"
           id="ceLicense"
           name="ceLicense"
           value={formData.ceLicense}
           onChange={(e) => handleChange("ceLicense", e.target.value)}
-          placeholder="CE12345678"
+          placeholder="01-1234567/2564"
           required
           icon="medical_services"
           error={errors.ceLicense}

@@ -9,6 +9,7 @@ import type {
   PayloadSendLinkResetPassword,
   PostReferralPayload,
   PostReferralPayloadEncrypted,
+  UpdateAppointmentPayloadEncrypted,
   UpdateCaseStatusProps,
   WorkplacePayload,
 } from "../types/type";
@@ -113,7 +114,9 @@ export const PostAddUpdateWorksplaceVet = async (a: string[]) => {
   }
 };
 
-export const PostFeedback = async (payload: FeedbackProps) => {
+export const PostFeedback = async (
+  payload: FeedbackProps,
+): Promise<unknown | null> => {
   try {
     const encyptedDataBody = encryptDataNew(payload);
 
@@ -122,16 +125,18 @@ export const PostFeedback = async (payload: FeedbackProps) => {
     });
 
     return resp.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof AxiosError) {
       if (error.response) {
         console.error("Error in PostFeedback: ", error.response.data.message);
-        return error.response.data.message;
+        return null;
       } else {
         console.error("Error in PostFeedback: ", error.message);
-        return error.message;
+        return null;
       }
     }
+
+    return null;
   }
 };
 
@@ -342,6 +347,36 @@ export const PostAppointment = async (
       "/case/referral-appointment",
       formData,
       { timeout: 120000 },
+    );
+
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { success: false };
+    }
+    throw error;
+  }
+};
+
+export const PostUpdateAppointment = async (
+  payload: UpdateAppointmentPayloadEncrypted,
+) => {
+  try {
+    const formData = new FormData();
+    const encryptedMetadata = encryptDataNew(payload);
+
+    formData.append("encodedData", encryptedMetadata);
+
+    if (payload.files[0]) {
+      formData.append("files", payload.files[0]);
+    }
+
+    const resp = await apiWithAuth.put(
+      "/case/counter/file/referral-appointment/update",
+      formData,
+      {
+        timeout: 120000,
+      },
     );
 
     return resp.data;

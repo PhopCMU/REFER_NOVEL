@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Workbook } from "exceljs";
 import { GetHospitalData } from "../../api/GetApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -109,14 +110,25 @@ const STATUS_CONFIG: Record<
 };
 
 const SERVICE_LABELS: Record<string, string> = {
-  ONC: "มะเร็งวิทยา",
-  OPH: "จักษุวิทยา",
-  EXOT: "สัตว์พิเศษ",
-  FEL: "แมว",
-  GI: "ทางเดินอาหาร",
-  NEURO: "ระบบประสาท",
-  CARD: "หัวใจ",
-  DENT: "ทันตกรรม",
+  DERM: "คลินิกโรคผิวหนัง",
+  OPH: "คลินิกโรคตา",
+  DENT: "คลินิกช่องปากและทันตกรรม",
+  ORTH: "คลินิกกระดูกและข้อต่อ",
+  CARD: "คลินิกหัวใจและหลอดเลือด",
+  NEURO: "คลินิกระบบประสาทและสมอง",
+  FEL: "คลินิกโรคแมว",
+  ONC: "คลินิกโรคเนื้องอก",
+  PT: "คลินิกกายภาพบำบัด",
+  ENDO: "คลินิกฮอร์โมนและต่อมไร้ท่อ",
+  GI: "คลินิกระบบทางเดินอาหาร",
+  NEPH: "คลินิกโรคไต",
+  ACU: "คลินิกฝังเข็ม",
+  EXOT: "คลินิกสัตว์ชนิดพิเศษ",
+  AQUA: "คลินิกสัตว์น้ำ",
+  CT: "คลินิกทัศนวินิจฉัย/CT SCAN",
+  US: "คลินิกทัศนวินิจฉัย/Ultrasound",
+  GIM: "หน่วยอายุรกรรมทั่วไป",
+  ASU: "หน่วยศัลยกรรมนอก",
 };
 
 // Animation variants
@@ -581,7 +593,410 @@ function CaseTable({ referrals }: { referrals: CaseReferral[] }) {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Excel Export ────────────────────────────────────────────────────────────
+
+async function exportHospitalDataToXLSX(
+  hospitals: Hospital[],
+  year: number,
+): Promise<void> {
+  const wb = new Workbook();
+  wb.creator = "Refer Novel System";
+  wb.created = new Date();
+
+  const yearTH = year + 543;
+  const allCases = hospitals.flatMap((h) => h.caseReferrals);
+  const total = allCases.length;
+
+  type SolidFill = {
+    type: "pattern";
+    pattern: "solid";
+    fgColor: { argb: string };
+  };
+  const solidFill = (argb: string): SolidFill => ({
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb },
+  });
+
+  const addDataBar = (
+    ws: ReturnType<typeof wb.addWorksheet>,
+    ref: string,
+    maxValue: number,
+    colorArgb: string,
+  ) => {
+    ws.addConditionalFormatting({
+      ref,
+      rules: [
+        {
+          type: "dataBar",
+          priority: 1,
+          minLength: 0,
+          maxLength: 100,
+          cfvo: [
+            { type: "num", value: 0 },
+            { type: "num", value: maxValue || 1 },
+          ],
+          color: { argb: colorArgb },
+          showValue: true,
+          gradient: true,
+          border: false,
+        } as never,
+      ],
+    });
+  };
+
+  // ── Sheet 1: Overview ─────────────────────────────────────────────────────
+  const ws1 = wb.addWorksheet("สรุปภาพรวม");
+  ws1.views = [{ state: "frozen", ySplit: 2 }];
+
+  ws1.mergeCells("A1:G1");
+  const ws1Title = ws1.getCell("A1");
+  ws1Title.value = `สรุปภาพรวมการส่งต่อผู้ป่วย  —  ปี พ.ศ. ${yearTH}`;
+  ws1Title.font = { bold: true, size: 15, color: { argb: "FF1E1B4B" } };
+  ws1Title.fill = solidFill("FFEEF2FF");
+  ws1Title.alignment = { horizontal: "center", vertical: "middle" };
+  ws1.getRow(1).height = 38;
+
+  const activeCount = allCases.filter((c) =>
+    ["PENDING", "APPOINTED", "RECEIVED"].includes(c.status),
+  ).length;
+  const completedCount = allCases.filter(
+    (c) => c.status === "COMPLETED",
+  ).length;
+  const cancelledCount = allCases.filter(
+    (c) => c.status === "CANCELLED",
+  ).length;
+  const activeHospCount = hospitals.filter(
+    (h) => h.caseReferrals.length > 0,
+  ).length;
+
+  // Stats header
+  const ws1StatsHRow = ws1.getRow(3);
+  ["หมวดสถิติ", "จำนวน (เคส)"].forEach((h, i) => {
+    const cell = ws1StatsHRow.getCell(i + 2);
+    cell.value = h;
+    cell.fill = solidFill("FF4F46E5");
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+  });
+  ws1StatsHRow.height = 24;
+
+  const statsData: [string, number, string][] = [
+    ["เคสทั้งหมด", total, "FFCFFAFE"],
+    ["กำลังดำเนินการ (รอ + นัด + รับเคส)", activeCount, "FFFEF3C7"],
+    ["เสร็จสิ้น", completedCount, "FFD1FAE5"],
+    ["ยกเลิก", cancelledCount, "FFFEE2E2"],
+    ["สถานที่ทั้งหมดในระบบ", hospitals.length, "FFF1F5F9"],
+    ["สถานที่ที่มีเคส", activeHospCount, "FFF1F5F9"],
+  ];
+  statsData.forEach(([label, value, bgArgb], i) => {
+    const row = ws1.getRow(4 + i);
+    row.getCell(2).value = label;
+    row.getCell(3).value = value;
+    row.getCell(2).fill = solidFill(bgArgb);
+    row.getCell(3).fill = solidFill(bgArgb);
+    row.getCell(3).alignment = { horizontal: "center", vertical: "middle" };
+    row.height = 22;
+  });
+  ws1.getColumn(2).width = 48;
+  ws1.getColumn(3).width = 20;
+
+  // Top-10 hospitals chart section
+  const chartStartRow = 12;
+  ws1.mergeCells(`B${chartStartRow}:G${chartStartRow}`);
+  const ws1ChartTitle = ws1.getCell(`B${chartStartRow}`);
+  ws1ChartTitle.value = "แผนภูมิแท่ง: สถานที่ที่มีเคสมากที่สุด (Top 10)";
+  ws1ChartTitle.font = { bold: true, size: 12, color: { argb: "FF1E1B4B" } };
+  ws1ChartTitle.fill = solidFill("FFE0E7FF");
+  ws1ChartTitle.alignment = { horizontal: "left", vertical: "middle" };
+  ws1.getRow(chartStartRow).height = 28;
+
+  const chartHRow = ws1.getRow(chartStartRow + 1);
+  ["ลำดับ", "ชื่อสถานที่", "จำนวนเคส"].forEach((h, i) => {
+    const cell = chartHRow.getCell(i + 2);
+    cell.value = h;
+    cell.fill = solidFill("FF818CF8");
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+  });
+  chartHRow.height = 22;
+
+  const top10 = [...hospitals]
+    .sort((a, b) => b.caseReferrals.length - a.caseReferrals.length)
+    .slice(0, 10);
+  top10.forEach((h, i) => {
+    const row = ws1.getRow(chartStartRow + 2 + i);
+    row.getCell(2).value = i + 1;
+    row.getCell(3).value = h.name;
+    row.getCell(4).value = h.caseReferrals.length;
+    row.getCell(2).alignment = { horizontal: "center", vertical: "middle" };
+    row.getCell(4).alignment = { horizontal: "center", vertical: "middle" };
+    if (i % 2 === 0) {
+      [2, 3, 4].forEach((c) => {
+        row.getCell(c).fill = solidFill("FFF5F3FF");
+      });
+    }
+    row.height = 20;
+  });
+  if (top10.length > 0) {
+    addDataBar(
+      ws1,
+      `D${chartStartRow + 2}:D${chartStartRow + 1 + top10.length}`,
+      top10[0].caseReferrals.length,
+      "FF6366F1",
+    );
+  }
+  ws1.getColumn(4).width = 24;
+
+  // ── Sheet 2: By Hospital / Clinic ─────────────────────────────────────────
+  const ws2 = wb.addWorksheet("จำแนกตามสถานที่");
+  ws2.views = [{ state: "frozen", ySplit: 2 }];
+
+  ws2.mergeCells("A1:I1");
+  const ws2Title = ws2.getCell("A1");
+  ws2Title.value = `การส่งเคสจำแนกตามโรงพยาบาล/คลินิก  —  ปี พ.ศ. ${yearTH}`;
+  ws2Title.font = { bold: true, size: 13, color: { argb: "FF1E1B4B" } };
+  ws2Title.fill = solidFill("FFEEF2FF");
+  ws2Title.alignment = { horizontal: "center", vertical: "middle" };
+  ws2.getRow(1).height = 32;
+
+  const ws2Hdrs = [
+    "ลำดับ",
+    "ชื่อสถานที่",
+    "ประเภท",
+    "รวมทั้งหมด",
+    "รอดำเนินการ",
+    "นัดหมายแล้ว",
+    "รับเคส",
+    "เสร็จสิ้น",
+    "ยกเลิก",
+  ];
+  const ws2HdrColors = [
+    "FF4F46E5",
+    "FF4F46E5",
+    "FF4F46E5",
+    "FF4F46E5",
+    "FFF59E0B",
+    "FF06B6D4",
+    "FF8B5CF6",
+    "FF10B981",
+    "FFEF4444",
+  ];
+  const ws2HRow = ws2.getRow(2);
+  ws2Hdrs.forEach((h, i) => {
+    const cell = ws2HRow.getCell(i + 1);
+    cell.value = h;
+    cell.fill = solidFill(ws2HdrColors[i]);
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+  });
+  ws2HRow.height = 24;
+
+  const sortedH = [...hospitals].sort(
+    (a, b) => b.caseReferrals.length - a.caseReferrals.length,
+  );
+  sortedH.forEach((h, i) => {
+    const row = ws2.getRow(3 + i);
+    row.getCell(1).value = i + 1;
+    row.getCell(2).value = h.name;
+    row.getCell(3).value = h.type === "hospital" ? "โรงพยาบาล" : "คลินิก";
+    row.getCell(4).value = h.caseReferrals.length;
+    row.getCell(5).value = h.caseReferrals.filter(
+      (c) => c.status === "PENDING",
+    ).length;
+    row.getCell(6).value = h.caseReferrals.filter(
+      (c) => c.status === "APPOINTED",
+    ).length;
+    row.getCell(7).value = h.caseReferrals.filter(
+      (c) => c.status === "RECEIVED",
+    ).length;
+    row.getCell(8).value = h.caseReferrals.filter(
+      (c) => c.status === "COMPLETED",
+    ).length;
+    row.getCell(9).value = h.caseReferrals.filter(
+      (c) => c.status === "CANCELLED",
+    ).length;
+    for (let c = 1; c <= 9; c++) {
+      row.getCell(c).alignment = {
+        horizontal: c === 2 ? "left" : "center",
+        vertical: "middle",
+      };
+    }
+    if (i % 2 === 0) {
+      for (let c = 1; c <= 9; c++) {
+        row.getCell(c).fill = solidFill("FFF5F3FF");
+      }
+    }
+    row.height = 20;
+  });
+  if (sortedH.length > 0) {
+    addDataBar(
+      ws2,
+      `D3:D${2 + sortedH.length}`,
+      sortedH[0].caseReferrals.length,
+      "FF6366F1",
+    );
+  }
+  ws2.columns = [
+    { width: 8 },
+    { width: 35 },
+    { width: 14 },
+    { width: 16 },
+    { width: 16 },
+    { width: 16 },
+    { width: 12 },
+    { width: 14 },
+    { width: 10 },
+  ];
+  ws2.autoFilter = { from: { row: 2, column: 1 }, to: { row: 2, column: 9 } };
+
+  // ── Sheet 3: By Animal Species ────────────────────────────────────────────
+  const ws3 = wb.addWorksheet("จำแนกตามชนิดสัตว์");
+  ws3.views = [{ state: "frozen", ySplit: 2 }];
+
+  const speciesMap = new Map<string, number>();
+  allCases.forEach((c) => {
+    const key = c.pet.species || "ไม่ระบุ";
+    speciesMap.set(key, (speciesMap.get(key) ?? 0) + 1);
+  });
+  const speciesData = [...speciesMap.entries()].sort((a, b) => b[1] - a[1]);
+
+  ws3.mergeCells("A1:E1");
+  const ws3Title = ws3.getCell("A1");
+  ws3Title.value = `ชนิดสัตว์ที่รับการส่งเคส  —  ปี พ.ศ. ${yearTH}`;
+  ws3Title.font = { bold: true, size: 13, color: { argb: "FF1E1B4B" } };
+  ws3Title.fill = solidFill("FFECFDF5");
+  ws3Title.alignment = { horizontal: "center", vertical: "middle" };
+  ws3.getRow(1).height = 32;
+
+  const ws3HRow = ws3.getRow(2);
+  ["ลำดับ", "ชนิดสัตว์", "จำนวนเคส", "ร้อยละ (%)"].forEach((h, i) => {
+    const cell = ws3HRow.getCell(i + 1);
+    cell.value = h;
+    cell.fill = solidFill("FF059669");
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+  });
+  ws3HRow.height = 24;
+
+  speciesData.forEach(([species, count], i) => {
+    const row = ws3.getRow(3 + i);
+    row.getCell(1).value = i + 1;
+    row.getCell(2).value = species;
+    row.getCell(3).value = count;
+    row.getCell(4).value =
+      total > 0 ? parseFloat(((count / total) * 100).toFixed(2)) : 0;
+    row.getCell(4).numFmt = "0.00";
+    for (let c = 1; c <= 4; c++) {
+      row.getCell(c).alignment = {
+        horizontal: c === 2 ? "left" : "center",
+        vertical: "middle",
+      };
+    }
+    if (i % 2 === 0) {
+      for (let c = 1; c <= 4; c++) {
+        row.getCell(c).fill = solidFill("FFF0FDF4");
+      }
+    }
+    row.height = 20;
+  });
+  if (speciesData.length > 0) {
+    addDataBar(
+      ws3,
+      `C3:C${2 + speciesData.length}`,
+      speciesData[0][1],
+      "FF10B981",
+    );
+  }
+  ws3.columns = [{ width: 8 }, { width: 28 }, { width: 16 }, { width: 14 }];
+
+  // ── Sheet 4: By Service / Treatment Type ─────────────────────────────────
+  const ws4 = wb.addWorksheet("จำแนกตามบริการ");
+  ws4.views = [{ state: "frozen", ySplit: 2 }];
+
+  const serviceMap = new Map<string, number>();
+  allCases.forEach((c) => {
+    const code = c.serviceCode || "ไม่ระบุ";
+    serviceMap.set(code, (serviceMap.get(code) ?? 0) + 1);
+  });
+  const serviceData = [...serviceMap.entries()].sort((a, b) => b[1] - a[1]);
+
+  ws4.mergeCells("A1:E1");
+  const ws4Title = ws4.getCell("A1");
+  ws4Title.value = `ประเภทบริการที่รับการส่งเคส  —  ปี พ.ศ. ${yearTH}`;
+  ws4Title.font = { bold: true, size: 13, color: { argb: "FF1E1B4B" } };
+  ws4Title.fill = solidFill("FFEFF6FF");
+  ws4Title.alignment = { horizontal: "center", vertical: "middle" };
+  ws4.getRow(1).height = 32;
+
+  const ws4HRow = ws4.getRow(2);
+  ["ลำดับ", "รหัสบริการ", "ชื่อบริการ", "จำนวนเคส", "ร้อยละ (%)"].forEach(
+    (h, i) => {
+      const cell = ws4HRow.getCell(i + 1);
+      cell.value = h;
+      cell.fill = solidFill("FF2563EB");
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+    },
+  );
+  ws4HRow.height = 24;
+
+  serviceData.forEach(([code, count], i) => {
+    const row = ws4.getRow(3 + i);
+    row.getCell(1).value = i + 1;
+    row.getCell(2).value = code;
+    row.getCell(3).value = SERVICE_LABELS[code] ?? code;
+    row.getCell(4).value = count;
+    row.getCell(5).value =
+      total > 0 ? parseFloat(((count / total) * 100).toFixed(2)) : 0;
+    row.getCell(5).numFmt = "0.00";
+    for (let c = 1; c <= 5; c++) {
+      row.getCell(c).alignment = {
+        horizontal: c === 3 ? "left" : "center",
+        vertical: "middle",
+      };
+    }
+    if (i % 2 === 0) {
+      for (let c = 1; c <= 5; c++) {
+        row.getCell(c).fill = solidFill("FFEFF6FF");
+      }
+    }
+    row.height = 20;
+  });
+  if (serviceData.length > 0) {
+    addDataBar(
+      ws4,
+      `D3:D${2 + serviceData.length}`,
+      serviceData[0][1],
+      "FF3B82F6",
+    );
+  }
+  ws4.columns = [
+    { width: 8 },
+    { width: 16 },
+    { width: 38 },
+    { width: 16 },
+    { width: 14 },
+  ];
+  ws4.autoFilter = { from: { row: 2, column: 1 }, to: { row: 2, column: 5 } };
+
+  // ── Download ──────────────────────────────────────────────────────────────
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `hospital-summary-${year}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(link.href);
+    link.remove();
+  }, 100);
+}
+
+// ─── Main Component ─────────────────────────────────────────────────────────────
 
 export default function HospitalData() {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
@@ -589,7 +1004,18 @@ export default function HospitalData() {
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
   const initRef = useRef(false);
+
+  const handleExport = async () => {
+    if (isExporting || hospitals.length === 0) return;
+    setIsExporting(true);
+    try {
+      await exportHospitalDataToXLSX(hospitals, selectedYear);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const fetchDataHospitals = async (year: number) => {
     setIsLoading(true);
@@ -701,30 +1127,62 @@ export default function HospitalData() {
             </p>
           </div>
 
-          {/* Year Selector */}
-          <motion.div
-            variants={itemVariants}
-            className="flex gap-1.5 bg-white border border-slate-200/60 rounded-xl p-1 shadow-sm self-start"
-          >
-            {YEARS.map((y) => (
-              <motion.button
-                key={y}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleYearChange(y)}
-                className={`
-                  px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200
-                  ${
-                    selectedYear === y
-                      ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                  }
-                `}
-              >
-                {y + 543}
-              </motion.button>
-            ))}
-          </motion.div>
+          {/* Year Selector + Export */}
+          <div className="flex items-start gap-3 flex-wrap">
+            <motion.div
+              variants={itemVariants}
+              className="flex gap-1.5 bg-white border border-slate-200/60 rounded-xl p-1 shadow-sm"
+            >
+              {YEARS.map((y) => (
+                <motion.button
+                  key={y}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleYearChange(y)}
+                  className={`
+                    px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200
+                    ${
+                      selectedYear === y
+                        ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
+                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                    }
+                  `}
+                >
+                  {y + 543}
+                </motion.button>
+              ))}
+            </motion.div>
+
+            <motion.button
+              variants={itemVariants}
+              whileHover={{ scale: hospitals.length > 0 ? 1.03 : 1 }}
+              whileTap={{ scale: hospitals.length > 0 ? 0.97 : 1 }}
+              onClick={handleExport}
+              disabled={isExporting || hospitals.length === 0}
+              title="ส่งออกสรุปข้อมูลเป็น Excel (.xlsx)"
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+                border transition-all duration-200 shadow-sm
+                ${
+                  isExporting || hospitals.length === 0
+                    ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                    : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 shadow-emerald-500/20"
+                }
+              `}
+            >
+              {isExporting ? (
+                <>
+                  <span className="animate-spin inline-block">⟳</span>
+                  กำลังส่งออก...
+                </>
+              ) : (
+                <>
+                  <span>📊</span>
+                  ส่งออก Excel
+                </>
+              )}
+            </motion.button>
+          </div>
         </motion.div>
 
         {/* Stat Cards */}

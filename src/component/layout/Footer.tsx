@@ -34,7 +34,7 @@ const Footer = ({ user }: { user: any }) => {
             </div>
           </div>
           <p className="text-[10px] text-slate-600">
-            All rights reserved. Version {import.meta.env.VITE_VERSION_APP}
+            All rights reserved. Version {__APP_VERSION__}
           </p>
         </div>
 

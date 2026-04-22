@@ -44,6 +44,21 @@ export default function VetsPage() {
   });
   const [isEditingOwner, setIsEditingOwner] = useState(false);
 
+  // Detect duplicate owner name (case-insensitive, trimmed).
+  const isDuplicateName = useMemo(() => {
+    const fn = (ownerForm.firstName || "").trim().toLowerCase();
+    const ln = (ownerForm.lastName || "").trim().toLowerCase();
+    if (!fn || !ln) return false;
+    return owners.some((o) => {
+      if (!o) return false;
+      // If editing, ignore the current owner record
+      if (ownerForm.id && o.id && o.id === ownerForm.id) return false;
+      const ofn = (o.firstName || "").trim().toLowerCase();
+      const oln = (o.lastName || "").trim().toLowerCase();
+      return ofn === fn && oln === ln;
+    });
+  }, [owners, ownerForm.firstName, ownerForm.lastName, ownerForm.id]);
+
   const [petForm, setPetForm] = useState<FormPetProp>({
     name: "",
     ownerId: "",
@@ -196,6 +211,10 @@ export default function VetsPage() {
   // เพิ่มเจ้าของใหม่
   const addOwner = async () => {
     if (validateForm(ownerForm)) return;
+    if (isDuplicateName) {
+      showToast.info("มีชื่อนี้ซ้ำอยู่ในระบบ");
+      return;
+    }
 
     try {
       if (isEditingOwner) {
@@ -586,7 +605,7 @@ export default function VetsPage() {
   return (
     <div className="p-6 space-y-6  min-h-screen">
       {/* Confirm Modal */}
-      <ConfirmModal />
+      {ConfirmModal}
       {/* Toast Notification */}
       <ToastContainer
         position="top-right"
@@ -738,6 +757,18 @@ export default function VetsPage() {
               />
             </div>
           </div>
+
+          {isDuplicateName && (
+            <div className="mt-2 md:col-span-4">
+              <div
+                role="status"
+                aria-live="polite"
+                className="p-2 rounded-md bg-amber-50 border border-amber-100 text-amber-700 text-sm"
+              >
+                มีชื่อนี้ซ้ำอยู่ในระบบ
+              </div>
+            </div>
+          )}
 
           {/* Medical Certificate Note Section */}
           <div className="mt-4 p-4 bg-linear-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">

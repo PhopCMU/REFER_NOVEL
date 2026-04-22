@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import ConfirmModalTailwind from "../component/ConfirmModalTailwind";
 
 interface ConfirmOptions {
@@ -52,7 +52,7 @@ export const useConfirmTailwind = () => {
     });
   }, [modalState]);
 
-  const ConfirmModalComponent = () => {
+  const ConfirmModal = useMemo(() => {
     if (!modalState.isOpen || !modalState.options) return null;
 
     return (
@@ -67,11 +67,11 @@ export const useConfirmTailwind = () => {
         onCancel={handleCancel}
       />
     );
-  };
+  }, [modalState.isOpen, modalState.options, handleConfirm, handleCancel]);
 
   return {
     confirm,
-    ConfirmModal: ConfirmModalComponent,
+    ConfirmModal,
     isOpen: modalState.isOpen,
   };
 };
