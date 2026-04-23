@@ -101,6 +101,69 @@ Approve / Request changes / Comment only
 
 ---
 
+# Docker — Production
+
+## Prerequisites
+- Docker ≥ 24
+- Docker Compose plugin ≥ 2.20 (`docker compose version`)
+
+## Environment variables
+
+All `VITE_*` values are **embedded into the JS bundle at build time**.  
+Copy `.env.example` to `.env` and fill in every value before building:
+
+```bash
+cp .env.example .env
+# edit .env
+```
+
+## Build
+
+```bash
+docker compose build --no-cache
+```
+
+## Run
+
+```bash
+docker compose up -d
+```
+
+The app is served by nginx on **port 3083** (mapped to container port 80).
+
+## Logs
+
+```bash
+docker compose logs -f
+```
+
+## Stop / remove
+
+```bash
+docker compose down
+```
+
+## Health check
+
+```bash
+docker compose ps                  # look for (healthy)
+curl -I http://localhost:3083/
+```
+
+## Docker debugging skill
+
+When a build or runtime error occurs:
+
+1. Open `.docker-skill/create-prompt.md`.
+2. Fill in all sections (Dockerfile, logs, platform, lockfile type).
+3. Paste the completed template into GitHub Copilot Chat.
+
+Additional resources:
+- `.docker-skill/troubleshooting.md` — common failure patterns and fixes
+- `.docker-skill/prod-checklist.md` — pre-deployment checklist
+
+---
+
 # Copy/Paste Prompts (Use with Copilot)
 
 ## Prompt 0 — Session bootstrap
