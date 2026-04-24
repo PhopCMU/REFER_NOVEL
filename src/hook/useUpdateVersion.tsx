@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { removeToken } from "../utils/authUtils";
 
 const APP_VERSION_KEY = "app_version";
 
@@ -20,6 +21,7 @@ export function useUpdateVersion(): {
 
   const doUpdate = () => {
     localStorage.setItem(APP_VERSION_KEY, __APP_VERSION__);
+    removeToken();
     window.location.reload();
   };
 
