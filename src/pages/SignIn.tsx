@@ -147,8 +147,10 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="w-full md:w-1/2 bg-white flex items-center justify-center p-8">
-        <div className="w-full ">
+      <div
+        className={`${authMode === "signup" ? "w-full" : "w-full md:w-1/2"} bg-white flex items-center justify-center p-4 sm:p-6 md:p-8`}
+      >
+        <div className="w-full">
           {/* Role Header */}
           <div className="text-center mb-5">
             <p className="text-xs text-gray-400">
@@ -158,7 +160,7 @@ export default function AuthPage() {
           </div>
 
           {/* Toggle Switch */}
-          <div className="flex flex-col items-center mb-6 gap-2">
+          <div className="flex flex-col items-center mb-4 sm:mb-6 gap-2">
             <div
               className="bg-gray-100 p-1 rounded-full flex shadow-inner"
               role="tablist"
@@ -169,7 +171,7 @@ export default function AuthPage() {
                 role="tab"
                 aria-selected={authMode === "signin"}
                 onClick={() => setAuthMode("signin")}
-                className={`px-6 py-2 rounded-full relative cursor-pointer ${
+                className={`px-3 sm:px-6 py-2 rounded-full relative cursor-pointer text-xs sm:text-sm ${
                   authMode === "signin" ? "text-white" : "text-gray-600"
                 }`}
               >
@@ -182,12 +184,13 @@ export default function AuthPage() {
                 )}
                 <span className="relative z-10 flex items-center gap-1">
                   <span
-                    className="material-symbols-outlined"
+                    className="material-symbols-outlined text-sm sm:text-base"
                     aria-hidden="true"
                   >
                     login
                   </span>
-                  เข้าสู่ระบบ
+                  <span className="hidden sm:inline">เข้าสู่ระบบ</span>
+                  <span className="sm:hidden">เข้าสู่</span>
                 </span>
               </motion.button>
               <motion.button
@@ -195,7 +198,7 @@ export default function AuthPage() {
                 role="tab"
                 aria-selected={authMode === "signup"}
                 onClick={() => setAuthMode("signup")}
-                className={`px-6 py-2 rounded-full relative cursor-pointer ${
+                className={`px-3 sm:px-6 py-2 rounded-full relative cursor-pointer text-xs sm:text-sm ${
                   authMode === "signup" ? "text-white" : "text-gray-600"
                 }`}
               >
@@ -208,16 +211,17 @@ export default function AuthPage() {
                 )}
                 <span className="relative z-10 flex items-center gap-1">
                   <span
-                    className="material-symbols-outlined"
+                    className="material-symbols-outlined text-sm sm:text-base"
                     aria-hidden="true"
                   >
                     person_add
                   </span>
-                  สมัครสมาชิก
+                  <span className="hidden sm:inline">สมัครสมาชิก</span>
+                  <span className="sm:hidden">สมัคร</span>
                 </span>
               </motion.button>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-400 text-center px-2">
               {authMode === "signin"
                 ? "มีบัญชีอยู่แล้ว — เข้าสู่ระบบเพื่อส่งตัวสัตว์ป่วย"
                 : authMode === "signup"
@@ -262,7 +266,9 @@ export default function AuthPage() {
         </div>
       </div>
       {/* Right Side - Banner */}
-      <div className="hidden md:flex md:w-1/2 bg-gray-100 relative">
+      <div
+        className={`${authMode === "signup" ? "hidden" : "hidden md:flex"} md:w-1/2 bg-gray-100 relative`}
+      >
         <div className="absolute inset-0 overflow-hidden">
           <img
             src={images.bg_novel}
