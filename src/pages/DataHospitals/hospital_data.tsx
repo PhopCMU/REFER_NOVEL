@@ -2,6 +2,10 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Workbook } from "exceljs";
 import { GetHospitalData } from "../../api/GetApi";
+import {
+  currentUserCan,
+  PERMISSIONS,
+} from "../../utils/permissionUtils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1093,6 +1097,7 @@ export default function HospitalData() {
 
   const selectedHospital = hospitals.find((h) => h.id === selectedId);
 
+
   return (
     <motion.div
       initial="hidden"
@@ -1153,35 +1158,37 @@ export default function HospitalData() {
               ))}
             </motion.div>
 
-            <motion.button
-              variants={itemVariants}
-              whileHover={{ scale: hospitals.length > 0 ? 1.03 : 1 }}
-              whileTap={{ scale: hospitals.length > 0 ? 0.97 : 1 }}
-              onClick={handleExport}
-              disabled={isExporting || hospitals.length === 0}
-              title="ส่งออกสรุปข้อมูลเป็น Excel (.xlsx)"
-              className={`
-                flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
-                border transition-all duration-200 shadow-sm
-                ${
-                  isExporting || hospitals.length === 0
-                    ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 shadow-emerald-500/20"
-                }
-              `}
-            >
-              {isExporting ? (
-                <>
-                  <span className="animate-spin inline-block">⟳</span>
-                  กำลังส่งออก...
-                </>
-              ) : (
-                <>
-                  <span>📊</span>
-                  ส่งออก Excel
-                </>
-              )}
-            </motion.button>
+            {currentUserCan(PERMISSIONS.EXPORT) && (
+              <motion.button
+                variants={itemVariants}
+                whileHover={{ scale: hospitals.length > 0 ? 1.03 : 1 }}
+                whileTap={{ scale: hospitals.length > 0 ? 0.97 : 1 }}
+                onClick={handleExport}
+                disabled={isExporting || hospitals.length === 0}
+                title="ส่งออกสรุปข้อมูลเป็น Excel (.xlsx)"
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+                  border transition-all duration-200 shadow-sm
+                  ${
+                    isExporting || hospitals.length === 0
+                      ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 shadow-emerald-500/20"
+                  }
+                `}
+              >
+                {isExporting ? (
+                  <>
+                    <span className="animate-spin inline-block">⟳</span>
+                    กำลังส่งออก...
+                  </>
+                ) : (
+                  <>
+                    <span>📊</span>
+                    ส่งออก Excel
+                  </>
+                )}
+              </motion.button>
+            )}
           </div>
         </motion.div>
 

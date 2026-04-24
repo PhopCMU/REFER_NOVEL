@@ -20,6 +20,7 @@ import { useFeedbackSubmission } from "../../hook/useFeedbackSubmission";
 interface SidebarUser {
   aud: string;
   role?: string;
+  email?: string;
 }
 
 interface SidebarMenuItem {
@@ -114,7 +115,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, toggleSidebar }) => {
         icon: Hospital,
         path: "/novel/hospitals",
         showIf: (currentUser) =>
-          currentUser.aud === "admin" && currentUser.role === "ADMIN",
+          currentUser.aud === "admin" &&
+          (currentUser.role === "ADMIN" || currentUser.role === "COUNTER"),
         badge: null,
       },
       {
@@ -139,7 +141,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, toggleSidebar }) => {
         icon: BoxSelect,
         path: "/novel/permission",
         showIf: (currentUser) =>
-          currentUser.aud === "admin" && currentUser.role === "ADMIN",
+          currentUser.aud === "admin" &&
+          currentUser.role === "ADMIN" &&
+          currentUser.email === import.meta.env.VITE_EMAIL_SERVICE,
         badge: null,
       },
     ],

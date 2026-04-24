@@ -60,8 +60,10 @@ export const canViewPrivate = (perms: string[]): boolean =>
 /** Reads permissions from the current admin JWT and returns them as a string[]. */
 export const getPermissionsFromToken = (): string[] => {
   const user = getAdminFromToken();
-  if (!user?.permission) return [];
-  return Array.isArray(user.permission) ? user.permission : [user.permission];
+  // JWT may use 'permissions' (plural, from backend) or 'permission' (singular)
+  const raw = user?.permissions ?? user?.permission;
+  if (!raw) return [];
+  return Array.isArray(raw) ? raw : [raw];
 };
 
 /** Checks a single permission against the current JWT. */

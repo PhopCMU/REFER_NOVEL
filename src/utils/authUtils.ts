@@ -85,6 +85,7 @@ export const getAdminFromToken = (): {
   fname?: string;
   lname?: string;
   email?: string;
+  permissions?: string | string[];
   permission?: string | string[];
   exp?: number;
   [key: string]: any;

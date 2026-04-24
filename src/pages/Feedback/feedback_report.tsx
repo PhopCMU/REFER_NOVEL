@@ -209,10 +209,7 @@ export default function FeedbackReport() {
     setError(null);
     try {
       const resp = await GetDataFeedback(start, end);
-      console.log("Fetched feedback data:", resp);
       if (resp.results && Array.isArray(resp.results)) {
-        console.log("Fetched feedback data:", resp);
-
         setFeedbackData(resp.results as FeedbackItem[]);
       } else {
         setFeedbackData([]);
@@ -278,10 +275,6 @@ export default function FeedbackReport() {
         : [],
     [feedbackData],
   );
-
-  console.log("Metrics:", metrics);
-  console.log("Monthly averages:", monthlyAverages);
-  console.log("Sorted feedback data:", sortedData);
 
   // ── Chart config ───────────────────────────────────────────────────────────
 
