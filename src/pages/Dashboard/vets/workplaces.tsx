@@ -389,6 +389,90 @@ export default function Workplaces() {
               </span>
             </div>
 
+            {/* Hospital & Clinic List Box */}
+            {data_hospital.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="rounded-2xl mt-10 border border-gray-200 bg-white shadow-sm overflow-hidden"
+              >
+                {/* Header */}
+                <div className="flex items-center gap-2 px-4 py-3 bg-linear-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
+                  <span className="material-symbols-outlined text-indigo-500 text-lg">
+                    location_city
+                  </span>
+                  <p className="text-sm font-semibold text-indigo-700">
+                    รายชื่อสถานที่ที่มีในระบบ
+                  </p>
+                  <span className="ml-auto text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200">
+                    {data_hospital.length} แห่ง
+                  </span>
+                </div>
+
+                {/* Two-column grid (scrollable when content is long) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-gray-100 max-h-72 md:max-h-96 overflow-y-auto pr-2">
+                  {/* Left column */}
+                  <div className="p-3 space-y-1">
+                    <p className="text-xs font-semibold text-blue-600 mb-2 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">
+                        local_hospital
+                      </span>
+                      โรงพยาบาลสัตว์
+                    </p>
+                    {data_hospital
+                      .filter((item) => item.type === "hospital")
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                          <span className="text-xs text-gray-700 truncate">
+                            {item.name}
+                          </span>
+                        </div>
+                      ))}
+                    {data_hospital.filter((item) => item.type === "hospital")
+                      .length === 0 && (
+                      <p className="text-xs text-gray-400 italic px-3">
+                        ยังไม่มีข้อมูล
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Right column */}
+                  <div className="p-3 space-y-1">
+                    <p className="text-xs font-semibold text-emerald-600 mb-2 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">
+                        medical_services
+                      </span>
+                      คลินิก
+                    </p>
+                    {data_hospital
+                      .filter((item) => item.type === "clinic")
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                          <span className="text-xs text-gray-700 truncate">
+                            {item.name}
+                          </span>
+                        </div>
+                      ))}
+                    {data_hospital.filter((item) => item.type === "clinic")
+                      .length === 0 && (
+                      <p className="text-xs text-gray-400 italic px-3">
+                        ยังไม่มีข้อมูล
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             <AnimatePresence>
               {addWorkloction && (
                 <motion.div

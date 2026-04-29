@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowUpFromLine,
+  Badge,
   BoxSelect,
   Dog,
   Home,
@@ -128,14 +129,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, toggleSidebar }) => {
         badge: null,
       },
 
-      // {
-      //   name: "ข้อมูลโรงพยาบาล/คลินิก",
-      //   icon: Hospital,
-      //   path: "/novel/hospitals-info",
-      //   showIf: (currentUser) =>
-      //     currentUser.aud === "admin" && currentUser.role === "ADMIN",
-      //   badge: null,
-      // },
+      {
+        name: "รายชื่อทั้งหมด",
+        icon: Badge,
+        path: "/novel/all-info",
+        showIf: (currentUser) =>
+          currentUser.aud === "admin" &&
+          (currentUser.role === "ADMIN" || currentUser.role === "COUNTER"),
+        badge: null,
+      },
       {
         name: "กำหนดสิทธิ์",
         icon: BoxSelect,

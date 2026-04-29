@@ -174,3 +174,60 @@ export const GetDataFeedback = async (start: string, end: string) => {
     }
   }
 };
+
+export const GetVetMember = async () => {
+  try {
+    const resp = await apiWithAuth.get(`/auth/vet-members`);
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error("Error in GetVetMember: ", error.response.data.message);
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetVetMember: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
+
+export const GetAllOwnersAdmin = async () => {
+  try {
+    const resp = await apiWithAuth.get(`/owners/admin/list`);
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in GetAllOwnersAdmin: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetAllOwnersAdmin: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};
+
+export const GetAllPetsAdmin = async () => {
+  try {
+    const resp = await apiWithAuth.get(`/pets/admin/list`);
+    return resp.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        console.error(
+          "Error in GetAllPetsAdmin: ",
+          error.response.data.message,
+        );
+        return error.response.data.message;
+      } else {
+        console.error("Error in GetAllPetsAdmin: ", error.message);
+        return error.message;
+      }
+    }
+  }
+};

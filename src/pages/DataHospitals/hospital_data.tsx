@@ -2,10 +2,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Workbook } from "exceljs";
 import { GetHospitalData } from "../../api/GetApi";
-import {
-  currentUserCan,
-  PERMISSIONS,
-} from "../../utils/permissionUtils";
+import { currentUserCan, PERMISSIONS } from "../../utils/permissionUtils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1021,6 +1018,13 @@ export default function HospitalData() {
     }
   };
 
+  useEffect(() => {
+    if (!initRef.current) {
+      fetchDataHospitals(selectedYear);
+      initRef.current = true;
+    }
+  });
+
   const fetchDataHospitals = async (year: number) => {
     setIsLoading(true);
     setError("");
@@ -1060,13 +1064,6 @@ export default function HospitalData() {
     }
   };
 
-  useEffect(() => {
-    if (!initRef.current) {
-      fetchDataHospitals(selectedYear);
-      initRef.current = true;
-    }
-  });
-
   const handleYearChange = (year: number) => {
     setSelectedYear(year);
     fetchDataHospitals(year);
@@ -1096,7 +1093,6 @@ export default function HospitalData() {
   ).length;
 
   const selectedHospital = hospitals.find((h) => h.id === selectedId);
-
 
   return (
     <motion.div

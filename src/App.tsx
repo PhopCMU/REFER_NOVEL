@@ -21,6 +21,7 @@ import Workplaces from "./pages/Dashboard/vets/workplaces";
 import { useUpdateVersion } from "./hook/useUpdateVersion";
 import DataUser from "./pages/Dashboard/vets/datauser";
 import FeedbackReport from "./pages/Feedback/feedback_report";
+import AllInfo from "./pages/AllInfo/all_info";
 
 export default function App() {
   const { needsUpdate, currentVersion, doUpdate } = useUpdateVersion();
@@ -88,6 +89,7 @@ export default function App() {
             <Route path="permission" element={<PermissionData />} />
             <Route path="profile" element={<DataUser />} />
             <Route path="feedback-report" element={<FeedbackReport />} />
+            <Route path="all-info" element={<AllInfo />} />
           </Route>
         </Route>
 
